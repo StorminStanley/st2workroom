@@ -1,0 +1,21 @@
+---
+# Defaults can be defined and reused with YAML anchors
+defaults: &defaults
+  domain: stackstorm.net
+  memory: 1024
+  cpus: 1
+  box: puppetlabs/ubuntu-14.04-64-puppet
+st2dev:
+  <<: *defaults
+  hostname: st2dev
+  # Any number of facts available to the server can be set here
+  puppet:
+    facts:
+      role: st2dev
+st2express:
+  <<: *defaults
+  hostname: st2express
+  box: puppetlabs/centos-6.5-64-puppet
+  puppet:
+    facts:
+      role: st2express

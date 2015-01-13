@@ -1,0 +1,14 @@
+:backends:
+  - yaml
+:yaml:
+  :datadir: /opt/puppet/environments/%{::environment}/hieradata
+:hierarchy:
+  - "node/%{::fqdn}"
+  - "role/%{::role}"
+  - "stack/node/%{::fqdn}"
+  - "stack/role/%{::role}"
+  - "stack/datacenter/%{::datacenter}"
+  - "stack/%{::stack}"
+  - "osfamily/%{::osfamily}"
+  - "datacenter/%{::datacenter}"
+  - common

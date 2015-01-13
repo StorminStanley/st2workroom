@@ -1,0 +1,8 @@
+---
+apply:
+  catalog:
+    terminus: compiler
+  resource:
+    terminus: ral
+  facts:
+    terminus: facter

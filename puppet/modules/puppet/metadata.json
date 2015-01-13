@@ -1,0 +1,22 @@
+{
+  "author": "Patrick Hoolboom",
+  "checksums": {
+    "Rakefile": "f37e6131fe7de9a49b09d31596f5fbf1",
+    "manifests/admin.pp": "a91f3ad98a0e53e244596b8bff9b1e62",
+    "manifests/init.pp": "86256c871fcf3d028b7d4ceb31427534",
+    "Modulefile": "e6cba156da4d9536b6f0db686d2d7a10",
+    "spec/spec.opts": "a600ded995d948e393fbe2320ba8e51c",
+    "tests/init.pp": "c1674c960201c4f34481a507772c0149",
+    "spec/spec_helper.rb": "3ea886dd135e120afa31e0aab12e85b0",
+    "README.markdown": "b0aa0204be75e28cec892f4abaaf8d7a"
+  },
+  "dependencies": [],
+  "description": "",
+  "license": "",
+  "name": "StackStorm-puppet",
+  "project_page": "",
+  "source": "",
+  "summary": "",
+  "types": [],
+  "version": "0.1.0"
+}

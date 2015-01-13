@@ -1,0 +1,12 @@
+ssl/*
+.bundler
+.puppetfile
+puppet/vendor/bundle
+puppet/environments/*
+.bundle
+.r10k.conf.swp
+puppet/graphs
+puppet/shared
+*.rpmnew
+puppet/current_environment
+mounts/*

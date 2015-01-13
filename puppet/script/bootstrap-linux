@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source $DIR/shared-functions
+
+## Check to see if bootstrap has been done already...
+if [ ! -f /etc/vagrant-bootstrapped ]; then
+  ## Might be an ubuntu box
+  if [ -f /etc/lsb-release ]; then
+    $DIR/bootstrap-ubuntu
+  fi
+
+  ## Or maybe a RedHat Node
+  if [ -f /etc/redhat-release ]; then
+    $DIR/bootstrap-redhat
+  fi
+fi

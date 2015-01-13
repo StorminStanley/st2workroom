@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+# Get rid of Puppet Manifests
+rm -rf /opt/puppet /etc/puppet

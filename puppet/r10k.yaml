@@ -1,0 +1,5 @@
+---
+:sources:
+  :production:
+    remote: '.'
+    basedir: '/etc/puppet/environments'

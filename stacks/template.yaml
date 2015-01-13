@@ -1,0 +1,22 @@
+---
+# Defaults can be defined and reused with YAML anchors
+defaults: &defaults
+  domain: stackstorm.net
+  memory: 2048
+  cpus: 1
+  box: puppetlabs/ubuntu-14.04-64-puppet
+# Define as many hosts as you would like. Deep merged in!
+st2server:
+  <<: *defaults  # Take advantage of YAML anchors and inherit
+  hostname: st2server
+  # Any number of facts available to the server can be set here
+  facts: # Apply facts to the guest OS
+    role: st2server
+  mounts:
+    # Mounts can be in a temp directory
+    - /opt/stackstorm
+    # Or with an absolute path
+    - "/opt/st2web:/tmp/st2web"
+  # Any number of private networks can be defined
+  private_networks:
+    - 10.20.30.2

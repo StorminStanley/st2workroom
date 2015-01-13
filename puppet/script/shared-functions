@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#
+# To use, add to your script
+#   DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+#   source $DIR/shared-functions
+
+PROJECT_ROOT=/etc/puppet
+NODE=$(hostname -s);
+
+# Ubuntu
+if [ -f /etc/lsb-release ]; then
+  . /etc/lsb-release
+fi
+
+if [ -f /etc/vagrantrc ]; then
+  . /etc/vagrantrc
+fi
+
+if [ -f /etc/containerrc ]; then
+  . /etc/containerrc
+fi
+
+

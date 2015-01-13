@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+
+PROJECT_ROOT=/opt/puppet
+NODE=$(hostname -s);
+
+cd $PROJECT_ROOT
+
+### Setup the puppet directory
+if [ "$update_from_upstream" != "0" ]; then
+  git pull origin
+fi
+
+if [ "$debug" = "1" ]; then
+  PUPPET_DEBUG_ARGS="--debug"
+  R10K_DEBUG_ARGS="-v"
+  RSYNC_DEBUG_ARGS="-v"
+fi
+
+# Install necessary gems
+if [ "$cache_libraries" = "1" ]; then
+  # Check locally to see if the Puppetfile has been
+  # updated, and then update if so.
+  if [ ! -f .bundler ]; then
+    echo "New!!!" > .bundler
+  fi
+
+  OLD_SHA=$(cat .bundler)
+  CURRENT_SHA=$(git hash-object Gemfile)
+  if [ "$OLD_SHA" != "$CURRENT_SHA" ]; then
+    echo "Need to update bundled gems..."
+    bundle install --path vendor/bundle
+    echo $CURRENT_SHA > .bundler
+  fi
+else
+  bundle install --path vendor/bundle
+fi
+
+# Deploy Environments from upstream
+if [ "$generate_all_environments" != "0" ]; then
+  bundle exec r10k deploy environment -p -c $PROJECT_ROOT/r10k.yaml $R10K_DEBUG_ARGS
+fi
+
+# Bootstrap Modules for current_working_directory
+## `cache_libraries` only updates if Puppetfile is updated
+if [ "$cache_libraries" = "1" ]; then
+  # Check locally to see if the Puppetfile has been
+  # updated, and then update if so.
+  if [ ! -f .puppetfile ]; then
+    echo "New!!!" > .puppetfile
+  fi
+
+  OLD_SHA=$(cat .puppetfile)
+  CURRENT_SHA=$(git hash-object Puppetfile)
+  if [ "$OLD_SHA" != "$CURRENT_SHA" ]; then
+    bundle exec r10k puppetfile install $R10K_DEBUG_ARGS
+    echo $CURRENT_SHA > .puppetfile
+  fi
+else
+  bundle exec r10k puppetfile install $R10K_DEBUG_ARGS
+fi
+
+# Make sure the current working directory is an environment too!
+# This is sort of a hack to support environments while developing
+# on the currently active branch in Vagrant or other environments
+rsync $RSYNC_DEBUG_ARGS -arhz --delete --exclude "environments" --exclude "vendor" \
+  $PROJECT_ROOT/ $PROJECT_ROOT/environments/current_working_directory/
+
+# Set the environment. This should be done *after* R10K has done its thing
+# to determine if it is needed to switch back to production if the branch
+# has been deleted.
+if [ -z "$environment" ]; then
+  if [ -f $PROJECT_ROOT/current_environment ]; then
+    requested_environment=$(cat $PROJECT_ROOT/current_environment)
+  else
+    requested_environment='production'
+  fi
+else
+  requested_environment=$environment
+fi
+
+## Attempt to detect if the environment even exists... if not,
+## roll back to the production environment.
+
+## Make sure our environment conforms to Puppet environment naming
+requested_environment=$(echo $requested_environment | sed 's/[-\/]/_/g')
+if [ -d $PROJECT_ROOT/environments/${requested_environment} ]; then
+  environment=$requested_environment
+else
+  echo "The environment ${requested_environment} does not exist... falling back to production"
+  environment='production'
+fi
+
+
+## Make graph directory for output and debug
+if [ ! -d $PROJECT_ROOT/graphs/${NODE} ]; then
+  mkdir -p $PROJECT_ROOT/graphs/${NODE}
+fi
+
+puppet apply $PUPPET_DEBUG_ARGS --verbose --environment $environment \
+  --config $PROJECT_ROOT/puppet.conf \
+  --graph --graphdir $PROJECT_ROOT/graphs/${NODE} \
+  $PROJECT_ROOT/environments/${environment}/manifests $@
