@@ -174,8 +174,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
           export environment=#{VM_ENV}
 
           # Do not update Gems/Puppetfile/Environments each run
-          #export generate_all_environments=0
-          #export cache_libraries=1
+          export generate_all_environments=0
+          export cache_libraries=1
 
           # Pass through Debug Commands
           export debug=#{ENV['debug']}
