@@ -121,6 +121,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
       n.vm.box = config['box']
       n.vm.hostname = "#{config['hostname']}.#{config['domain']}"
       n.ssh.forward_agent = true
+      n.ssh.pty = true
       @synced_folder_type = ENV['VM_SYNC'] || nil
       @local_provision    = true
 
