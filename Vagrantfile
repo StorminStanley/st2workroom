@@ -72,12 +72,16 @@ module Vagrant
         'hostname' => ENV['hostname'] || 'vagrant',
         'box'      => ENV['box'].nil? ? VM_BOXES[:ubuntu] : VM_BOXES[ENV['box'].to_sym],
         'domain'   => ENV['domain'] || 'stackstorm.net',
-	'do'       => {
+	      'do'       => {
           'ssh_key_path' => ENV['DO_SSH_KEY_PATH'] || '~/.ssh/id_rsa',
           'token'        => ENV['DO_TOKEN'],
           'image'        => '14.04 x64',
           'region'       => 'nyc3',
           'size'         => '1gb',
+        },
+        'ssh'      => {
+          'pty'           => false,
+          'forward_agent' => true,
         },
       }
     end
@@ -120,7 +124,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
     vagrant.vm.define node do |n|
       n.vm.box = config['box']
       n.vm.hostname = "#{config['hostname']}.#{config['domain']}"
-      n.ssh.forward_agent = true
+      n.ssh.forward_agent = config['ssh']['forward_agent'] || true
+      n.ssh.pty = config['ssh']['pty'] || false
       @synced_folder_type = ENV['VM_SYNC'] || nil
       @local_provision    = true
 

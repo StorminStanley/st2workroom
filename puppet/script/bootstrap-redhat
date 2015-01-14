@@ -13,8 +13,10 @@ RELEASE=`uname -r`
 
 if [[ $RELEASE =~ "el6" ]]; then
   PACKAGE="http://yum.puppetlabs.com/puppetlabs-release-el-6.noarch.rpm"
+  EPEL="http://linux.mirrors.es.net/fedora-epel/6/i386/epel-release-6-8.noarch.rpm"
 elif [[ $RELEASE =~ "el7" ]]; then
   PACKAGE="http://yum.puppetlabs.com/puppetlabs-release-el-7.noarch.rpm"
+  EPEL="http://mirror.chpc.utah.edu/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm"
 elif [[ $RELEASE =~ "fc19" ]]; then
   PACKAGE="http://yum.puppetlabs.com/puppetlabs-release-fedora-19.noarch.rpm"
 elif [[ $RELEASE =~ "fc20" ]]; then
@@ -24,6 +26,12 @@ else
   exit 1
 fi
 
+# Install EPEL on RHEL boxen
+if [ -n "${EPEL}" ]; then
+  rpm -ivh ${EPEL}
+fi
+
+# Install the PL Repo
 if [ ! -f /etc/yum.repos.d/puppetlabs.repo ]; then
   rpm -ivh $PACKAGE
 fi

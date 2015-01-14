@@ -15,7 +15,7 @@ st2dev:
 st2express:
   <<: *defaults
   hostname: st2express
-  box: puppetlabs/centos-6.5-64-puppet
+  #box: puppetlabs/centos-6.5-64-puppet
   puppet:
     facts:
       role: st2express

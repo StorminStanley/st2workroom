@@ -9,9 +9,10 @@ defaults: &defaults
 st2server:
   <<: *defaults  # Take advantage of YAML anchors and inherit
   hostname: st2server
-  # Any number of facts available to the server can be set here
-  facts: # Apply facts to the guest OS
-    role: st2server
+  puppet:
+    # Any number of facts available to the server can be set here
+    facts: # Apply facts to the guest OS
+      role: st2server
   mounts:
     # Mounts can be in a temp directory
     - /opt/stackstorm
