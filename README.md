@@ -80,6 +80,8 @@ vagrant status
 ... or set it up to stay configured indefinetely. This is done via the `dotenv` gem. Simply edit
 the file `.env` in the top-level of this project, and add the line `stack=cicd` and you're done!
 
+See more examples in the `stacks` directory at the top-level of this project.
+
 ### Supported Vagrant Objects
 
 * Hostname [`hostname`]
