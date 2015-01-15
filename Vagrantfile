@@ -169,7 +169,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
       ## Bootstrap using different provisioners.
       case PROVISIONER
       when 'puppet-apply' then
-        n.vm.synced_folder 'puppet', '/opt/puppet', type: @synced_folder_type
+        n.vm.synced_folder '.', '/opt/puppet', type: @synced_folder_type
         n.vm.provision 'shell', inline: '/opt/puppet/script/bootstrap-linux'
         n.vm.provision 'shell', inline: <<-EOF
           # Skips the `git pull` step, since you're working out of it directly

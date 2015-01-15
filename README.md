@@ -18,7 +18,7 @@ Currently, the project has support for the following Config Management Tools:
 
 * Puppet
 
-The following Config Management Tools are under development:
+Additional workrooms will be created for the following languages:
 
 * Chef
 * Ansible
