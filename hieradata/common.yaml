@@ -1,3 +1,4 @@
 ---
 classes:
   - 'puppet::masterless'
+st2::version: 0.7
