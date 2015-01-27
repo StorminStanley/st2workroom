@@ -15,7 +15,5 @@ mod 'puppetlabs/mysql',              '3.0.0'
 mod 'puppetlabs/nodejs',             '0.6.1'
 mod 'puppetlabs/rabbitmq',           '4.1.0'
 mod 'puppetlabs/vcsrepo',            '1.2.0'
-
-mod 'st2',
-  :git => 'https://github.com/StackStorm/puppet-st2.git'
+mod 'stackstorm/st2',                '0.1.7'
 
