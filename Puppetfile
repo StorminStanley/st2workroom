@@ -15,5 +15,5 @@ mod 'puppetlabs/mysql',              '3.0.0'
 mod 'puppetlabs/nodejs',             '0.6.1'
 mod 'puppetlabs/rabbitmq',           '4.1.0'
 mod 'puppetlabs/vcsrepo',            '1.2.0'
-mod 'stackstorm/st2',                '0.1.7'
+mod 'stackstorm/st2',                '0.1.8'
 
