@@ -7,6 +7,10 @@ A full fledged development environment for working with StackStorm. This project
 * Spin up a development environment to work with StackStorm (`st2dev`)
 * Begin building infrastructure patterns using pre-configured Config Management tools
 
+# Requirements:
+
+* Vagrant - [version 1.7.2 or higher](https://www.vagrantup.com/downloads.html). (See https://github.com/mitchellh/vagrant/issues/3769)
+
 ## Project Goals
 
 The goal of this project is to have a workspace that allows you to develop infrastructure in conjuction
