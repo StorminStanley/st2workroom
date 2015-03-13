@@ -28,7 +28,7 @@ apt-get -y install \
 
 apt-get -y install rubygems || true
 
-gem install deep_merge --no-ri --no-rdoc
+gem install bundler deep_merge --no-ri --no-rdoc
 
 apt-get install -y unzip wget ruby git
 

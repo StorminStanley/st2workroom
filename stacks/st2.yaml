@@ -15,7 +15,8 @@ st2dev:
 st2express:
   <<: *defaults
   hostname: st2express
-  #box: puppetlabs/centos-6.5-64-puppet
   puppet:
     facts:
       role: st2express
+  mounts:
+    - "/mnt/st2incubator:/Users/jfryman/stackstorm/st2incubator"
