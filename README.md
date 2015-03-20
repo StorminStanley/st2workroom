@@ -93,6 +93,8 @@ hubot::dependencies:
 Refer to https://github.com/github/hubot/blob/master/docs/adapters.md for additional information about
 Hubot Adapters
 
+Hubot by default is installed at `/opt/hubot`
+
 ### Development Directories
 In the `st2dev` environment, the image makes no attempt to download code for you. Instead, it is
 assumed that most development will be happening on the host machine, and as such you will need to grab
