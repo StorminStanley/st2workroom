@@ -10,7 +10,7 @@ end
 begin
   Dotenv.load
 rescue => e
-  puts 'problem loading dotenv'.
+  puts 'problem loading dotenv'
   puts e
   exit 1
 end
