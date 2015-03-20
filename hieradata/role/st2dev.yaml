@@ -1,0 +1,5 @@
+---
+classes:
+  - 'role::st2dev'
+
+nodejs::proxy: false

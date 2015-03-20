@@ -12,3 +12,4 @@
   - "osfamily/%{::osfamily}"
   - "datacenter/%{::datacenter}"
   - common
+  - workbench

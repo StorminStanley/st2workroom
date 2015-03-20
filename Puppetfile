@@ -17,3 +17,5 @@ mod 'puppetlabs/rabbitmq',           '4.1.0'
 mod 'puppetlabs/vcsrepo',            '1.2.0'
 mod 'stackstorm/st2',                '0.2.0'
 
+mod 'hubot',
+  :git => 'https://github.com/evenup/evenup-hubot'

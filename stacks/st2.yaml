@@ -7,11 +7,14 @@ defaults: &defaults
   box: puppetlabs/ubuntu-14.04-64-puppet
 st2dev:
   <<: *defaults
+  sync_type: nfs
   hostname: st2dev
   # Any number of facts available to the server can be set here
   puppet:
     facts:
       role: st2dev
+  mounts:
+    - "/mnt/st2:/Users/jfryman/stackstorm/st2"
 st2express:
   <<: *defaults
   hostname: st2express

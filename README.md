@@ -29,134 +29,91 @@ Additional workrooms will be created for the following languages:
 * Salt
 
 ## Usage
-### Vagrant Stacks
+### st2express
 
-Underpinning Vagrant is something referred to as Vagrant Stacks. This pattern is another attempt by the
-pattern used in `vagrant-stroller`. In a nutshell, a user should be able to compose entire infrastructure
-stacks quickly and easily with Vagrant, all using potentially different options.
+st2express is used to spin up a test StackStorm instance. To start, simply type the following command:
 
-To accomplish this, Vagrant has been extended to read from a `stack` file. A `stack` file is simply
-a YAML file defining what a given infrastructure stack looks like. You can add as many stacks
-as you would like, and switch between them with minimal problems.
+```
+  vagrant up st2express
+```
 
-An example Vagrant Stack looks like:
+This will automatically provision a new StackStorm server. If you have Bonjour/Zeroconf enabled on your
+machine, the WebUI will be available at http://st2express.local:9101/
+
+To SSH into the machine, simply type the following command:
+
+```
+  vagrant ssh st2express
+```
+
+### st2dev
+
+st2dev is used as a clean room environment to develop StackStorm against. This machine downloads all
+the necessary dependencies, as well as Mistral.
+
+To start the machine, simply type the following command
+
+```
+  vagrant up st2dev
+```
+
+To SSH into the machine, simply type the following command:
+
+```
+  vagrant ssh st2dev
+```
+
+## Configuration
+### Virtual Machine configuration
+In the event you would like to develop or test a different target machine, or need to change the
+number of CPUs/RAM... all of these settings are configured in `stacks/st2.yaml`. Take a look at
+the `defaults` section and adjust accordingly.
+
+### ChatOps
+
+By default, both `st2express` and `st2dev` come with installed copies of Hubot. This is to allow
+local testing of ChatOps. To configure Hubot, simply take a look at the file `hieradata/workbench.yaml`.
+You will see all of the configuration commented out. To setup Hubot to automatically connect to an
+IRC room, for example, simply set the following values in `hieradata/workbench.yaml`
+
+```
+hubot::adapter: irc
+hubot::env_export:
+  HUBOT_LOG_LEVEL: DEBUG
+  HUBOT_IRC_SERVER: "irc.freenode.net"
+  HUBOT_IRC_ROOMS: "#stackstorm"
+  HUBOT_IRC_NICK: "hubot-stanley"
+  HUBOT_IRC_UNFLOOD: true
+hubot::dependencies:
+  hubot: ">= 2.6.0 < 3.0.0"
+  "hubot-scripts": ">= 2.5.0 < 3.0.0"
+  "hubot-irc": ">= 0.2.7"
+```
+
+Refer to https://github.com/github/hubot/blob/master/docs/adapters.md for additional information about
+Hubot Adapters
+
+### Development Directories
+In the `st2dev` environment, the image makes no attempt to download code for you. Instead, it is
+assumed that most development will be happening on the host machine, and as such you will need to grab
+StackStorm code directly.
+
+Our recommendation: specify a mountpoint in the file `stacks/st2.yaml` under the `st2dev` key. This will
+automatically setup an NFS mount, and makes it easy to do development locally. Learn more about how stacks work
+by reading STACKS.md. For example, here is what it looks like to mount my local StackStorm install:
+
 ```yaml
+# stacks/st2.yaml
 ---
-# Defaults can be defined and reused with YAML anchors
-defaults: &defaults
-  domain: stackstorm.net
-  memory: 2048
-  cpus: 1
-  box: puppetlabs/ubuntu-14.04-64-puppet
-# Define as many hosts as you would like. Deep merged in!
-st2server:
-  <<: *defaults  # Take advantage of YAML anchors and inherit
-  hostname: st2server
+st2dev:
+  <<: *defaults
+  hostname: st2dev
   # Any number of facts available to the server can be set here
   puppet:
-    facts: # Apply facts to the guest OS
-      role: st2server
+    facts:
+      role: st2dev
   mounts:
-    # Mounts can be in a temp directory
-    - /opt/stackstorm
-    # Or with an absolute path
-    - "/opt/st2web:/tmp/st2web"
-  # Any number of private networks can be defined
-  private_networks:
-    - 10.20.30.2
+    - "/mnt/st2:/Users/jfryman/stackstorm/st2"
 ```
 
-To switch between a stack, simply change the Environment variable `stack` to something else. This
-can be done at runtime...
-
-```
-stack=cicd vagrant status
-```
-
-... exported for a session ...
-
-```
-# All subsequent actions for the shell session will be this stack
-export stack=cicd
-vagrant status
-```
-
-... or set it up to stay configured indefinetely. This is done via the `dotenv` gem. Simply edit
-the file `.env` in the top-level of this project, and add the line `stack=cicd` and you're done!
-
-See more examples in the `stacks` directory at the top-level of this project.
-
-### Supported Vagrant Objects
-
-* Hostname [`hostname`]
-* Domain [`domain`]
-* Memory [`memory`]
-* Private Networks [`private_networks`]
-* Box name [`box`]
-* Box URL [`box_url`]
-* Puppet Facts [`puppet/facts`]
-* Mounts [`mounts`]
-
-### Digital Ocean Provisioning
-
-In addition to having constructs to manage a `virtualbox` or `vmware_desktop` image, Vagrant Stacks
-also supports using DO as a provisioner. To do this, you must set the following environment variables:
-
-* `DO_SSH_KEY_PATH` - Path to SSH key used to log into servers
-* `DO_TOKEN` - Digital Ocean Token used to provision servers
-
-Then, in a Vagrant Stack, you can specify the following values:
-
-```yaml
-...
-  do:
-    image: '14.04 x64'
-    region: nyc3
-    size: 1gb
-```
-
-Refer to https://www.digitalocean.com/community/tutorials/how-to-use-digitalocean-as-your-provider-in-vagrant-on-an-ubuntu-12-10-vps
-for more information on available options
-
-## Provisioners
-
-Support for many provisioners out-of-the box with the ability to install `st2`, and perform basic
-tasks (install packages, configure users, setup CM downloads, etc) is a goal of this project. To
-that end, you can change also at runtime the provisioner used to provision a server. Set the
-environment variable `provisioner` at runtime, or in the `.env` file as outlined in the overview.
-
-### `puppet-agent`
-
-A script is copied to `/usr/bin/puprun`, which will be used to do branch updates based on upstream `git`,
-and act as the masterless executor.
-
-Puppet can run a series of environments, covered by `git` branching. To deploy a specific branch, simply
-set the environment variable `environment` and off you go!
-
-Example:
-```
-environment=myawesomechange puprun
-```
-
-The node will stay on the `myawesomechange` branch until:
-* The branch is deleted from upstream, where it will automatically revert back to `production`, or...
-* You specify another branch to run as illustrated above
-
-#### Puppet Environments
-
-Vagrant also able to be super flexible. By default, a branch known as `current_working_directory` is
-created and used as the environment for Puppet to run in. This prevents you from having to `git commit`
-and push upstream to make and test local changes.
-
-Vagrant has the ability to mock out different nodes, as well as different environments. Simply use the
-`hostname` and `environment` variables as appropriate.
-
-Vagrant also has the ability to dynamically switch out Vagrant Baseboxes. Use the `box` environment
-variable to change it up. (More details can be found inside the `Vagrantfile`)
-
-Example:
-```
-hostname=ops001 box=fedora vagrant up
-```
-
-The node will remain named `ops001.stackstorm.net` and running on Fedora until it is destroyed
+NOTE: You may be asked for permission to make modifications to the Host's `/etc/exports` file.
