@@ -69,9 +69,10 @@ module Vagrant
             'datacenter' => ENV['container'].nil? ? 'vagrant' : 'docker',
           },
         },
-        'hostname' => ENV['hostname'] || 'vagrant',
-        'box'      => ENV['box'].nil? ? VM_BOXES[:ubuntu] : VM_BOXES[ENV['box'].to_sym],
-        'domain'   => ENV['domain'] || 'stackstorm.net',
+        'hostname'  => ENV['hostname'] || 'vagrant',
+        'box'       => ENV['box'].nil? ? VM_BOXES[:ubuntu] : VM_BOXES[ENV['box'].to_sym],
+        'domain'    => ENV['domain'] || 'stackstorm.net',
+        'sync_type' => ENV['sync_type'] || 'rsync',
 	      'do'       => {
           'ssh_key_path' => ENV['DO_SSH_KEY_PATH'] || '~/.ssh/id_rsa',
           'token'        => ENV['DO_TOKEN'],
@@ -122,12 +123,10 @@ end
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
   @stack.servers.each do |node, config|
     vagrant.vm.define node do |n|
-      n.vm.box = config['box']
-      n.vm.hostname = "#{config['hostname']}.#{config['domain']}"
+      n.vm.box            = config['box']
+      n.vm.hostname       = "#{config['hostname']}.#{config['domain']}"
       n.ssh.forward_agent = config['ssh']['forward_agent'] || true
-      n.ssh.pty = config['ssh']['pty'] || false
-      @synced_folder_type = ENV['VM_SYNC'] || nil
-      @local_provision    = true
+      n.ssh.pty           = config['ssh']['pty'] || false
 
       n.vm.provider 'vmware_fusion' do |vmware|
         vmware.vmx['memsize']  = config['memory'].to_s
@@ -145,8 +144,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
         digitalocean.image            = config['do']['image']
         digitalocean.region           = config['do']['region']
         digitalocean.size             = config['do']['size']
-        @synced_folder_type           = 'rsync'
-        @local_provision              = false
       end
 
 
@@ -157,12 +154,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
       end
 
       # Sync up any file mounts for you
-      if config.has_key?('mounts') && @local_provision
+      if config.has_key?('mounts')
         config['mounts'].each do |mount|
           vm_mount, local_mount = mount.split(/:/)
           local_mount ||= [DIR, 'mounts', vm_mount.gsub(/\//, '_')].join('/')
           FileUtils.mkdir_p local_mount
-          n.vm.synced_folder local_mount, vm_mount, type: @synced_folder_type
+          n.vm.synced_folder local_mount, vm_mount, type: config['sync_type']
         end
       end
 
@@ -180,7 +177,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
 
           # Do not update Gems/Puppetfile/Environments each run
           export generate_all_environments=0
-          export cache_libraries=1
 
           # Pass through Debug Commands
           export debug=#{ENV['debug']}
