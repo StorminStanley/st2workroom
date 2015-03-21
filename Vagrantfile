@@ -147,7 +147,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
       end
 
 
-      if config.has_key?('private_networks') && @local_provision
+      if config.has_key?('private_networks')
         config['private_networks'].each do |nic|
           n.vm.network 'private_network', ip: nic
         end
