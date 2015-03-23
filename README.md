@@ -121,14 +121,28 @@ st2dev:
 NOTE: You may be asked for permission to make modifications to the Host's `/etc/exports` file.
 
 ### Adding Users
-By default, the `stanley` user is added to both the `st2express` and `st2dev` roles. However, there
-may exist times where you want to add a local user to the box. To do this, simply add an entry to
-`hieradata/workroom.yaml` under the `users` key.
+By default, the `stanley` user is added to both the `st2express` and `st2dev` roles. This
+user is installed with default SSH keys that are insecure and not meant to be used in
+production. If you would like to change these keys, take a look at the `st2::stanley`
+keys located in `hieradata/workroom.yaml`
+
+For example, to change the SSH Keys for the `stanley` user:
+
+```
+# hieradata/workroom.yaml
+st2::stanley::ssh_public_key: XXXXXX
+st2::stanley::ssh_key_type: ssh-rsa
+st2::stanley::ssh_private_key: XXXXXX
+```
+
+
+However, there may exist times where you want to add a local user to the box. To do
+this, simply add an entry to `hieradata/workroom.yaml` under the `users` key.
 
 For example, to add a new user, simply:
 
 ```
----
+# hieradata/workroom.yaml
 users:
   manas:
     uid: 700
@@ -137,5 +151,4 @@ users:
     sshkeytype: ssh-rsa
     shell: /bin/bash
     admin: true
-```
 ```

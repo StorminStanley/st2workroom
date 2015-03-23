@@ -1,6 +1,11 @@
 ### User configurable settings
 ## Place any user-configurable settings here.
 
+## Stanley User Configuration
+# st2::stanley::ssh_public_key: XXXXXX
+# st2::stanley::ssh_key_type: ssh-rsa
+# st2::stanley::ssh_private_key: XXXXXX
+
 ## Hubot Configuration
 # hubot::adapter: slack
 # hubot::build_deps:
