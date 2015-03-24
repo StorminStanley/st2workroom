@@ -6,4 +6,5 @@ class profile::st2_dependencies {
   class { '::st2::profile::mistral':
     manage_mysql => true,
   }
+  class { 'screen': }
 }
