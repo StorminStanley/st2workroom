@@ -10,4 +10,4 @@ shared
 *.rpmnew
 current_environment
 mounts/*
-hieradata/workroom.yaml
+hieradata/workbench.yaml
