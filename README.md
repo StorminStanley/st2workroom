@@ -72,9 +72,9 @@ the `defaults` section and adjust accordingly.
 ### ChatOps
 
 By default, both `st2express` and `st2dev` come with installed copies of Hubot. This is to allow
-local testing of ChatOps. To configure Hubot, simply take a look at the file `hieradata/workbench.yaml`.
+local testing of ChatOps. To configure Hubot, simply take a look at the file `hieradata/workroom.yaml`.
 You will see all of the configuration commented out. To setup Hubot to automatically connect to an
-IRC room, for example, simply set the following values in `hieradata/workbench.yaml`
+IRC room, for example, simply set the following values in `hieradata/workroom.yaml`
 
 ```
 hubot::adapter: irc
