@@ -3,6 +3,7 @@
 PROJECT_ROOT=/opt/puppet
 NODE=$(hostname -s);
 
+
 cd $PROJECT_ROOT
 
 ### Setup the puppet directory
@@ -28,11 +29,11 @@ if [ "$cache_libraries" = "1" ]; then
   CURRENT_SHA=$(git hash-object Gemfile)
   if [ "$OLD_SHA" != "$CURRENT_SHA" ]; then
     echo "Need to update bundled gems..."
-    bundle install --path vendor/bundle
+    bundle install --path vendor/bundle --deployment --without development
     echo $CURRENT_SHA > .bundler
   fi
 else
-  bundle install --path vendor/bundle
+  bundle install --path vendor/bundle --deployment --without development
 fi
 
 # Deploy Environments from upstream
