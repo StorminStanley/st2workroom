@@ -83,9 +83,8 @@ module Vagrant
         'aws' => {
           'access_key'        => ENV['AWS_ACCESS_KEY'],
           'secret_access_key' => ENV['AWS_SECRET_ACCESS_KEY'],
-          'session_token'     => ENV['AWS_SESSION_TOKEN'],
           'keypair_name'      => ENV['AWS_KEYPAIR_NAME'],
-          'ssh_key_path'      => ENV['AWS_SSH_KEY_PATH'],
+          'ssh_key_path'      => ENV['AWS_SSH_KEY_PATH'] || '~/.ssh/id_rsa',
           'ami'               => ENV['AWS_AMI'] || 'ami-29ebb519',
           'username'          => ENV['AWS_USERNAME'] || 'ubuntu',
           'region'            => ENV['AWS_REGION'] || 'us-west-2',
@@ -161,11 +160,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
         aws.region            = config['aws']['region']
         aws.access_key_id     = config['aws']['access_key']
         aws.secret_access_key = config['aws']['secret_access_key']
-        aws.session_token     = config['aws']['session_token']
         aws.keypair_name      = config['aws']['keypair_name']
         aws.ami               = config['aws']['ami']
+
         override.ssh.username = config['aws']['username']
-        override.ssh.private_key_path = config['aws']['private_key_path']
+        override.ssh.private_key_path = config['aws']['ssh_key_path']
       end
 
 
