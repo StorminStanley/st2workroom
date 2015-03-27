@@ -9,6 +9,7 @@ gem 'puppet',     '~> 3.7.1'
 
 group :development do
   gem 'guard'
+  gem 'guard-shell'
   gem 'rake',         '~> 10.3.2'
   gem 'rspec-puppet', '~> 1.0.1'
   gem 'pry',          '~> 0.10.1'

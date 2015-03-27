@@ -1,24 +1,22 @@
-# A sample Guardfile
-# More info at https://github.com/guard/guard#readme
+#!/usr/bin/env ruby
 
-## Uncomment and set this to only include directories you want to watch
-# directories %w(app lib config test spec features)
+# Start with the -w /opt/stackstorm/packs option.
+guard :shell do
+  watch /sensors/ do |file|
+    puts "Reloading StackStorm Sensors..."
+    `st2ctl reload --register-sensors`
+    `st2ctl restart-component sensor_container`
+  end
 
-## Uncomment to clear the screen before every task
-# clearing :on
+  watch /rules/ do |file|
+    puts "Reloading StackStorm Rules..."
+    `st2ctl reload --register-rules`
+  end
 
-## Guard internally checks for changes in the Guardfile and exits.
-## If you want Guard to automatically start up again, run guard in a
-## shell loop, e.g.:
-##
-##  $ while bundle exec guard; do echo "Restarting Guard..."; done
-##
-## Note: if you are using the `directories` clause above and you are not
-## watching the project directory ('.'), then you will want to move
-## the Guardfile to a watched dir and symlink it back, e.g.
-#
-#  $ mkdir config
-#  $ mv Guardfile config/
-#  $ ln -s config/Guardfile .
-#
-# and, you'll have to watch "config/Guardfile" instead of "Guardfile"
+  watch /actions/ do |file|
+    puts "Reloading StackStorm Actions..."
+   `st2ctl reload --register-rules`
+  end
+end
+
+

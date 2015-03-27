@@ -1,5 +1,6 @@
 class profile::vagrant {
-  package { 'avahi-daemon':
+  $packages = ['avahi-daemon', 'ruby-dev']
+  package { $packages:
     ensure => present,
   }
 }

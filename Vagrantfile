@@ -178,6 +178,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
           # Do not update Gems/Puppetfile/Environments each run
           export generate_all_environments=0
 
+          # Notify this is a development workspace
+          export development=1
+
           # Pass through Debug Commands
           export debug=#{ENV['debug']}
 
