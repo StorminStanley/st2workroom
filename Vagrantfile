@@ -80,6 +80,15 @@ module Vagrant
           'region'       => 'nyc3',
           'size'         => '1gb',
         },
+        'aws' => {
+          'access_key'        => ENV['AWS_ACCESS_KEY'],
+          'secret_access_key' => ENV['AWS_SECRET_ACCESS_KEY'],
+          'keypair_name'      => ENV['AWS_KEYPAIR_NAME'],
+          'ssh_key_path'      => ENV['AWS_SSH_KEY_PATH'] || '~/.ssh/id_rsa',
+          'ami'               => ENV['AWS_AMI'] || 'ami-29ebb519',
+          'username'          => ENV['AWS_USERNAME'] || 'ubuntu',
+          'region'            => ENV['AWS_REGION'] || 'us-west-2',
+        },
         'ssh'      => {
           'pty'           => false,
           'forward_agent' => true,
@@ -146,6 +155,18 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
         digitalocean.size             = config['do']['size']
       end
 
+      n.vm.provider 'aws' do |aws, override|
+        override.vm.box       = 'dummy'
+        aws.region            = config['aws']['region']
+        aws.access_key_id     = config['aws']['access_key']
+        aws.secret_access_key = config['aws']['secret_access_key']
+        aws.keypair_name      = config['aws']['keypair_name']
+        aws.ami               = config['aws']['ami']
+
+        override.ssh.username = config['aws']['username']
+        override.ssh.private_key_path = config['aws']['ssh_key_path']
+      end
+
 
       if config.has_key?('private_networks')
         config['private_networks'].each do |nic|
@@ -177,6 +198,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
 
           # Do not update Gems/Puppetfile/Environments each run
           export generate_all_environments=0
+
+          # Notify this is a development workspace
+          export development=1
 
           # Pass through Debug Commands
           export debug=#{ENV['debug']}

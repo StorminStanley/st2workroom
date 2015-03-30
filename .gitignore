@@ -11,3 +11,4 @@ shared
 current_environment
 mounts/*
 hieradata/workroom.yaml
+bin/*
