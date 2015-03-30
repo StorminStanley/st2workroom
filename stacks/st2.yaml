@@ -7,7 +7,6 @@ defaults: &defaults
   box: puppetlabs/ubuntu-14.04-64-puppet
 st2dev:
   <<: *defaults
-  sync_type: nfs
   hostname: st2dev
   # Any number of facts available to the server can be set here
   puppet:
@@ -16,10 +15,7 @@ st2dev:
 st2express:
   <<: *defaults
   hostname: st2express
-  sync_type: nfs
   puppet:
     facts:
       role: st2express
-  mounts:
-    - "/opt/stackstorm/packs/trello:/Volumes/Repositories/stackstorm/st2contrib/packs/trello"
 
