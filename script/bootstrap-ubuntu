@@ -26,10 +26,8 @@ apt-get -y install \
   puppetdb-terminus=$PUPPETDB_TERMINUS_VER-1puppetlabs1 \
   ruby-bundler
 
-apt-get -y install rubygems || true
-
 gem install bundler deep_merge --no-ri --no-rdoc
 
-apt-get install -y unzip wget ruby git
+apt-get install -y unzip wget ruby ruby-dev git
 
 touch /etc/vagrant-bootstrapped
