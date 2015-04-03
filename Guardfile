@@ -15,7 +15,7 @@ guard :shell do
 
   watch /actions/ do |file|
     puts "Reloading StackStorm Actions..."
-   `st2ctl reload --register-rules`
+   `st2ctl reload --register-actions`
   end
 end
 
