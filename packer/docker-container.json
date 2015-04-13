@@ -1,0 +1,59 @@
+{
+  "variables": {
+    "role": "{{env `role`}}",
+    "environment": "{{env `environment`}}",
+    "debug": "{{env `debug`}}",
+    "docker_tag": "{{env `DOCKER_TAG`}}",
+    "docker_image": "{{env `DOCKER_IMAGE`}}",
+    "docker_repository": "{{env `DOCKER_REPOSITORY`}}",
+    "docker_login_email": "{{env `DOCKER_LOGIN_EMAIL`}}",
+    "docker_login_username": "{{env `DOCKER_LOGIN_USERNAME`}}",
+    "docker_login_password": "{{env `DOCKER_LOGIN_PASSWORD`}}",
+    "docker_login_server": "{{env `DOCKER_LOGIN_SERVER`}}"
+  },
+  "builders": [
+    {
+      "type": "docker",
+      "image": "{{user `docker_image`}}",
+      "commit": true,
+      "volumes": {
+        "/opt/puppet": "/opt/puppet"
+      }
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "/opt/puppet/script/bootstrap-linux",
+        "/opt/puppet/script/puppet-apply"
+      ],
+      "environment_vars": [
+        "update_from_upstream=0",
+        "debug={{user `debug`}}",
+        "generate_all_environments=0",
+        "environment={{user `environment`}}",
+        "cache_libraries=1",
+        "FACTER_role={{user `role`}}",
+        "FACTER_datacenter=docker"
+      ]
+    }
+  ],
+  "post-processors": [
+    [
+      {
+        "type": "docker-tag",
+        "repository": "{{user `docker_repository`}}",
+        "tag": "{{user `docker_tag`}}"
+      },
+      {
+        "type": "docker-push",
+        "login": true,
+        "login_email": "{{user `docker_login_email`}}",
+        "login_username": "{{user `docker_login_username`}}",
+        "login_password": "{{user `docker_login_password`}}",
+        "login_server": "{{user `docker_login_server`}}"
+      }
+    ]
+  ]
+}

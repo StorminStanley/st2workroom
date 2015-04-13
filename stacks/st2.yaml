@@ -18,4 +18,10 @@ st2express:
   puppet:
     facts:
       role: st2express
+st2factory:
+  <<: *defaults
+  hostname: st2factory
+  puppet:
+    facts:
+      role: st2factory
 

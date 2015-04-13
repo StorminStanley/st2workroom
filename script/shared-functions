@@ -4,7 +4,7 @@
 #   DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 #   source $DIR/shared-functions
 
-PROJECT_ROOT=/etc/puppet
+PROJECT_ROOT=/opt/puppet
 NODE=$(hostname -s);
 
 # Ubuntu

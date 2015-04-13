@@ -63,6 +63,32 @@ To SSH into the machine, simply type the following command:
   vagrant ssh st2dev
 ```
 
+### st2factory
+
+st2factory is used as a clean image to build artifacts for distribution (vagrant and docker). This
+machine will download docker and packer in the VM for rapid development.
+
+To build an image with `st2factory`, do the following.
+
+```
+  script/build-container
+```
+
+This script will automatically boot the `st2factory` image, and begin building artifacts. In addition,
+you may need to set some environment variables. You can do this using `dotenv`, or within your shell.
+
+Environment variables:
+* `role` - Puppet role to build in a container (required)
+* `environment` - Puppet environment to build in a container (default: `current_working_directory`)
+* `debug` - Set this to any value to enable debug (default: `false`)
+* `docker_repository` - Name of repository to upload (e.g.: stackstorm/base. required)
+* `docker_image` - Name of image used as baseline for containers (default: `ubuntu:14.04`)
+* `docker_tag` - Version to tag `docker_repository`. (required)
+* `docker_login_email` - email address associated with Docker Registry account (required)
+* `docker_login_username` - username associated with Docker Registry account (required)
+* `docker_login_password` - password associated with Docker Registry account (required)
+* `docker_login_server` - Docker Registry to connect to (default: Docker Hub)
+
 ## Configuration
 ### Virtual Machine configuration
 In the event you would like to develop or test a different target machine, or need to change the
