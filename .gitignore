@@ -12,3 +12,4 @@ current_environment
 mounts/*
 hieradata/workroom.yaml
 bin/*
+artifacts/*

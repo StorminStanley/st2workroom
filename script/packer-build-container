@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source $DIR/shared-functions
+
+export PATH="/opt/packer/bin:$PATH"
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
+cd $PROJECT_ROOT
+packer build packer/docker-container.json

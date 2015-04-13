@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source $DIR/shared-functions
+
+# Load up dotenv data if exists
+if [ -f $PROJECT_ROOT/.env ]; then
+  source $PROJECT_ROOT/.env
+elif [ -f .env ]; then
+  source .env
+fi
+
+# TODO Make this getopt and cleaner
+MISSING_ARGS=()
+
+function check_var() {
+  name=$1
+  var=$2
+  if [ -z $2 ]; then
+    MISSING_ARGS=( "${MISSING_ARGS[@]}" "$name" )
+  fi
+}
+
+check_var "role" $role
+check_var "DOCKER_REPOSITORY" $DOCKER_REPOSITORY
+check_var "DOCKER_TAG" $DOCKER_TAG
+check_var "DOCKER_LOGIN_USERNAME" $DOCKER_LOGIN_USERNAME
+check_var "DOCKER_LOGIN_PASSWORD" $DOCKER_LOGIN_PASSWORD
+check_var "DOCKER_LOGIN_EMAIL" $DOCKER_LOGIN_EMAIL
+
+if [ -z $debug ]; then
+  export debug=0
+fi
+if [ -z $environment ]; then
+  environment=current_working_directory
+fi
+if [ -z $DOCKER_IMAGE ]; then
+  DOCKER_IMAGE="ubuntu:14.04"
+fi
+
+if [ ${#MISSING_ARGS[@]} -ne 0 ]; then
+  echo "Missing environment variables: ${MISSING_ARGS[@]}"
+  exit 1
+fi
+
+# Try and determine if we're running in the Vagrant workroom
+if [ -f /etc/vagrant-bootstrapped ]; then
+  packer build $PROJECT_ROOT/packer/docker-container.json
+else
+  vagrant up st2factory
+  vagrant ssh st2factory -- sudo \
+    role=$role debug=$debug \
+    environment=$environment \
+    DOCKER_REPOSITORY=$DOCKER_REPOSITORY \
+    DOCKER_TAG=$DOCKER_TAG \
+    DOCKER_IMAGE=$DOCKER_IMAGE \
+    DOCKER_LOGIN_EMAIL=$DOCKER_LOGIN_EMAIL \
+    DOCKER_LOGIN_USERNAME=$DOCKER_LOGIN_USERNAME \
+    DOCKER_LOGIN_PASSWORD=$DOCKER_LOGIN_PASSWORD \
+    DOCKER_LOGIN_SERVER=$DOCKER_LOGIN_SERVER \
+    PACKER_LOG=1 \
+    /opt/puppet/script/build-container
+fi
