@@ -1,4 +1,7 @@
-class profile::hubot {
+class profile::hubot(
+  $bot_name = 'hubot',
+) {
+  ## Common
   include ::hubot
 
   if $::osfamily == 'Debian' {
@@ -15,5 +18,32 @@ class profile::hubot {
 
   Exec<| title == 'Hubot init' |> {
     path => '/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin',
+  }
+
+  # Accomidate a custom hubot install vs default
+  if $::hubot::git_source {
+    $env_vars   = hiera_hash('hubot::env_export', {})
+    $hubot_home = "${::hubot::root_dir}/${bot_name}"
+    $adapter    = $::hubot::adapter
+    $chat_alias = $::hubot::chat_alias
+
+    file { '/etc/init/hubot.conf':
+      ensure  => file,
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0444',
+      content => template('profile/hubot/upstart_init.erb'),
+      before  => Service['hubot'],
+    }
+
+    ## Non-ideal hacks, but prevents the need for forking
+    ## upstream module
+    Service<| title == 'hubot' |> {
+      provider => upstart,
+    }
+    File<| tag == 'hubot::config' |> ->
+    Vcsrepo<| title == '/opt/hubot/hubot' |> {
+      revision => undef,
+    }
   }
 }

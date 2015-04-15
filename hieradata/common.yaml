@@ -2,6 +2,4 @@
 classes:
   - 'puppet::masterless'
 
-st2::version: 0.8.3
-st2::mistral_git_branch: st2-0.8.1
 

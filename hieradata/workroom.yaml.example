@@ -1,6 +1,10 @@
 ### User configurable settings
 ## Place any user-configurable settings here.
 
+## StackStorm Versions
+# st2::version: 0.8.3
+# st2::mistral_git_branch: st2-0.8.1
+
 ## Stanley User Configuration
 # st2::stanley::ssh_public_key: XXXXXX
 # st2::stanley::ssh_key_type: ssh-rsa
