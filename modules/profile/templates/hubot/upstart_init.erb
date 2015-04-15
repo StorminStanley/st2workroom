@@ -1,0 +1,18 @@
+description "<%= @bot_name %>"
+author "Estee Tew"
+
+start on (filesystem and net-device-up IFACE=lo)
+stop on runlevel [!2345]
+
+setuid hubot
+setgid hubot
+
+<%- @env_vars.each do |k,v| -%>
+env <%= k %>=<%= v %>
+<%- end -%>
+
+chdir <%= @hubot_home %>
+
+script
+  bin/hubot --adapter slack --name <%= @bot_name %> --alias <%= @chat_alias %> 2>&1 | logger -t hubot
+end script

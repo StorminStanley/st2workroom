@@ -117,6 +117,18 @@ hubot::dependencies:
   "hubot-irc": ">= 0.2.7"
 ```
 
+Installing an existing install of Hubot is equally easy. Simply replace the `hubot::dependencies` key
+with values for `hubot::git_soucre` and `hubot::ssh_privatekey`. For exapmle, in `hieradata/workroom.yaml`:
+
+```
+hubot::adapter: slack
+hubot::chat_alias: "!"
+hubot::git_source: "git@github.com:StackStorm/hubot-stanley.git"
+hubot::ssh_privatekey: "-----BEGIN RSA PRIVATE KEY-----YYY-----END RSA PRIVATE KEY-----"
+hubot::env_export:
+  HUBOT_SLACK_TOKEN: "XXX"
+```
+
 Refer to https://github.com/github/hubot/blob/master/docs/adapters.md for additional information about
 Hubot Adapters
 
