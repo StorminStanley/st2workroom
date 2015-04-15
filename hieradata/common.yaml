@@ -2,4 +2,12 @@
 classes:
   - 'puppet::masterless'
 
-
+st2::packs:
+  hubot:
+    ensure: present
+    repo_url: https://github.com/StackStorm/st2incubator.git
+    config:
+      endpoint: "http://localhost:8080/hubot/st2"
+  deploy:
+    ensure: present
+    repo_url: https://github.com/StackStorm/st2incubator.git
