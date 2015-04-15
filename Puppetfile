@@ -22,4 +22,5 @@ mod 'counsyl/packer',                '0.9.14'
 mod 'counsyl/sys',                   '0.9.17'
 
 mod 'hubot',
-  :git => 'https://github.com/evenup/evenup-hubot'
+  :git => 'https://github.com/jfryman/evenup-hubot',
+  :ref => 'alias-support'

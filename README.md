@@ -104,6 +104,7 @@ IRC room, for example, simply set the following values in `hieradata/workroom.ya
 
 ```
 hubot::adapter: irc
+hubot::chat_alias: !
 hubot::env_export:
   HUBOT_LOG_LEVEL: DEBUG
   HUBOT_IRC_SERVER: "irc.freenode.net"
