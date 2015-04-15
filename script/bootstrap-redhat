@@ -42,7 +42,7 @@ yum install -y \
   puppet-$PUPPET_VER \
   puppetdb-terminus-$PUPPETDB_TERMINUS_VER \
 
-yum install -y unzip wget ruby git
+yum install -y unzip wget ruby git ruby-devel
 gem install bundler deep_merge --no-ri --no-rdoc
 
 touch /etc/vagrant-bootstrapped

@@ -1,7 +1,10 @@
 class profile::hubot {
   include ::hubot
-  package { 'npm':
-    ensure => present,
+
+  if $::osfamily == 'Debian' {
+    package { 'npm':
+      ensure => present,
+    }
   }
 
   file { '/usr/bin/node':
