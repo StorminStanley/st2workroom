@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+KEY=$1
+
+if [ -z $KEY ]; then
+  echo "$0 <path to ssh private key>"
+  exit 1
+fi
+
+perl -p -e 's/\n/\\n/' $KEY
