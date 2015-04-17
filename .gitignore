@@ -13,3 +13,4 @@ mounts/*
 hieradata/workroom.yaml
 bin/*
 artifacts/*
+.vagrant/*
