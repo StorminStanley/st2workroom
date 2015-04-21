@@ -3,8 +3,13 @@
 
 ## Need to install dotenv in your vagrant environment
 ## vagrant plugin install vagrant-dotenv
-['dotenv', 'deep_merge'].each do |plugin|
-  system("vagrant plugin install #{plugin}") unless Vagrant.has_plugin?(plugin)
+REQUIRED_PLUGINS = %w(dotenv deep_merge)
+exit unless REQUIRED_PLUGINS.all? do |plugin|
+  Vagrant.has_plugin?(plugin) || (
+  puts "The #{plugin} plugin is required. Please install it with:"
+  puts "$ vagrant plugin install #{plugin}"
+  false
+  )
 end
 
 begin
