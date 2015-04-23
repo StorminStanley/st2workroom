@@ -46,18 +46,6 @@ To SSH into the machine, simply type the following command:
   vagrant ssh st2express
 ```
 
-NOTE: In the event you receive an error related to IP conflict, Edit the `private_neworks` address in `stacks/st2.yaml`, and adjust the third octet to a non-conflicting value. For example:
-
-```
-st2express:
-  ...
-    private_networks:
-        - 172.168.50.10
-```
-
-The third octet is now set to `50` as opposed to `100`, the default value. Once changed, reload vagrant with the `vagrant reload` command.
-
-
 ### st2dev
 
 st2dev is used as a clean room environment to develop StackStorm against. This machine downloads all
