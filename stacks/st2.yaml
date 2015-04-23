@@ -12,16 +12,21 @@ st2dev:
   puppet:
     facts:
       role: st2dev
+  private_networks:
+    - 172.168.60.10
 st2express:
   <<: *defaults
   hostname: st2express
   puppet:
     facts:
       role: st2express
+  private_networks:
+    - 172.168.100.11
 st2factory:
   <<: *defaults
   hostname: st2factory
   puppet:
     facts:
       role: st2factory
-
+  private_networks:
+    - 172.168.50.12
