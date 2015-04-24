@@ -21,7 +21,7 @@ st2express:
     facts:
       role: st2express
   private_networks:
-    - 172.168.100.11
+    - 172.168.50.11
 st2factory:
   <<: *defaults
   hostname: st2factory
