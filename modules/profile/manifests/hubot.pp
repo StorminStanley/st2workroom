@@ -22,10 +22,15 @@ class profile::hubot(
 
   # Accomidate a custom hubot install vs default
   if $::hubot::git_source {
-    $env_vars   = hiera_hash('hubot::env_export', {})
-    $hubot_home = "${::hubot::root_dir}/${bot_name}"
-    $adapter    = $::hubot::adapter
-    $chat_alias = $::hubot::chat_alias
+    $hiera_env_vars = hiera_hash('hubot::env_export', {})
+    $stackstorm_env_vars = {
+      'EXPRESS_PORT' => '8081',
+    }
+    $env_vars = merge($hiera_env_vars, $stackstorm_env_vars)
+
+    $hubot_home     = "${::hubot::root_dir}/${bot_name}"
+    $adapter        = $::hubot::adapter
+    $chat_alias     = $::hubot::chat_alias
 
     file { '/etc/init/hubot.conf':
       ensure  => file,
