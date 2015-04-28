@@ -104,6 +104,11 @@ if [ ! -d $PROJECT_ROOT/graphs/${NODE} ]; then
   mkdir -p $PROJECT_ROOT/graphs/${NODE}
 fi
 
+## Make sure apt is up-to-date if a Debian box
+if [ -e /usr/bin/apt-get ]; then
+  apt-get update
+fi
+
 puppet apply $PUPPET_DEBUG_ARGS --verbose --environment $environment \
   --config $PROJECT_ROOT/puppet.conf \
   --graph --graphdir $PROJECT_ROOT/graphs/${NODE} \
