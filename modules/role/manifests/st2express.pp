@@ -1,5 +1,6 @@
 class role::st2express {
   include ::profile::st2server
+  include ::profile::ruby
   include ::profile::users
 
   if $::osfamily == 'RedHat' and $::operatingsystemmajrelease == '6' {
