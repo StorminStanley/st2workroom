@@ -21,11 +21,11 @@ tool in conjunction with StackStorm
 Currently, the project has support for the following Config Management Tools:
 
 * Puppet
+* Ansible
 
 Additional workrooms will be created for the following languages:
 
 * Chef
-* Ansible
 * Salt
 
 ## Usage
@@ -107,6 +107,13 @@ In the event you would like to develop or test a different target machine, or ne
 number of CPUs/RAM... all of these settings are configured in `stacks/st2.yaml`. Take a look at
 the `defaults` section and adjust accordingly.
 
+### Provision
+By default, `vagrant` provisions the server with puppet according to the roles defined in `stacks/st2.yaml`. To use different provisioner, you would need to change `provision` environment variable. The possible values include:
+ - `puppet-apply` for running `puppet-apply` on a guest machine
+ - `ansible-local` for running `ansible-playbook --connection=local` on a guest machine
+
+For Ansible provision, the path to the playbook in `stacks/st2.yaml` is relative to guest's `/opt/ansible` directory (and also host's `artifact/ansible` directory when they are synced).
+
 ### ChatOps
 
 By default, both `st2express` and `st2dev` come with installed copies of Hubot. This is to allow
@@ -130,7 +137,7 @@ hubot::dependencies:
 ```
 
 Installing an existing install of Hubot is equally easy. Simply replace the `hubot::dependencies` key
-with values for `hubot::git_soucre` and `hubot::ssh_privatekey`. For exapmle, in `hieradata/workroom.yaml`:
+with values for `hubot::git_soucre` and `hubot::ssh_privatekey`. For example, in `hieradata/workroom.yaml`:
 
 ```
 hubot::adapter: slack

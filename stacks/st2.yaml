@@ -17,6 +17,8 @@ st2dev:
 st2express:
   <<: *defaults
   hostname: st2express
+  ansible:
+    playbook: playbooks/st2express.yaml
   puppet:
     facts:
       role: st2express
@@ -24,7 +26,8 @@ st2express:
     - 172.168.50.11
   mounts:
     - '/opt/stackstorm:artifacts/stackstorm'
-  vm_sync: nfs
+    - '/opt/ansible:artifacts/ansible'
+  sync_type: nfs
 st2factory:
   <<: *defaults
   hostname: st2factory
