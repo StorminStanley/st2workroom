@@ -2,6 +2,8 @@
 classes:
   - 'puppet::masterless'
 
+st2::auth: false
+
 st2::packs:
   hubot:
     ensure: present
