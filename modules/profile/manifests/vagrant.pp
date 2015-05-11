@@ -1,7 +1,7 @@
 class profile::vagrant {
   $_packages = $::osfamily ? {
-    'Debian' => ['avahi-daemon', 'ruby-dev'],
-    'RedHat' => ['avahi', 'ruby-devel'],
+    'Debian' => ['avahi-daemon'],
+    'RedHat' => ['avahi'],
   }
 
   package { $_packages:
