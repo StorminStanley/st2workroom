@@ -14,6 +14,7 @@ st2dev:
       role: st2dev
   private_networks:
     - 172.168.60.10
+  sync_type: nfs
 st2express:
   <<: *defaults
   hostname: st2express
