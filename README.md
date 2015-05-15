@@ -75,6 +75,11 @@ To SSH into the machine, simply type the following command:
   vagrant ssh st2dev
 ```
 
+While working with StackStorm, if you are developing on OSX and are mounting filesystems into
+the `st2dev` environment, you should consider setting up a SparseBundle and store your repo there.
+
+Instructions on how to do this can be found at https://plog.logston.me/Vagrant-development-environment-on-OSX/
+
 ### st2factory
 
 st2factory is used as a clean image to build artifacts for distribution (vagrant and docker). This
