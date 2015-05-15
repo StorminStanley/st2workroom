@@ -24,7 +24,7 @@ st2express:
   private_networks:
     - 172.168.50.11
   mounts:
-    - '/opt/stackstorm:artifacts/stackstorm'
+    - '/opt/stackstorm/packs:artifacts/packs'
   sync_type: nfs
 st2factory:
   <<: *defaults
