@@ -226,3 +226,21 @@ st2express:
 ```
 
 The third octet is now set to `50` as opposed to `100`, the default value. Once changed, reload vagrant with the `vagrant reload` command.
+
+### Mounts
+
+Sometimes after editing or adding mounts in `stacks/st2.yaml`, `mounts` section, and firing `vagrant up` or `vagrant reload`, you may see this:
+ 
+```
+==> st2express: Exporting NFS shared folders...
+NFS is reporting that your exports file is invalid. Vagrant does
+this check before making any changes to the file. Please correct
+the issues below and execute "vagrant reload":
+
+exports:3: path contains non-directory or non-existent components: /Volumes/Repo/st2
+exports:3: path contains non-directory or non-existent components: /Volumes/Repo/st2contrib
+exports:3: path contains non-directory or non-existent components: /Volumes/Repo/st2incubator
+exports:3: no usable directories in export entry
+exports:3: using fallback (marked offline): /Volumes/Repo
+```
+FIX: Remove residuals from `/etc/exports`.
