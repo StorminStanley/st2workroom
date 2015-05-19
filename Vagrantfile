@@ -215,6 +215,43 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
           export FACTER_stack=#{@stack.stack}
           /opt/puppet/script/puppet-apply
 EOF
+      when 'ansible-local' then
+        n.vm.provision 'shell', inline: '/vagrant/script/bootstrap-ansible'
+        n.vm.provision 'shell', inline: <<-EOF
+          # Use the current branch by default as the envirnment. Override with environment=XXX
+          export environment=#{VM_ENV}
+
+          # Do not update Gems/Puppetfile/Environments each run
+          export generate_all_environments=0
+
+          # Notify this is a development workspace
+          export development=1
+
+          # Pass through Debug Commands
+          export debug=#{ENV['debug']}
+
+          # (Re)initialize the repo
+          git init /opt/ansible
+          pushd /opt/ansible
+
+          # Add remote
+          git remote add origin https://github.com/stackstorm/ansible-st2 2> /dev/null ||
+          echo "Remote origin already exists"
+
+          # Try to detach HEAD
+          git checkout --detach -q 2> /dev/null &&
+          # if HEAD exist, try to make a fast-forward update of master
+          echo "Fetching latest changes from master branch..." &&
+          (git fetch origin master:master ||
+          echo "Fast-forward on master branch is not possible. Please, reset it manually.") &&
+          # then attach the HEAD back
+          git checkout - -q ||
+          # otherwise, it is likely a new repository, so just create a new master branch off origin
+          ( git fetch origin; git checkout master )
+          # Finally, run playbook locally
+          env PYTHONUNBUFFERED=1 ansible-playbook #{config['ansible']['playbook']} -i 'localhost,' --connection=local
+          popd
+EOF
       else
         puts "Unsupported provisioner: #{PROVISIONER}. Skipping..."
       end

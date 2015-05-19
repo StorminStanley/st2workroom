@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source $DIR/shared-functions
+
+export DEBIAN_FRONTEND=noninteractive
+
+# Add PPA
+sudo apt-get install -y software-properties-common
+sudo apt-add-repository ppa:ansible/ansible
+
+sudo apt-get -y update
+
+# Install Ansible and git
+sudo apt-get install -y ansible git
+
+touch /etc/vagrant-bootstrapped-ansible
