@@ -25,7 +25,6 @@ st2express:
     - 172.168.50.11
   mounts:
     - '/opt/stackstorm/packs:artifacts/packs'
-  sync_type: nfs
 st2factory:
   <<: *defaults
   hostname: st2factory
