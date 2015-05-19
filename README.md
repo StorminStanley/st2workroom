@@ -142,15 +142,17 @@ hubot::dependencies:
 ```
 
 Installing an existing install of Hubot is equally easy. Simply replace the `hubot::dependencies` key
-with values for `hubot::git_soucre` and `hubot::ssh_privatekey`. For example, in `hieradata/workroom.yaml`:
+with a value for `hubot::git_soucre`. For exapmle, in `hieradata/workroom.yaml`:
 
 ```
+# hieradata/workroom.yaml
+---
 hubot::adapter: slack
 hubot::chat_alias: "!"
-hubot::git_source: "git@github.com:StackStorm/hubot-stanley.git"
-hubot::ssh_privatekey: "-----BEGIN RSA PRIVATE KEY-----YYY-----END RSA PRIVATE KEY-----"
 hubot::env_export:
-  HUBOT_SLACK_TOKEN: "XXX"
+  HUBOT_SLACK_TOKEN: "xoxb-XXXX"
+  HUBOT_LOG_LEVEL: debug
+hubot::git_source: "https://github.com/StackStorm/hubot-stanley.git"
 ```
 
 Refer to https://github.com/github/hubot/blob/master/docs/adapters.md for additional information about
@@ -231,3 +233,21 @@ st2express:
 ```
 
 The third octet is now set to `50` as opposed to `100`, the default value. Once changed, reload vagrant with the `vagrant reload` command.
+
+### Mounts
+
+Sometimes after editing or adding mounts in `stacks/st2.yaml`, `mounts` section, and firing `vagrant up` or `vagrant reload`, you may see this:
+
+```
+==> st2express: Exporting NFS shared folders...
+NFS is reporting that your exports file is invalid. Vagrant does
+this check before making any changes to the file. Please correct
+the issues below and execute "vagrant reload":
+
+exports:3: path contains non-directory or non-existent components: /Volumes/Repo/st2
+exports:3: path contains non-directory or non-existent components: /Volumes/Repo/st2contrib
+exports:3: path contains non-directory or non-existent components: /Volumes/Repo/st2incubator
+exports:3: no usable directories in export entry
+exports:3: using fallback (marked offline): /Volumes/Repo
+```
+FIX: Remove residuals from `/etc/exports`.
