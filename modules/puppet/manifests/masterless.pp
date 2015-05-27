@@ -3,6 +3,11 @@ class puppet::masterless(
 ) {
   $offset = fqdn_rand(30)
 
+  $_load_role = "::role::${::role}"
+  if $::role and defined($_load_role) {
+    include $_load_role
+  }
+
   cron { 'puppet agent':
     ensure => absent,
   }
