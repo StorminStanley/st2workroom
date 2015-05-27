@@ -5,11 +5,7 @@
     "debug": "{{env `debug`}}",
     "docker_tag": "{{env `DOCKER_TAG`}}",
     "docker_image": "{{env `DOCKER_IMAGE`}}",
-    "docker_repository": "{{env `DOCKER_REPOSITORY`}}",
-    "docker_login_email": "{{env `DOCKER_LOGIN_EMAIL`}}",
-    "docker_login_username": "{{env `DOCKER_LOGIN_USERNAME`}}",
-    "docker_login_password": "{{env `DOCKER_LOGIN_PASSWORD`}}",
-    "docker_login_server": "{{env `DOCKER_LOGIN_SERVER`}}"
+    "docker_repository": "{{env `DOCKER_REPOSITORY`}}"
   },
   "builders": [
     {
@@ -45,14 +41,6 @@
         "type": "docker-tag",
         "repository": "{{user `docker_repository`}}",
         "tag": "{{user `docker_tag`}}"
-      },
-      {
-        "type": "docker-push",
-        "login": true,
-        "login_email": "{{user `docker_login_email`}}",
-        "login_username": "{{user `docker_login_username`}}",
-        "login_password": "{{user `docker_login_password`}}",
-        "login_server": "{{user `docker_login_server`}}"
       }
     ]
   ]
