@@ -85,11 +85,21 @@ Instructions on how to do this can be found at https://plog.logston.me/Vagrant-d
 st2factory is used as a clean image to build artifacts for distribution (vagrant and docker). This
 machine will download docker and packer in the VM for rapid development.
 
-To build an image with `st2factory`, do the following.
+_Build Docker Containers for Local Usage/Testing_
 
 ```
-  script/build-container
+  script/build-st2-containers
 ```
+
+_Publish Docker Containers to Docker Hub_
+
+```
+  export DOCKER_LOGIN_USERNAME=XXX
+  export DOCKER_LOGIN_PASSWORD=XXX
+  export DOCKER_LOGIN_EMAIL=XXX
+  script/publish-st2-containers
+```
+
 
 This script will automatically boot the `st2factory` image, and begin building artifacts. In addition,
 you may need to set some environment variables. You can do this using `dotenv`, or within your shell.
