@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+export CURRENT_ST2_REF=$(cd /opt/stackstorm/src; git rev-parse HEAD)
+export SUBSYSTEMS=( actionrunner api auth notifier resultstracker rulesengine sensorcontainer )
+
+export DOCKER_TAG=latest
+
+cd /opt/puppet
+docker pull ubuntu:14.04
+
+DOCKER_REPOSITORY=stackstorm/st2base DOCKER_IMAGE=ubuntu:14.04 role=container_st2base script/build-container
+
+for subsystem in ${SUBSYSTEMS[@]}; do
+  echo "Building Docker Container: st2${subsystem}"
+  DOCKER_REPOSITORY=stackstorm/st2${subsystem} DOCKER_IMAGE=stackstorm/st2base:${DOCKER_TAG} role=container_st2${subsystem}
+done
