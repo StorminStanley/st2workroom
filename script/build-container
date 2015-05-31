@@ -20,6 +20,7 @@ function check_var() {
   fi
 }
 
+
 check_var "role" $role
 check_var "DOCKER_REPOSITORY" $DOCKER_REPOSITORY
 check_var "DOCKER_TAG" $DOCKER_TAG
@@ -27,12 +28,20 @@ check_var "DOCKER_LOGIN_USERNAME" $DOCKER_LOGIN_USERNAME
 check_var "DOCKER_LOGIN_PASSWORD" $DOCKER_LOGIN_PASSWORD
 check_var "DOCKER_LOGIN_EMAIL" $DOCKER_LOGIN_EMAIL
 
+# Try to only build locally, unless requested
+PACKER_CONFIG="build-container.json"
+if [ ! -z $DOCKER_PUBLISH ]; then
+  PACKER_CONFIG="build-and-publish-container.json"
+fi
+
 if [ -z $debug ]; then
   export debug=0
 fi
+
 if [ -z $environment ]; then
   environment=current_working_directory
 fi
+
 if [ -z $DOCKER_IMAGE ]; then
   DOCKER_IMAGE="ubuntu:14.04"
 fi
@@ -44,7 +53,7 @@ fi
 
 # Try and determine if we're running in the Vagrant workroom
 if [ -f /etc/vagrant-bootstrapped ]; then
-  packer build $PROJECT_ROOT/packer/docker-container.json
+  packer build $PROJECT_ROOT/packer/$PACKER_CONFIG
 else
   vagrant up st2factory
   vagrant ssh st2factory -- sudo \

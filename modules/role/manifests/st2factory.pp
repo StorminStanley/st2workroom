@@ -1,5 +1,5 @@
 class role::st2factory {
   include ::profile::docker
   include ::profile::packer
-  include ::profle::ruby
+  include ::profile::ruby
 }

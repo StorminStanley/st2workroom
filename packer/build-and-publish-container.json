@@ -8,14 +8,17 @@
     "docker_repository": "{{env `DOCKER_REPOSITORY`}}",
     "docker_login_email": "{{env `DOCKER_LOGIN_EMAIL`}}",
     "docker_login_username": "{{env `DOCKER_LOGIN_USERNAME`}}",
-    "docker_login_password": "{{env `DOCKER_LOGIN_PASSWORD`}}",
-    "docker_login_server": "{{env `DOCKER_LOGIN_SERVER`}}"
+    "docker_login_password": "{{env `DOCKER_LOGIN_PASSWORD`}}"
   },
   "builders": [
     {
       "type": "docker",
       "image": "{{user `docker_image`}}",
       "commit": true,
+      "login": true,
+      "login_email": "{{user `docker_login_email`}}",
+      "login_username": "{{user `docker_login_username`}}",
+      "login_password": "{{user `docker_login_password`}}",
       "volumes": {
         "/opt/puppet": "/opt/puppet"
       }
@@ -51,8 +54,7 @@
         "login": true,
         "login_email": "{{user `docker_login_email`}}",
         "login_username": "{{user `docker_login_username`}}",
-        "login_password": "{{user `docker_login_password`}}",
-        "login_server": "{{user `docker_login_server`}}"
+        "login_password": "{{user `docker_login_password`}}"
       }
     ]
   ]
