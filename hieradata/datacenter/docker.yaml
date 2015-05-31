@@ -3,3 +3,4 @@ sudo::configs:
   vagrant:
     ensure: present
     content: "%wheel ALL=(ALL) NOPASSWD: ALL"
+puppet::masterless::cron: false
