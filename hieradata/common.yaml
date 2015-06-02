@@ -7,7 +7,6 @@ st2::auth: false
 st2::packs:
   hubot:
     ensure: present
-    repo_url: https://github.com/StackStorm/st2incubator.git
     config:
       endpoint: "http://localhost:8081"
   deploy:
