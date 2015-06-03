@@ -2,8 +2,8 @@
 ## Place any user-configurable settings here.
 
 ## StackStorm Versions
-# st2::version: 0.8.3
-# st2::mistral_git_branch: st2-0.8.1
+# st2::version: 0.10.0
+# st2::mistral_git_branch: st2-0.10.0
 
 ## Stanley User Configuration
 # st2::stanley::ssh_public_key: XXXXXX
@@ -16,10 +16,15 @@
 #  - libxml2-devel
 #  - gcc-c++
 # hubot::env_export:
-#  HUBOT_LOG_LEVEL: DEBUG
+#  HUBOT_LOG_LEVEL: "debug"
+#  HUBOT_SLACK_TOKEN: "xoxb-XXXX"
+#  ST2_CHANNEL: "hubot"
+#  ST2_AUTH_USERNAME: "testu"
+#  ST2_AUTH_PASSWORD: "testu"
 # hubot::dependencies:
-#  hubot: ">= 2.6.0 < 3.0.0"
+#  "hubot": ">= 2.6.0 < 3.0.0"
 #  "hubot-scripts": ">= 2.5.0 < 3.0.0"
+#  "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
 
 ## User Configuration
 # users:
