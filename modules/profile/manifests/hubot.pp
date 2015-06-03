@@ -21,7 +21,7 @@ class profile::hubot(
   }
 
   # Accomidate a custom hubot install vs default
-  if $::hubot::git_source {
+  if $::hubot::git_source != undef {
     $hiera_env_vars = hiera_hash('hubot::env_export', {})
     $stackstorm_env_vars = {
       'EXPRESS_PORT' => '8081',
