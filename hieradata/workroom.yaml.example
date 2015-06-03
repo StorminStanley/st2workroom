@@ -12,19 +12,18 @@
 
 ## Hubot Configuration
 # hubot::adapter: slack
-# hubot::build_deps:
-#  - libxml2-devel
-#  - gcc-c++
+# hubot::chat_alias: "!"
 # hubot::env_export:
-#  HUBOT_LOG_LEVEL: "debug"
-#  HUBOT_SLACK_TOKEN: "xoxb-XXXX"
-#  ST2_CHANNEL: "hubot"
-#  ST2_AUTH_USERNAME: "testu"
-#  ST2_AUTH_PASSWORD: "testu"
+#   HUBOT_SLACK_TOKEN: "xxxx"
+#   HUBOT_LOG_LEVEL: debug
+# hubot::external_scripts:
+#   - "hubot-stackstorm"
 # hubot::dependencies:
-#  "hubot": ">= 2.6.0 < 3.0.0"
-#  "hubot-scripts": ">= 2.5.0 < 3.0.0"
-#  "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
+#   "hubot": ">= 2.6.0 < 3.0.0"
+#   "hubot-scripts": ">= 2.5.0 < 3.0.0"
+#   "hubot-slack": ">=3.3.0 < 4.0.0"
+#   "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
+
 
 ## User Configuration
 # users:
