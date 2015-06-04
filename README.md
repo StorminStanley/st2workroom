@@ -145,6 +145,7 @@ hubot::env_export:
   HUBOT_IRC_ROOMS: "#stackstorm"
   HUBOT_IRC_NICK: "hubot-stanley"
   HUBOT_IRC_UNFLOOD: true
+  EXPRESS_PORT: 8081
 hubot::external_scripts:
   - "hubot-stackstorm"
 hubot::dependencies:
@@ -168,9 +169,12 @@ hubot::adapter: slack
 hubot::chat_alias: "!"
 hubot::env_export:
   HUBOT_SLACK_TOKEN: "xoxb-XXXX"
-  HUBOT_LOG_LEVEL: debug
+  HUBOT_LOG_LEVEL: DEBUG
+  EXPRESS_PORT: 8081
 hubot::git_source: "https://github.com/StackStorm/hubot-stanley.git"
 ```
+
+Take note of the `EXPRESS_PORT` environment variable. Hubot's HTTP port in `st2workroom` needs to be moved to `TCP 8081` to avoid port conflict with `st2web`, which serves on `TCP 8080`.
 
 Refer to https://github.com/github/hubot/blob/master/docs/adapters.md for additional information about
 Hubot Adapters
