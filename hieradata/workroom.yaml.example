@@ -2,8 +2,8 @@
 ## Place any user-configurable settings here.
 
 ## StackStorm Versions
-# st2::version: 0.10.0
-# st2::mistral_git_branch: st2-0.10.0
+st2::version: 0.10.0
+st2::mistral_git_branch: st2-0.10.0
 
 ## Stanley User Configuration
 # st2::stanley::ssh_public_key: XXXXXX
@@ -11,20 +11,21 @@
 # st2::stanley::ssh_private_key: XXXXXX
 
 ## Hubot Configuration
-# hubot::adapter: slack
-# hubot::build_deps:
-#  - libxml2-devel
-#  - gcc-c++
-# hubot::env_export:
-#  HUBOT_LOG_LEVEL: "debug"
-#  HUBOT_SLACK_TOKEN: "xoxb-XXXX"
-#  ST2_CHANNEL: "hubot"
-#  ST2_AUTH_USERNAME: "testu"
-#  ST2_AUTH_PASSWORD: "testu"
-# hubot::dependencies:
-#  "hubot": ">= 2.6.0 < 3.0.0"
-#  "hubot-scripts": ">= 2.5.0 < 3.0.0"
-#  "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
+hubot::chat_alias: "!"
+hubot::adapter: "slack"
+hubot::env_export:
+ HUBOT_LOG_LEVEL: "debug"
+ HUBOT_SLACK_TOKEN: "xoxb-XXXX"
+ ST2_CHANNEL: "hubot"
+ ST2_AUTH_USERNAME: "testu"
+ ST2_AUTH_PASSWORD: "testu"
+hubot::external_scripts:
+  - "hubot-stackstorm"
+hubot::dependencies:
+  - "hubot": ">= 2.6.0 < 3.0.0"
+  - "hubot-scripts": ">= 2.5.0 < 3.0.0"
+  - "hubot-slack": ">=3.3.0 < 4.0.0"
+  - "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
 
 ## User Configuration
 # users:
