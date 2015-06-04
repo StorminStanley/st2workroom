@@ -145,14 +145,21 @@ hubot::env_export:
   HUBOT_IRC_ROOMS: "#stackstorm"
   HUBOT_IRC_NICK: "hubot-stanley"
   HUBOT_IRC_UNFLOOD: true
+hubot::external_scripts:
+  - "hubot-stackstorm"
 hubot::dependencies:
   hubot: ">= 2.6.0 < 3.0.0"
   "hubot-scripts": ">= 2.5.0 < 3.0.0"
   "hubot-irc": ">= 0.2.7"
+  "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
 ```
 
-Installing an existing install of Hubot is equally easy. Simply replace the `hubot::dependencies` key
-with a value for `hubot::git_soucre`. For exapmle, in `hieradata/workroom.yaml`:
+Installing an existing install of Hubot is equally easy. Make sure that your Hubot installation has 
+the `hubot-stackstorm` plugin installed and configured. Refer to 
+https://github.com/stackstorm/hubot-stackstorm for install instructions. Once done, 
+simply replace the `hubot::dependencies` key with a value for `hubot::git_soucre`. 
+
+For exapmle, in `hieradata/workroom.yaml`:
 
 ```
 # hieradata/workroom.yaml
