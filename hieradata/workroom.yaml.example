@@ -14,11 +14,11 @@ st2::mistral_git_branch: st2-0.10.0
 hubot::chat_alias: "!"
 hubot::adapter: "slack"
 hubot::env_export:
- HUBOT_LOG_LEVEL: "debug"
- HUBOT_SLACK_TOKEN: "xoxb-XXXX"
- ST2_CHANNEL: "hubot"
- ST2_AUTH_USERNAME: "testu"
- ST2_AUTH_PASSWORD: "testu"
+  HUBOT_LOG_LEVEL: "debug"
+  HUBOT_SLACK_TOKEN: "xoxb-XXXX"
+  ST2_CHANNEL: "hubot"
+  ST2_AUTH_USERNAME: "testu"
+  ST2_AUTH_PASSWORD: "testu"
 hubot::external_scripts:
   - "hubot-stackstorm"
 hubot::dependencies:
