@@ -1,9 +1,11 @@
 ### User configurable settings
 ## Place any user-configurable settings here.
 
-## StackStorm Versions
-st2::version: 0.10.0
-st2::mistral_git_branch: st2-0.10.0
+## StackStorm Versions. Only set these if you need
+## a specific version installed. Otherwise, you will get latest
+## stable
+# st2::version: 0.10.0
+# st2::mistral_git_branch: st2-0.10.0
 
 ## Stanley User Configuration
 # st2::stanley::ssh_public_key: XXXXXX
@@ -11,21 +13,84 @@ st2::mistral_git_branch: st2-0.10.0
 # st2::stanley::ssh_private_key: XXXXXX
 
 ## Hubot Configuration
-hubot::chat_alias: "!"
-hubot::adapter: "slack"
-hubot::env_export:
- HUBOT_LOG_LEVEL: "debug"
- HUBOT_SLACK_TOKEN: "xoxb-XXXX"
- ST2_CHANNEL: "hubot"
- ST2_AUTH_USERNAME: "testu"
- ST2_AUTH_PASSWORD: "testu"
-hubot::external_scripts:
-  - "hubot-stackstorm"
-hubot::dependencies:
-  - "hubot": ">= 2.6.0 < 3.0.0"
-  - "hubot-scripts": ">= 2.5.0 < 3.0.0"
-  - "hubot-slack": ">=3.3.0 < 4.0.0"
-  - "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
+### Slack Example Config
+## See https://github.com/slackhq/hubot-slack#configuration
+# hubot::chat_alias: "!"
+# hubot::adapter: "slack"
+# hubot::env_export:
+#  HUBOT_LOG_LEVEL: "debug"
+#  HUBOT_SLACK_TOKEN: "xoxb-XXXX"
+#  ST2_CHANNEL: "hubot"
+#  ST2_AUTH_USERNAME: "testu"
+#  ST2_AUTH_PASSWORD: "testu"
+# hubot::external_scripts:
+#   - "hubot-stackstorm"
+# hubot::dependencies:
+#   - "hubot": ">= 2.6.0 < 3.0.0"
+#   - "hubot-scripts": ">= 2.5.0 < 3.0.0"
+#   - "hubot-slack": ">=3.3.0 < 4.0.0"
+#   - "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
+
+### Hipchat Example Config
+## See https://github.com/hipchat/hubot-hipchat#adapter-configuration for more details
+# hubot::chat_alias: "!"
+# hubot::adapter: "hipchat"
+# hubot::env_export:
+#  HUBOT_LOG_LEVEL: "debug"
+#  HUBOT_HIPCHAT_JID: "XXX"
+#  HUBOT_HIPCHAT_PASSWORD: "XXX"
+#  HUBOT_XMPP_DOMAIN: "XXX" # Use only if using HipChat Server Beta
+#  ST2_CHANNEL: "hubot"
+#  ST2_AUTH_USERNAME: "testu"
+#  ST2_AUTH_PASSWORD: "testu"
+# hubot::external_scripts:
+#   - "hubot-stackstorm"
+# hubot::dependencies:
+#   - "hubot": ">= 2.6.0 < 3.0.0"
+#   - "hubot-scripts": ">= 2.5.0 < 3.0.0"
+#   - "hubot-hipchat": ">=2.12.0 < 3.0.0"
+#   - "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
+
+### FlowDock Example
+## See https://github.com/flowdock/hubot-flowdock#configuring-the-adapter
+# hubot::chat_alias: "!"
+# hubot::adapter: "flowdock"
+# hubot::env_export:
+#  HUBOT_LOG_LEVEL: "debug"
+#  HUBOT_FLOWDOCK_API_TOKEN: "XXX"
+#  HUBOT_FLOWDOCK_LOGIN_EMAIL: "XXX"
+#  HUBOT_FLOWDOCK_LOGIN_PASSWORD: "XXX"
+#  ST2_CHANNEL: "hubot"
+#  ST2_AUTH_USERNAME: "testu"
+#  ST2_AUTH_PASSWORD: "testu"
+# hubot::external_scripts:
+#   - "hubot-stackstorm"
+# hubot::dependencies:
+#   - "hubot": ">= 2.6.0 < 3.0.0"
+#   - "hubot-scripts": ">= 2.5.0 < 3.0.0"
+#   - "hubot-flowdock": ">=0.7.6 < 1.0.0"
+#   - "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
+
+### IRC Example
+## See https://github.com/nandub/hubot-irc#configuring-the-adapter
+# hubot::chat_alias: "!"
+# hubot::adapter: "irc"
+# hubot::env_export:
+#  HUBOT_LOG_LEVEL: "debug"
+#  HUBOT_IRC_SERVER: "XXX"
+#  HUBOT_IRC_ROOMS: "#room1,#room2"
+#  HUBOT_IRC_NICK: "st2bot"
+#  HUBOT_IRC_UNFLOOD: true
+#  ST2_CHANNEL: "hubot"
+#  ST2_AUTH_USERNAME: "testu"
+#  ST2_AUTH_PASSWORD: "testu"
+# hubot::external_scripts:
+#   - "hubot-stackstorm"
+# hubot::dependencies:
+#   - "hubot": ">= 2.6.0 < 3.0.0"
+#   - "hubot-scripts": ">= 2.5.0 < 3.0.0"
+#   - "hubot-irc": ">=0.2.7 < 1.0.0"
+#   - "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
 
 ## User Configuration
 # users:
