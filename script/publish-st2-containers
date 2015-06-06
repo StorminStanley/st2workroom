@@ -11,5 +11,5 @@ DOCKER_REPOSITORY=stackstorm/st2base DOCKER_IMAGE=ubuntu:14.04 role=container_st
 
 for subsystem in ${SUBSYSTEMS[@]}; do
   echo "Building Docker Container: st2${subsystem}"
-  DOCKER_REPOSITORY=stackstorm/st2${subsystem} DOCKER_IMAGE=stackstorm/st2base:${DOCKER_TAG} role=container_st2${subsystem}
+  DOCKER_REPOSITORY=stackstorm/st2${subsystem} DOCKER_IMAGE=stackstorm/st2base:${DOCKER_TAG} role=container_st2${subsystem} script/build-container
 done

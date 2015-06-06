@@ -145,14 +145,22 @@ hubot::env_export:
   HUBOT_IRC_ROOMS: "#stackstorm"
   HUBOT_IRC_NICK: "hubot-stanley"
   HUBOT_IRC_UNFLOOD: true
+  EXPRESS_PORT: 8081
+hubot::external_scripts:
+  - "hubot-stackstorm"
 hubot::dependencies:
   hubot: ">= 2.6.0 < 3.0.0"
   "hubot-scripts": ">= 2.5.0 < 3.0.0"
   "hubot-irc": ">= 0.2.7"
+  "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
 ```
 
-Installing an existing install of Hubot is equally easy. Simply replace the `hubot::dependencies` key
-with a value for `hubot::git_soucre`. For exapmle, in `hieradata/workroom.yaml`:
+Installing an existing install of Hubot is equally easy. Make sure that your Hubot installation has 
+the `hubot-stackstorm` plugin installed and configured. Refer to 
+https://github.com/stackstorm/hubot-stackstorm for install instructions. Once done, 
+simply replace the `hubot::dependencies` key with a value for `hubot::git_soucre`. 
+
+For exapmle, in `hieradata/workroom.yaml`:
 
 ```
 # hieradata/workroom.yaml
@@ -161,9 +169,12 @@ hubot::adapter: slack
 hubot::chat_alias: "!"
 hubot::env_export:
   HUBOT_SLACK_TOKEN: "xoxb-XXXX"
-  HUBOT_LOG_LEVEL: debug
+  HUBOT_LOG_LEVEL: DEBUG
+  EXPRESS_PORT: 8081
 hubot::git_source: "https://github.com/StackStorm/hubot-stanley.git"
 ```
+
+Take note of the `EXPRESS_PORT` environment variable. Hubot's HTTP port in `st2workroom` needs to be moved to `TCP 8081` to avoid port conflict with `st2web`, which serves on `TCP 8080`.
 
 Refer to https://github.com/github/hubot/blob/master/docs/adapters.md for additional information about
 Hubot Adapters
