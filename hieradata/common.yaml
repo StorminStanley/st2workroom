@@ -9,6 +9,5 @@ st2::packs:
     ensure: present
     config:
       endpoint: "http://localhost:8081"
-  deploy:
+  st2:
     ensure: present
-    repo_url: https://github.com/StackStorm/st2incubator.git
