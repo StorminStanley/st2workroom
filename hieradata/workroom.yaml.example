@@ -25,10 +25,10 @@
 # hubot::external_scripts:
 #   - "hubot-stackstorm"
 # hubot::dependencies:
-#   - "hubot": ">= 2.6.0 < 3.0.0"
-#   - "hubot-scripts": ">= 2.5.0 < 3.0.0"
-#   - "hubot-slack": ">=3.3.0 < 4.0.0"
-#   - "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
+#   "hubot": ">= 2.6.0 < 3.0.0"
+#   "hubot-scripts": ">= 2.5.0 < 3.0.0"
+#   "hubot-slack": ">=3.3.0 < 4.0.0"
+#   "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
 
 ### Hipchat Example Config
 ## See https://github.com/hipchat/hubot-hipchat#adapter-configuration for more details
@@ -45,10 +45,10 @@
 # hubot::external_scripts:
 #   - "hubot-stackstorm"
 # hubot::dependencies:
-#   - "hubot": ">= 2.6.0 < 3.0.0"
-#   - "hubot-scripts": ">= 2.5.0 < 3.0.0"
-#   - "hubot-hipchat": ">=2.12.0 < 3.0.0"
-#   - "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
+#   "hubot": ">= 2.6.0 < 3.0.0"
+#   "hubot-scripts": ">= 2.5.0 < 3.0.0"
+#   "hubot-hipchat": ">=2.12.0 < 3.0.0"
+#   "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
 
 ### FlowDock Example
 ## See https://github.com/flowdock/hubot-flowdock#configuring-the-adapter
@@ -65,10 +65,10 @@
 # hubot::external_scripts:
 #   - "hubot-stackstorm"
 # hubot::dependencies:
-#   - "hubot": ">= 2.6.0 < 3.0.0"
-#   - "hubot-scripts": ">= 2.5.0 < 3.0.0"
-#   - "hubot-flowdock": ">=0.7.6 < 1.0.0"
-#   - "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
+#   "hubot": ">= 2.6.0 < 3.0.0"
+#   "hubot-scripts": ">= 2.5.0 < 3.0.0"
+#   "hubot-flowdock": ">=0.7.6 < 1.0.0"
+#   "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
 
 ### IRC Example
 ## See https://github.com/nandub/hubot-irc#configuring-the-adapter
@@ -86,10 +86,11 @@
 # hubot::external_scripts:
 #   - "hubot-stackstorm"
 # hubot::dependencies:
-#   - "hubot": ">= 2.6.0 < 3.0.0"
-#   - "hubot-scripts": ">= 2.5.0 < 3.0.0"
-#   - "hubot-irc": ">=0.2.7 < 1.0.0"
-#   - "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
+#   "hubot": ">= 2.6.0 < 3.0.0"
+#   "hubot-scripts": ">= 2.5.0 < 3.0.0"
+#   "hubot-irc": ">=0.2.7 < 1.0.0"
+#   "hubot-stackstorm": ">= 0.1.0 < 0.2.0"
+
 ## User Configuration
 # users:
 #   manas:
