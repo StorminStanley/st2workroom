@@ -10,3 +10,4 @@ chown -R vagrant /home/vagrant/.ssh
 chmod -R go-rwsx /home/vagrant/.ssh
 
 echo "%wheel        ALL=(ALL) NOPASSWD: SETENV: ALL" >> /etc/sudoers
+echo "vagrant       ALL=(ALL) NOPASSWD: SETENV: ALL" >> /etc/sudoers
