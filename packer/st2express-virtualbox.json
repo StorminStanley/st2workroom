@@ -1,61 +1,39 @@
 {
   "variables": {
-    "cache_dir": "{{env `PACKER_CACHE_DIR`}}",
-    "st2_version": "{{env `ST2_VERSION`}}",
-    "environment": "{{env `environment`}}",
-    "role": "{{env `role`}}"
+    "atlas_token": "{{env `ATLAS_TOKEN`}}",
+    "environment": "current_working_directory",
+    "role": "st2express"
   },
   "provisioners": [
     {
       "type": "shell",
       "execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
-      "inline": [
-        "mkdir -p /opt/puppet",
-        "chmod 777 /opt/puppet"
-      ]
-    },
-    {
-      "type": "file",
-      "source": "../",
-      "destination": "/opt/puppet"
-    },
-    {
-      "type": "shell",
-      "execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
       "environment_vars": [
-        "environment={{.environment}}",
-        "role={{.role}}"
+        "environment={{user `environment`}}",
+        "FACTER_role={{user `role`}}",
+        "FACTER_datacenter=vagrant"
       ],
-      "override": {
-        "virtualbox-iso": {
-          "scripts": [
-            "scripts/vagrant.sh",
-            "scripts/ubuntu/base.sh",
-            "scripts/ubuntu/virtualbox.sh",
-            "scripts/bootstrap-puppet.sh",
-            "scripts/puppet.sh",
-            "scripts/ubuntu/cleanup.sh",
-            "scripts/zerodisk.sh"
-          ]
-        },
-        "vmware-iso": {
-          "scripts": [
-            "scripts/vagrant.sh",
-            "scripts/ubuntu/base.sh",
-            "scripts/ubuntu/vmware.sh",
-            "scripts/bootstrap-puppet.sh",
-            "scripts/puppet.sh",
-            "scripts/ubuntu/cleanup.sh",
-            "scripts/zerodisk.sh"
-          ]
-        }
-      }
+      "inline": [
+        "apt-get -y install git",
+        "git clone https://github.com/stackstorm/st2workroom /opt/puppet",
+        "/opt/puppet/packer/script/vagrant.sh",
+        "/opt/puppet/packer/script/ubuntu/base.sh",
+        "/opt/puppet/packer/script/ubuntu/virtualbox.sh",
+        "/opt/puppet/packer/script/puppet-st2express.sh",
+        "/opt/puppet/packer/script/ubuntu/cleanup.sh",
+        "/opt/puppet/packer/script/zerodisk.sh"
+      ]
     }
   ],
   "post-processors": [
     {
-      "type": "vagrant",
-      "output": "{{user `cache_dir`}}/baseboxes/st2express-{{user `st2_version`}}-{{.Provider}}.box"
+      "type": "atlas",
+      "token": "{{user `atlas_token`}}",
+      "artifact_type": "vagrant.box",
+      "artifact": "stackstorm/st2express",
+      "metadata": {
+        "provider": "virtualbox"
+      }
     }
   ],
   "builders": [
@@ -89,7 +67,6 @@
       "disk_size": 40960,
       "guest_os_type": "Ubuntu_64",
       "http_directory": "http",
-      "output_directory": "{{user `cache_dir`}}/packer-ubuntu-14.04-server-amd64-virtualbox",
       "iso_checksum": "83aabd8dcf1e8f469f3c72fff2375195",
       "iso_checksum_type": "md5",
       "iso_url": "http://releases.ubuntu.com/14.04/ubuntu-14.04.2-server-amd64.iso",
@@ -133,7 +110,6 @@
       "disk_size": 40960,
       "guest_os_type": "linux",
       "http_directory": "http",
-      "output_directory": "{{user `cache_dir`}}/packer-ubuntu-14.04-server-amd64-vmware",
       "iso_checksum": "83aabd8dcf1e8f469f3c72fff2375195",
       "iso_checksum_type": "md5",
       "iso_url": "http://releases.ubuntu.com/14.04/ubuntu-14.04.2-server-amd64.iso",
