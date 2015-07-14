@@ -3,35 +3,23 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source $DIR/shared-functions
 
-FACTER_VER="2.2.0"
-PUPPET_VER="3.7.1"
-PUPPETDB_VER="2.2.0"
-PUPPETDB_TERMINUS_VER="2.2.0"
-
 export DEBIAN_FRONTEND=noninteractive
 
 # Make sure we have the bare minimum
-apt-get update
-apt-get install -y curl
-
-# Install Puppet Source
-if [ ! -f /etc/apt/sources.list.d/puppetlabs.list ]; then
-  curl -O http://apt.puppetlabs.com/puppetlabs-release-${DISTRIB_CODENAME}.deb
-  dpkg -i puppetlabs-release-${DISTRIB_CODENAME}.deb
+if [ ! $(which curl) ]; then
+  apt-get update
+  apt-get install -y curl
 fi
 
+# Install Puppet Source
+rm /etc/apt/sources.list.d/puppetlabs.list
+curl -O http://apt.puppetlabs.com/puppetlabs-release-pc1-${DISTRIB_CODENAME}.deb
+dpkg -i puppetlabs-release-pc1-${DISTRIB_CODENAME}.deb
+
 apt-get update
 
-# Install Puppet from APT sources
-apt-get -y install \
-  facter=$FACTER_VER-1puppetlabs1 \
-  puppet=$PUPPET_VER-1puppetlabs1 \
-  puppet-common=$PUPPET_VER-1puppetlabs1 \
-  puppetdb-terminus=$PUPPETDB_TERMINUS_VER-1puppetlabs1 \
-  ruby-bundler
-
+apt-get -y install unzip wget ruby ruby-dev git
+apt-get -y install puppet-agent ruby-bundler unzip wget ruby ruby-dev git
 gem install bundler deep_merge --no-ri --no-rdoc
-
-apt-get install -y unzip wget ruby ruby-dev git
 
 touch /etc/vagrant-bootstrapped

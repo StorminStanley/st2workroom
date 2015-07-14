@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
 PROJECT_ROOT=/opt/puppet
+APT_UPDATE_FREQ=30
 NODE=$(hostname -s);
 BUNDLER_ARGS=""
 
-export PATH=/usr/local/bin:$PATH
+export PATH=/opt/puppetlabs/bin:/usr/local/bin:$PATH
+export cache_libraries=1
 
 cd $PROJECT_ROOT
 
@@ -70,8 +72,10 @@ fi
 # Make sure the current working directory is an environment too!
 # This is sort of a hack to support environments while developing
 # on the currently active branch in Vagrant or other environments
-rsync $RSYNC_DEBUG_ARGS -arhz --delete --exclude "environments" --exclude "vendor" \
-  $PROJECT_ROOT/ $PROJECT_ROOT/environments/current_working_directory/
+echo "Setting up 'current_working_directory'..."
+rsync $RSYNC_DEBUG_ARGS -arh --delete --exclude "environments" --exclude "vendor" \
+  --exclude "artifacts" --exclude "graphs" --exclude "packer" --exclude "script" \
+  --exclude ".git" $PROJECT_ROOT/ $PROJECT_ROOT/environments/current_working_directory/
 
 # Set the environment. This should be done *after* R10K has done its thing
 # to determine if it is needed to switch back to production if the branch
@@ -106,7 +110,14 @@ fi
 
 ## Make sure apt is up-to-date if a Debian box
 if [ -e /usr/bin/apt-get ]; then
-  apt-get update
+  ## Only run if we haven't run APT in awhile. Speed up feedback loop
+  if [ -f /var/lib/apt/periodic/update-success-stamp ]; then
+    if [ `find /var/lib/apt/periodic/update-success-stamp -mmin +${APT_UPDATE_FREQ} | grep apt` ]; then
+      apt-get update
+    fi
+  else
+    apt-get update
+  fi
 fi
 
 puppet apply $PUPPET_DEBUG_ARGS --verbose --environment $environment \
