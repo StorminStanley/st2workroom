@@ -1,23 +1,33 @@
 class puppet::masterless(
-  $cron = true,
-) {
+  $cron    = true,
+  $version = $::puppet::version,
+) inherits puppet {
   $offset = fqdn_rand(30)
+
+  package { 'puppet-agent':
+    ensure => "${version}-1${::lsbdistcodename}",
+  }
+
+  file { '/usr/bin/facter':
+    ensure => symlink,
+    target => '/opt/puppetlabs/bin/facter',
+  }
+  file { '/usr/bin/puppet':
+    ensure => symlink,
+    target => '/opt/puppetlabs/bin/puppet',
+  }
 
   $_load_role = "::role::${::role}"
   if $::role and defined($_load_role) {
     include $_load_role
   }
 
-  cron { 'puppet agent':
-    ensure => absent,
-  }
-
   if $cron {
     cron { 'puppet-apply':
       ensure  => present,
       user    => 'root',
-      minute  => "${offset}",
-      command => "/opt/puppet/script/puppet-apply"
+      minute  => $offset,
+      command => "${::settings::confdir}/script/puppet-apply",
     }
   }
 
@@ -26,10 +36,16 @@ class puppet::masterless(
     owner  => 'root',
     group  => 'root',
     mode   => '0755',
-    source => "/opt/puppet/script/puppet-apply",
+    source => "${::settings::confdir}/script/puppet-apply",
   }
-  file { '/opt/puppet/current_environment':
-   ensure => file,
+
+  file { "${::settings::confdir}/current_environment":
+    ensure  => file,
     content => "${::environment}\n",
+  }
+
+  file { "${::settings::confdir}/current_role":
+    ensure  => file,
+    content => "${::role}\n",
   }
 }

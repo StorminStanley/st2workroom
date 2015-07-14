@@ -10,7 +10,9 @@
 #
 # Sample Usage:
 #
-class puppet {
+class puppet(
+  $version = '1.2.0',
+) {
   require puppet::deps
 
 }
