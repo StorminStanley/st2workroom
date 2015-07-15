@@ -24,8 +24,6 @@ st2express:
       role: st2express
   private_networks:
     - 172.168.50.11
-  mounts:
-    - '/opt/stackstorm/packs:artifacts/packs'
 st2factory:
   <<: *defaults
   hostname: st2factory
