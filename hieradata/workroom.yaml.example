@@ -22,6 +22,7 @@
 #  ST2_CHANNEL: "hubot"
 #  ST2_AUTH_USERNAME: "testu"
 #  ST2_AUTH_PASSWORD: "testu"
+#  EXPRESS_PORT: 8081
 # hubot::external_scripts:
 #   - "hubot-stackstorm"
 # hubot::dependencies:
@@ -42,6 +43,7 @@
 #  ST2_CHANNEL: "hubot"
 #  ST2_AUTH_USERNAME: "testu"
 #  ST2_AUTH_PASSWORD: "testu"
+#  EXPRESS_PORT: 8081
 # hubot::external_scripts:
 #   - "hubot-stackstorm"
 # hubot::dependencies:
@@ -62,6 +64,7 @@
 #  ST2_CHANNEL: "hubot"
 #  ST2_AUTH_USERNAME: "testu"
 #  ST2_AUTH_PASSWORD: "testu"
+#  EXPRESS_PORT: 8081
 # hubot::external_scripts:
 #   - "hubot-stackstorm"
 # hubot::dependencies:
@@ -83,6 +86,7 @@
 #  ST2_CHANNEL: "hubot"
 #  ST2_AUTH_USERNAME: "testu"
 #  ST2_AUTH_PASSWORD: "testu"
+#  EXPRESS_PORT: 8081
 # hubot::external_scripts:
 #   - "hubot-stackstorm"
 # hubot::dependencies:
