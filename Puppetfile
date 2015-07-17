@@ -22,13 +22,21 @@ mod 'stackstorm/st2',                '0.4.9'
 mod 'garethr/docker',                '3.5.0'
 mod 'counsyl/packer',                '0.9.14'
 mod 'counsyl/sys',                   '0.9.17'
-mod 'engage/uwsgi',                  '1.2.0'
 mod 'jfryman/nginx',                 '0.2.7'
 mod 'jfryman/tiller',                '0.1.0'
 mod 'ajcrowe/supervisord',           '0.5.2'
 mod 'jamtur01/httpauth',             '0.0.3'
+mod 'camptocamp/openssl',            '1.3.9'
+mod 'puppetlabs/ntp',                '4.0.0'
+mod 'ghoneycutt/pam',                '2.19.0'
+mod 'ghoneycutt/nsswitch',           '1.2.1'
+mod 'ghoneycutt/common',             '1.3.0'
 # mod 'evenup/hubot',                  '0.2.0'
 
 mod 'hubot',
   :git => 'https://github.com/jfryman/evenup-hubot',
   :ref => 'fix-node-declaration'
+
+mod 'uwsgi',
+  :git => 'https://github.com/jfryman/puppet-uwsgi',
+  :ref => 'toggle-package-install'
