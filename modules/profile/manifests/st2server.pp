@@ -66,14 +66,17 @@ class profile::st2server {
 
   $_python_pack = $::st2::profile::server::_python_pack
 
+  # Manage uwsgi with module, but install it using python pack
+  # There is an odd error with installing directly via
+  # the `pip` provider when used via Class['uwsgi']
   class { '::uwsgi':
-    ensure          => present,
     install_package => false,
-    log_rotate      => true,
+    log_rotate      => 'yes',
   }
 
   python::pip { 'uwsgi':
     ensure  => present,
+    before  => Class['::uwsgi'],
   }
 
   # ### Application Configuration
@@ -195,20 +198,7 @@ class profile::st2server {
     location            => '/',
     location_custom_cfg => {
       'uwsgi_pass'  => 'st2auth',
-      'uwsgi_param' => [
-        'QUERY_STRING    $query_string',
-        'REQUEST_METHOD  $request_method',
-        'CONTENT_TYPE    $content_type',
-        'CONTENT_LENGTH  $content_length',
-        'REQUEST_URI     $request_uri',
-        'PATH_INFO       $document_uri',
-        'DOCUMENT_ROOT   $document_root',
-        'SERVER_PROTOCOL $server_protocol',
-        'REMOTE_ADDR     $remote_addr',
-        'REMOTE_PORT     $remote_port',
-        'SERVER_PORT     $server_port',
-        'SERVER_NAME     $server_name',
-      ],
+      'include'     => 'uwsgi_params',
     },
   }
 
@@ -239,17 +229,19 @@ class profile::st2server {
     content => '@include common-auth',
   }
 
-  # uwsgi::manage_app { 'st2auth':
-  #   ensure => present,
-  #   config => {
-  #     'socket'    => $_st2auth_socket,
-  #     'processes' => $_st2auth_processes,
-  #     'threads'   => $_st2auth_threads,
-  #     'wsgi-file' => "${_python_pack}/st2auth/wsgi.py",
-  #     'plugins'   => 'python',
-  #     'logto'     => '/var/log/uwsgi/st2auth.log',
-  #   }
-  # }
+  uwsgi::app { 'st2auth':
+    ensure              => present,
+    uid                 => $_nginx_daemon_user,
+    gid                 => $_nginx_daemon_user,
+    application_options => {
+      'socket'    => $_st2auth_socket,
+      'processes' => $_st2auth_processes,
+      'threads'   => $_st2auth_threads,
+      'wsgi-file' => "${_python_pack}/st2auth/wsgi.py",
+      'plugins'   => 'python',
+      'logto'     => '/var/log/uwsgi/st2auth.log',
+    }
+  }
 
   nginx::resource::vhost { 'st2auth':
     ensure               => present,
@@ -275,20 +267,7 @@ class profile::st2server {
     location            => '/',
     location_custom_cfg => {
       'uwsgi_pass'  => 'st2auth',
-      'uwsgi_param' => [
-        'QUERY_STRING    $query_string',
-        'REQUEST_METHOD  $request_method',
-        'CONTENT_TYPE    $content_type',
-        'CONTENT_LENGTH  $content_length',
-        'REQUEST_URI     $request_uri',
-        'PATH_INFO       $document_uri',
-        'DOCUMENT_ROOT   $document_root',
-        'SERVER_PROTOCOL $server_protocol',
-        'REMOTE_ADDR     $remote_addr',
-        'REMOTE_PORT     $remote_port',
-        'SERVER_PORT     $server_port',
-        'SERVER_NAME     $server_name',
-      ],
+      'include'     => 'uwsgi_params',
     },
   }
 
