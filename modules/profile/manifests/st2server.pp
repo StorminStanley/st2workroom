@@ -7,10 +7,6 @@ class profile::st2server {
   $_user_ssl_key = hiera('st2::ssl_private_key', undef)
   $_hostname = hiera('system::hostname', $::fqdn)
   $_host_ip = hiera('system::ipaddress', $::ipaddress)
-  $_st2auth_processes = hiera('st2::auth_processes', 2)
-  $_st2auth_threads = hiera('st2::auth_threads', 25)
-  $_st2api_processes = hiera('st2::api_processes', 2)
-  $_st2api_threads = hiera('st2::api_threads', 25)
 
   # Names this server could be
   $_server_names = [
