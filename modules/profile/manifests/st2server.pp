@@ -22,9 +22,9 @@ class profile::st2server {
   ]
 
   # Ports that uwsgi advertises on 127.0.0.1
-  $_st2auth_socket = '/tmp/st2auth.sock'
-  $_st2api_socket = '/tmp/st2api.sock'
-  $_st2installer_socket = '/tmp/st2installer.sock'
+  $_st2auth_port = '9100'
+  $_st2api_port = '9101'
+  $_st2installer_port = '9102'
 
   # NGINX SSL Settings. Provides A+ Setting. https://cipherli.st
   $_ssl_protocols = 'TLSv1 TLSv1.1 TLSv1.2'
@@ -70,10 +70,14 @@ class profile::st2server {
   }
 
   # Install StackStorm, after all pre-requsities have been satisifed
-  # Use proxy authentication for pam auth.
+  # Use proxy authentication for pam auth, and setup st2api and st2auth
+  # listeners on localhost to add SSL reverse proxy via NGINX
   anchor { 'st2::pre_reqs': }
   -> class { '::st2::profile::client': }
-  -> class { '::st2::profile::server': }
+  -> class { '::st2::profile::server':
+    st2api_listen_ip  => '127.0.0.1',
+    st2auth_listen_ip => '127.0.0.1',
+  }
   -> class { '::st2::auth::proxy': }
   -> class { '::st2::profile::web': }
 
@@ -188,6 +192,7 @@ class profile::st2server {
   ### Shared proxy headers for each reverse proxy
   nginx::resource::vhost { 'st2api':
     ensure               => present,
+    listen_ip            => $_host_ip,
     listen_port          => 9101,
     ssl                  => true,
     ssl_port             => 9101,
@@ -195,25 +200,13 @@ class profile::st2server {
     ssl_key              => $_ssl_key,
     ssl_protocols        => $_ssl_protocols,
     ssl_ciphers          => $_cipher_list,
+    server_name          => $_server_names,
     vhost_cfg_prepend    => $_ssl_options,
-    use_default_location => false,
+    proxy                => 'http://st2api',
   }
 
-  nginx::resource::location { 'st2api-uwsgi':
-    vhost               => 'st2api',
-    ssl_only            => true,
-    location            => '/',
-    location_custom_cfg => {
-      'uwsgi_pass'  => "unix:///${_st2api_socket}",
-      'include'     => 'uwsgi_params',
-    },
-  }
-
-  file { $_st2api_socket:
-    ensure => file,
-    owner  => $_nginx_daemon_user,
-    group  => $_nginx_daemon_user,
-    mode   => '0666',
+  nginx::resource::upstream { 'st2api':
+    members => ["127.0.0.1:${_st2api_port}"],
   }
 
   # ## Authentication
@@ -232,21 +225,9 @@ class profile::st2server {
     content => '@include common-auth',
   }
 
-  uwsgi::app { 'st2auth':
-    ensure              => present,
-    uid                 => $_nginx_daemon_user,
-    gid                 => $_nginx_daemon_user,
-    application_options => {
-      'socket'       => $_st2auth_socket,
-      'processes'    => $_st2auth_processes,
-      'threads'      => $_st2auth_threads,
-      'pecan'        => "${_python_pack}/st2auth/wsgi.py",
-      'vacuum'       => true,
-    }
-  }
-
   nginx::resource::vhost { 'st2auth':
     ensure               => present,
+    listen_ip            => $_host_ip,
     listen_port          => 9100,
     ssl                  => true,
     ssl_port             => 9100,
@@ -255,28 +236,16 @@ class profile::st2server {
     ssl_protocols        => $_ssl_protocols,
     ssl_ciphers          => $_cipher_list,
     vhost_cfg_prepend    => $_ssl_options,
+    server_name          => $_server_names,
     location_raw_prepend => [
       'auth_pam "Restricted";',
       'auth_pam_service_name "nginx";',
     ],
-    use_default_location => false,
+    proxy                => 'http://st2auth',
   }
 
-  nginx::resource::location { 'st2auth-uwsgi':
-    vhost               => 'st2auth',
-    ssl_only            => true,
-    location            => '/',
-    location_custom_cfg => {
-      'uwsgi_pass'  => "unix:///${_st2auth_socket}",
-      'include'     => 'uwsgi_params',
-    },
-  }
-
-  file { $_st2auth_socket:
-    ensure => file,
-    owner  => $_nginx_daemon_user,
-    group  => $_nginx_daemon_user,
-    mode   => '0666',
+  nginx::resource::upstream { 'st2auth':
+    members => ["127.0.0.1:${_st2auth_port}"],
   }
 
   # Setup the installer on initial provision, and get rid of it
@@ -294,7 +263,7 @@ class profile::st2server {
       uid                 => $_nginx_daemon_user,
       gid                 => $_nginx_daemon_user,
       application_options => {
-        'socket'       => "${_st2installer_socket}",
+        'http-socket'  => "127.0.0.1:${_st2installer_port}",
         'processes'    => 1,
         'threads'      => 10,
         'pecan'        => 'app.wsgi',
@@ -304,24 +273,18 @@ class profile::st2server {
       require       => Vcsrepo['/opt/stackstorm/st2installer'],
     }
 
-    nginx::resource::location { 'st2installer-uwsgi':
+    nginx::resource::location { 'st2installer':
       vhost               => 'st2webui',
       ssl_only            => true,
       location            => '/setup/',
-      location_custom_cfg => {
-        'uwsgi_pass'  => "unix:///${_st2installer_socket}",
-        'include'     => 'uwsgi_params',
-      },
+      proxy               => 'http://st2installer',
       rewrite_rules       => [
         '^/setup/(.*)  /$1 break',
       ],
     }
 
-    file { $_st2installer_socket:
-      ensure => file,
-      owner  => $_nginx_daemon_user,
-      group  => $_nginx_daemon_user,
-      mode   => '0666',
+    nginx::resource::upstream { 'st2installer':
+      members => ["127.0.0.1:${_st2installer_port}"],
     }
   }
 }
