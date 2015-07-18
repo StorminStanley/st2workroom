@@ -2,6 +2,7 @@ class profile::st2server {
   ### Profile Data Collection
   $_ssl_cert = '/etc/ssl/st2.crt'
   $_ssl_key = '/etc/ssl/st2.key'
+  $_installed = hiera('st2::installer_run', false)
   $_user_ssl_cert = hiera('st2::ssl_public_key', undef)
   $_user_ssl_key = hiera('st2::ssl_private_key', undef)
   $_hostname = hiera('system::hostname', $::fqdn)
@@ -10,8 +11,20 @@ class profile::st2server {
   $_st2auth_threads = hiera('st2::auth_threads', 25)
   $_st2api_processes = hiera('st2::api_processes', 2)
   $_st2api_threads = hiera('st2::api_threads', 25)
-  $_st2auth_socket = '/var/run/st2auth.sock'
-  $_st2api_socket = '/var/run/st2api.sock'
+
+  # Names this server could be
+  $_server_names = [
+    $_hostname,
+    'localhost',
+    'st2express.local',
+    'localhost.localdomain',
+    $_host_ip,
+  ]
+
+  # Ports that uwsgi advertises on 127.0.0.1
+  $_st2auth_socket = '/tmp/st2auth.sock'
+  $_st2api_socket = '/tmp/st2api.sock'
+  $_st2installer_socket = '/tmp/st2installer.sock'
 
   # NGINX SSL Settings. Provides A+ Setting. https://cipherli.st
   $_ssl_protocols = 'TLSv1 TLSv1.1 TLSv1.2'
@@ -22,13 +35,13 @@ class profile::st2server {
     'X-Content-Type-Options'    => 'nosniff',
     'Strict-Transport-Security' => '"max-age=63072000; includeSubdomains; preload"',
   }
-  $_ssl_options = [
-    'ssl_session_tickets off;',
-    'ssl_stapling on;',
-    'ssl_stapling_verify on;',
-    'resolver 8.8.4.4 8.8.8.8 valid=300s;',
-    'resolver_timeout 5s;',
-  ]
+  $_ssl_options = {
+#    'ssl_session_tickets' => 'off',
+#    'ssl_stapling'        => 'on',
+#    'ssl_stapling_verify' => 'on',
+    'resolver'            => '8.8.4.4 8.8.8.8 valid=300s',
+    'resolver_timeout'    => '5s',
+  }
 
   ### Infrastructure/Application Pre-requsites
   ## nginx-full contains PAM bits
@@ -108,7 +121,7 @@ class profile::st2server {
     $unit = 'Information Technology'
     $commonname = $_hostname
     $email = 'support@stackstorm.com'
-    $altnames = ['localhost', 'localhost.localdomain', 'st2express.local', 'st2express', $_host_ip]
+    $altnames = $_server_names
 
     file { $_ssl_template:
       ensure  => file,
@@ -156,23 +169,18 @@ class profile::st2server {
 
   # # Configure NGINX WebUI on 443
   nginx::resource::vhost { 'st2webui':
-    ensure        => present,
-    listen_port   => '443',
-    ssl           => true,
-    ssl_cert      => $_ssl_cert,
-    ssl_key       => $_ssl_key,
-    ssl_protocols => $_ssl_protocols,
-    ssl_ciphers   => $_cipher_list,
-    raw_prepend   => $_ssl_options,
-    server_name   => [
-      $_hostname,
-      'st2express.local',
-      'localhost.localdomain',
-      $_host_ip,
-    ],
-    add_header    => $_headers,
-    www_root      => '/opt/stackstorm/static/webui/',
-    require       => X509_cert[$_ssl_cert],
+    ensure            => present,
+    listen_port       => '443',
+    ssl               => true,
+    ssl_cert          => $_ssl_cert,
+    ssl_key           => $_ssl_key,
+    ssl_protocols     => $_ssl_protocols,
+    ssl_ciphers       => $_cipher_list,
+    vhost_cfg_prepend => $_ssl_options,
+    server_name       => $_server_names,
+    add_header        => $_headers,
+    www_root          => '/opt/stackstorm/static/webui/',
+    require           => X509_cert[$_ssl_cert],
   }
 
   ## st2auth and st2api SSL proxies via nginx
@@ -180,37 +188,32 @@ class profile::st2server {
   ### Shared proxy headers for each reverse proxy
   nginx::resource::vhost { 'st2api':
     ensure               => present,
+    listen_port          => 9101,
     ssl                  => true,
     ssl_port             => 9101,
     ssl_cert             => $_ssl_cert,
     ssl_key              => $_ssl_key,
     ssl_protocols        => $_ssl_protocols,
     ssl_ciphers          => $_cipher_list,
-    raw_append           => $_ssl_options,
+    vhost_cfg_prepend    => $_ssl_options,
     use_default_location => false,
-    vhost_cfg_prepend    => {
-      'charset' => 'utf-8',
-    },
   }
 
   nginx::resource::location { 'st2api-uwsgi':
     vhost               => 'st2api',
+    ssl_only            => true,
     location            => '/',
     location_custom_cfg => {
-      'uwsgi_pass'  => 'st2auth',
+      'uwsgi_pass'  => "unix:///${_st2api_socket}",
       'include'     => 'uwsgi_params',
     },
   }
 
   file { $_st2api_socket:
-    ensure => present,
+    ensure => file,
     owner  => $_nginx_daemon_user,
     group  => $_nginx_daemon_user,
-  }
-
-  nginx::resource::upstream { 'st2api':
-    ensure  => present,
-    members => ["unix:///${_st2api_socket}"],
+    mode   => '0666',
   }
 
   # ## Authentication
@@ -234,59 +237,91 @@ class profile::st2server {
     uid                 => $_nginx_daemon_user,
     gid                 => $_nginx_daemon_user,
     application_options => {
-      'socket'    => $_st2auth_socket,
-      'processes' => $_st2auth_processes,
-      'threads'   => $_st2auth_threads,
-      'wsgi-file' => "${_python_pack}/st2auth/wsgi.py",
-      'plugins'   => 'python',
-      'logto'     => '/var/log/uwsgi/st2auth.log',
+      'socket'       => $_st2auth_socket,
+      'processes'    => $_st2auth_processes,
+      'threads'      => $_st2auth_threads,
+      'pecan'        => "${_python_pack}/st2auth/wsgi.py",
+      'vacuum'       => true,
     }
   }
 
   nginx::resource::vhost { 'st2auth':
     ensure               => present,
+    listen_port          => 9100,
     ssl                  => true,
     ssl_port             => 9100,
     ssl_cert             => $_ssl_cert,
     ssl_key              => $_ssl_key,
     ssl_protocols        => $_ssl_protocols,
     ssl_ciphers          => $_cipher_list,
-    raw_append           => $_ssl_options,
+    vhost_cfg_prepend    => $_ssl_options,
     location_raw_prepend => [
       'auth_pam "Restricted";',
       'auth_pam_service_name "nginx";',
     ],
     use_default_location => false,
-    vhost_cfg_prepend    => {
-      'charset' => 'utf-8',
-    },
   }
 
   nginx::resource::location { 'st2auth-uwsgi':
     vhost               => 'st2auth',
+    ssl_only            => true,
     location            => '/',
     location_custom_cfg => {
-      'uwsgi_pass'  => 'st2auth',
+      'uwsgi_pass'  => "unix:///${_st2auth_socket}",
       'include'     => 'uwsgi_params',
     },
   }
 
   file { $_st2auth_socket:
-    ensure => present,
+    ensure => file,
     owner  => $_nginx_daemon_user,
     group  => $_nginx_daemon_user,
+    mode   => '0666',
   }
 
-  nginx::resource::upstream { 'st2auth':
-    ensure  => present,
-    members => ["unix:///${_st2auth_socket}"],
+  # Setup the installer on initial provision, and get rid of it
+  # after setup has been run.
+  if ! $_installed {
+    vcsrepo { '/opt/stackstorm/st2installer':
+      ensure   => present,
+      provider => 'git',
+      source   => 'https://github.com/stackstorm/st2installer',
+      require  => Class['::st2::profile::server'],
+    }
+
+    uwsgi::app { 'st2installer':
+      ensure              => present,
+      uid                 => $_nginx_daemon_user,
+      gid                 => $_nginx_daemon_user,
+      application_options => {
+        'socket'       => "${_st2installer_socket}",
+        'processes'    => 1,
+        'threads'      => 10,
+        'pecan'        => 'app.wsgi',
+        'chdir'        => '/opt/stackstorm/st2installer',
+        'vacuum'       => true,
+      },
+      require       => Vcsrepo['/opt/stackstorm/st2installer'],
+    }
+
+    nginx::resource::location { 'st2installer-uwsgi':
+      vhost               => 'st2webui',
+      ssl_only            => true,
+      location            => '/setup/',
+      location_custom_cfg => {
+        'uwsgi_pass'  => "unix:///${_st2installer_socket}",
+        'include'     => 'uwsgi_params',
+      },
+      rewrite_rules       => [
+        '^/setup/(.*)  /$1 break',
+      ],
+    }
+
+    file { $_st2installer_socket:
+      ensure => file,
+      owner  => $_nginx_daemon_user,
+      group  => $_nginx_daemon_user,
+      mode   => '0666',
+    }
   }
-
-  # # # Setup the installer on initial provision, and get rid of it
-  # # # after setup has been run.
-  # # if $_installer {
-
-  # # } else {
-
-  # # }
 }

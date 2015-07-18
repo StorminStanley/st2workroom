@@ -48,4 +48,11 @@ class puppet::masterless(
     ensure  => file,
     content => "${::role}\n",
   }
+
+  service { ['puppet', 'mcollective']:
+    ensure     => stopped,
+    enable     => false,
+    hasstatus  => true,
+    hasrestart => true,
+  }
 }
