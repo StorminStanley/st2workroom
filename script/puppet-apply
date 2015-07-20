@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run as root"
+  exit
+fi
+
 PROJECT_ROOT=/opt/puppet
 APT_UPDATE_FREQ=30
 NODE=$(hostname -s);
@@ -14,7 +19,7 @@ echo "Configuring system..."
 
 ### Setup the puppet directory
 if [ "$update_from_upstream" != "0" ]; then
-  git pull origin
+  git pull origin -q
 fi
 
 if [ "$debug" = "1" ]; then
