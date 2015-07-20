@@ -295,6 +295,13 @@ class profile::st2server {
       group  => $_nginx_daemon_user,
       mode   => $_installer_workroom_mode,
     }
+    
+    file { '/tmp/st2installer.log':
+      ensure => file,
+      owner  => $_nginx_daemon_user,
+      group  => $_nginx_daemon_user,
+      mode   => $_installer_workroom_mode,
+    }
 
     ### Installer also needs the ability to kick off a Puppet run to converge the system
     sudo::conf { $_nginx_daemon_user:
