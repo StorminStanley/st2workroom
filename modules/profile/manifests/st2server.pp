@@ -172,7 +172,7 @@ class profile::st2server {
     content => $_ssl_key_content,
   }
 
-  # # Configure NGINX WebUI on 443
+  # Configure NGINX WebUI on 443
   nginx::resource::vhost { 'st2webui':
     ensure            => present,
     listen_port       => '443',
@@ -186,6 +186,11 @@ class profile::st2server {
     add_header        => $_headers,
     www_root          => '/opt/stackstorm/static/webui/',
     require           => X509_cert[$_ssl_cert],
+  }
+
+  file_line { 'st2 disable simple HTTP server':
+    path => '/etc/environment',
+    line => 'ST2_DISABLE_HTTPSERVER=true',
   }
 
   ## st2auth and st2api SSL proxies via nginx
@@ -295,7 +300,7 @@ class profile::st2server {
       group  => $_nginx_daemon_user,
       mode   => $_installer_workroom_mode,
     }
-    
+
     file { '/tmp/st2installer.log':
       ensure => file,
       owner  => $_nginx_daemon_user,
