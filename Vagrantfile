@@ -214,6 +214,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
           #{config['puppet']['facts'].collect { |k,v| "export FACTER_#{k}=#{v}"}.join("\n")}
           export FACTER_stack=#{@stack.stack}
           /opt/puppet/script/puppet-apply
+
+          echo "Visit https://172.168.50.11/setup to configure StackStorm."
 EOF
       when 'ansible-local' then
         n.vm.provision 'shell', inline: '/vagrant/script/bootstrap-ansible'
