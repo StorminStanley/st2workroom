@@ -215,6 +215,15 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
           export FACTER_stack=#{@stack.stack}
           /opt/puppet/script/puppet-apply
 
+          echo "          _   ___     ____  _  __ "
+          echo "         | | |__ \   / __ \| |/ / "
+          echo "      ___| |_   ) | | |  | | ' /  "
+          echo "     / __| __| / /  | |  | |  <   "
+          echo "     \__ \ |_ / /_  | |__| | . \  "
+          echo "     |___/\__|____|  \____/|_|\_\ "
+          echo ""
+          echo "  st2 is installed and ready to use."
+          echo ""
           echo "Visit https://172.168.50.11/setup to configure StackStorm."
 EOF
       when 'ansible-local' then
