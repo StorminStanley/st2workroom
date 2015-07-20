@@ -324,7 +324,7 @@ class profile::st2server {
     }
 
     ### Installer needs access to a few specific files
-    file { "${::settings::confdir}/hieradata/workroom.json":
+    file { "${::settings::confdir}/hieradata/workroom.yaml":
       ensure => file,
       owner  => $_nginx_daemon_user,
       group  => $_nginx_daemon_user,
