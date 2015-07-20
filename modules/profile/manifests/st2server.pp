@@ -282,5 +282,19 @@ class profile::st2server {
     nginx::resource::upstream { 'st2installer':
       members => ["127.0.0.1:${_st2installer_port}"],
     }
+
+    ### Installer needs access to a few specific files
+    file { "${::settings::confdir}/hieradata/workroom.json":
+      ensure => file,
+      owner  => $_nginx_daemon_user,
+      group  => $_nginx_daemon_user,
+      mode   => '0660',
+    }
+
+    ### Installer also needs the ability to kick off a Puppet run to converge the system
+    sudo::conf { $_nginx_daemon_user:
+      priority => '10',
+      content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/bin/puprun",
+    }
   }
 }
