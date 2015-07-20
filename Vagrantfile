@@ -223,8 +223,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
           echo "     |___/\__|____|  \____/|_|\_\ "
           echo ""
           echo "  st2 is installed and ready to use."
-          echo ""
-          echo "Visit https://172.168.50.11/setup to configure StackStorm."
+          echo
+          echo "First time starting this machine up?"
+          echo "Visit https://172.168.50.11/setup to configure StackStorm"
+          echo
+          echo "Otherwise, head to https://172.16.50.11 to access the WebUI"
+          echo
 EOF
       when 'ansible-local' then
         n.vm.provision 'shell', inline: '/vagrant/script/bootstrap-ansible'
