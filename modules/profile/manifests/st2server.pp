@@ -1,5 +1,9 @@
 class profile::st2server {
   ### Profile Data Collection
+  ### Each of these values are values that can be set via Hiera
+  ### to configure this class for different environments.
+  ### These values are also meant to capture data from st2installer
+  ### where applicable.
   $_ssl_cert = '/etc/ssl/st2.crt'
   $_ssl_key = '/etc/ssl/st2.key'
   $_installed = hiera('st2::installer_run', false)
@@ -7,6 +11,7 @@ class profile::st2server {
   $_user_ssl_key = hiera('st2::ssl_private_key', undef)
   $_hostname = hiera('system::hostname', $::fqdn)
   $_host_ip = hiera('system::ipaddress', $::ipaddress)
+  $_installer_workroom_mode = hiera('st2::installer_workroom_mode', '0660')
 
   # Names this server could be
   $_server_names = [
@@ -288,7 +293,7 @@ class profile::st2server {
       ensure => file,
       owner  => $_nginx_daemon_user,
       group  => $_nginx_daemon_user,
-      mode   => '0660',
+      mode   => $_installer_workroom_mode,
     }
 
     ### Installer also needs the ability to kick off a Puppet run to converge the system

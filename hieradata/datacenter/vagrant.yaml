@@ -14,3 +14,4 @@ st2::api_url: 'https://%{::ipaddress_eth1}:9101'
 st2::auth_url: 'https://%{::ipaddress_eth1}:9100'
 st2::cli_api_url: 'https://%{::ipaddress_eth1}:9101'
 st2::cli_auth_url: 'https://%{::ipaddress_eth1}:9100'
+st2::installer_workroom_mode: "0666"
