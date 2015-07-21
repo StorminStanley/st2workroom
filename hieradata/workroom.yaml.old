@@ -1,0 +1,26 @@
+groups:
+  robots: {gid: '6000'}
+hubot::adapter: irc
+hubot::chat_alias: '!'
+hubot::dependencies: {hubot: '>= 2.6.0 < 3.0.0', hubot-irc: '>=0.2.7 < 1.0.0', hubot-scripts: '>=
+    2.5.0 < 3.0.0', hubot-stackstorm: '>= 0.1.0 < 0.2.0'}
+hubot::env_export: {HUBOT_IRC_NICK: !!python/unicode 'stanley', HUBOT_IRC_ROOMS: '#stackstorm',
+  HUBOT_IRC_SERVER: localhost, HUBOT_IRC_UNFLOOD: true, HUBOT_LOG_LEVEL: debug, ST2_AUTH_PASSWORD: n&rxV78CL65PZK0kzuKP!yM8y^Km%M3D,
+  ST2_AUTH_USERNAME: !!python/unicode 'stanley'}
+hubot::external_scripts: [hubot-stackstorm]
+st2::api_url: !!python/unicode 'https://st2test.fryman.io:9101'
+st2::auth: true
+st2::auth_url: !!python/unicode 'https://st2test.fryman.io:9100'
+st2::cli_api_url: !!python/unicode 'https://st2test.fryman.io:9101'
+st2::cli_auth_url: !!python/unicode 'https://st2test.fryman.io:9100'
+st2::cli_password: !!python/unicode 'Mc1f2hgbstackstorm'
+st2::cli_username: admin
+st2::stanley::password: n&rxV78CL65PZK0kzuKP!yM8y^Km%M3D
+st2::stanley::ssh_private_key: !!python/unicode ''
+st2::stanley::username: !!python/unicode 'stanley'
+system::hostname: !!python/unicode 'st2test.fryman.io'
+users:
+  admin: {admin: true, gid: '6002', password: !!python/unicode 'Mc1f2hgbstackstorm',
+    shell: /bin/bash, uid: '1001'}
+  !!python/unicode 'stanley': {gid: '6000', password: n&rxV78CL65PZK0kzuKP!yM8y^Km%M3D,
+    shell: /bin/bash, uid: '1000'}

@@ -14,14 +14,38 @@ class profile::st2server {
   $_installer_workroom_mode = hiera('st2::installer_workroom_mode', '0660')
   $_st2auth = hiera('st2::installer_run', false)
 
-  # Names this server could be
-  $_server_names = [
-    $_hostname,
-    'localhost',
-    'st2express.local',
-    'localhost.localdomain',
-    $_host_ip,
-  ]
+  $_server_names = $_st2auth ? {
+    true => [
+      $_hostname,
+      'localhost',
+      'st2express.local',
+      'localhost.localdomain',
+      $_host_ip,
+    ],
+    default => [
+      'localhost',
+      'st2express.local',
+      'localhost.localdomain',
+    ]
+  }
+
+  # On first run, rely on the actual services hosted on 0.0.0.0. This
+  # is good for packaging in foregin places (a. la: packer), but then
+  # lock it down to use the SSL proxy.
+  $_st2apiauth_listen_ip = $_installed ? {
+    true    => '127.0.0.1',
+    default => undef,
+  }
+
+  $_api_url = $_installed ? {
+    true    => "https://${_host_ip}:9101",
+    default => "http://${_host_ip}:9101",
+  }
+
+  $_auth_url = $_installed ? {
+    true    => "https://${_host_ip}:9100",
+    default => "http://${_host_ip}:9100",
+  }
 
   # Ports that uwsgi advertises on 127.0.0.1
   $_st2auth_port = '9100'
@@ -44,6 +68,10 @@ class profile::st2server {
     'resolver'            => '8.8.4.4 8.8.8.8 valid=300s',
     'resolver_timeout'    => '5s',
   }
+
+  #########################################################
+  ########## BEGIN RESOURCE DEFINITIONS ###################
+  #########################################################
 
   ### Infrastructure/Application Pre-requsites
   ## nginx-full contains PAM bits
@@ -79,15 +107,22 @@ class profile::st2server {
   # Maybe the user doesn't want to change the defaults?! Anyway,
   # doesn't make sense to enable it until then anyway when we have
   # data about the authentication case.
+
   anchor { 'st2::pre_reqs': }
-  -> class { '::st2::profile::client': }
+  -> class { '::st2::profile::client':
+    api_url  => $_api_url,
+    auth_url => $_auth_url,
+  }
   -> class { '::st2::profile::server':
     auth              => $_st2auth,
-    st2api_listen_ip  => '127.0.0.1',
-    st2auth_listen_ip => '127.0.0.1',
+    st2api_listen_ip  => $_st2apiauth_listen_ip,
+    st2auth_listen_ip => $_st2apiauth_listen_ip,
   }
   -> class { '::st2::auth::proxy': }
-  -> class { '::st2::profile::web': }
+  -> class { '::st2::profile::web':
+    api_url  => $_api_url,
+    auth_url => $_auth_url,
+  }
 
   $_python_pack = $::st2::profile::server::_python_pack
 
@@ -212,36 +247,41 @@ class profile::st2server {
 			return 204;
 		 }"
 
-  nginx::resource::vhost { 'st2api':
-    ensure               => present,
-    listen_ip            => $_host_ip,
-    listen_port          => 9101,
-    ssl                  => true,
-    ssl_port             => 9101,
-    ssl_cert             => $_ssl_cert,
-    ssl_key              => $_ssl_key,
-    ssl_protocols        => $_ssl_protocols,
-    ssl_ciphers          => $_cipher_list,
-    server_name          => $_server_names,
-    vhost_cfg_prepend    => $_ssl_options,
-    proxy                => 'http://st2api',
-    proxy_set_header     => [
-      'Host $host',
-      "Connection ''",
-    ],
-    location_raw_prepend => [
-      $_st2api_custom_options,
-    ],
-    location_raw_append  => [
-      'proxy_http_version 1.1;',
-      'chunked_transfer_encoding off;',
-      'proxy_buffering off;',
-      'proxy_cache off;',
-    ],
-  }
+  # Note this is in a flag. On first installation, nginx proxy
+  # with SSL is not available
+  if $_installed {
+    nginx::resource::vhost { 'st2api':
+      ensure               => present,
+      listen_ip            => $_host_ip,
+      listen_port          => 9101,
+      ssl                  => true,
+      ssl_port             => 9101,
+      ssl_cert             => $_ssl_cert,
+      ssl_key              => $_ssl_key,
+      ssl_protocols        => $_ssl_protocols,
+      ssl_ciphers          => $_cipher_list,
+      server_name          => $_server_names,
+      vhost_cfg_prepend    => $_ssl_options,
+      proxy                => 'http://st2api',
+      proxy_set_header     => [
+        'Host $host',
+        "Connection ''",
+      ],
+      location_raw_prepend => [
+        $_st2api_custom_options,
+      ],
+      location_raw_append  => [
+        'proxy_http_version 1.1;',
+        'chunked_transfer_encoding off;',
+        'proxy_buffering off;',
+        'proxy_cache off;',
+      ],
+      notify              => Service['st2api'],
+    }
 
-  nginx::resource::upstream { 'st2api':
-    members => ["127.0.0.1:${_st2api_port}"],
+    nginx::resource::upstream { 'st2api':
+      members => ["127.0.0.1:${_st2api_port}"],
+    }
   }
 
   # Note this is in a flag. By default on first installation, authentication
