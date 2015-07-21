@@ -314,11 +314,10 @@ class profile::st2server {
   # Setup the installer on initial provision, and get rid of it
   # after setup has been run.
   if ! $_installed {
-    vcsrepo { '/opt/stackstorm/st2installer':
+    vcsrepo { '/etc/st2installer':
       ensure   => present,
       provider => 'git',
       source   => 'https://github.com/stackstorm/st2installer',
-      require  => Class['::st2::profile::server'],
     }
 
     uwsgi::app { 'st2installer':
@@ -330,10 +329,10 @@ class profile::st2server {
         'processes'    => 1,
         'threads'      => 10,
         'pecan'        => 'app.wsgi',
-        'chdir'        => '/opt/stackstorm/st2installer',
+        'chdir'        => '/etc/st2installer',
         'vacuum'       => true,
       },
-      require       => Vcsrepo['/opt/stackstorm/st2installer'],
+      require       => Vcsrepo['/etc/st2installer'],
     }
 
     nginx::resource::location { 'st2installer':
