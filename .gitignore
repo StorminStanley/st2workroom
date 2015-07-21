@@ -9,8 +9,11 @@ graphs
 shared
 *.rpmnew
 current_environment
+current_role
 mounts/*
 hieradata/workroom.yaml
+hieradata/workroom.json
 bin/*
 artifacts/*
 .vagrant/*
+src/*

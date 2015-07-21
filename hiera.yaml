@@ -1,6 +1,5 @@
 :backends:
   - yaml
-  - json
 :yaml:
   :datadir: /opt/puppet/environments/%{::environment}/hieradata
 :hierarchy:

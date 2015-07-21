@@ -14,4 +14,9 @@ class profile::vagrant {
     hasstatus  => true,
     hasrestart => true,
   }
+
+  sudo::conf { 'vagrant':
+    ensure  => present,
+    content => '%vagrant ALL=(ALL) NOPASSWD: ALL',
+  }
 }

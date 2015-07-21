@@ -214,6 +214,21 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
           #{config['puppet']['facts'].collect { |k,v| "export FACTER_#{k}=#{v}"}.join("\n")}
           export FACTER_stack=#{@stack.stack}
           /opt/puppet/script/puppet-apply
+
+          echo "          _   ___     ____  _  __ "
+          echo "         | | |__ \   / __ \| |/ / "
+          echo "      ___| |_   ) | | |  | | ' /  "
+          echo "     / __| __| / /  | |  | |  <   "
+          echo "     \__ \ |_ / /_  | |__| | . \  "
+          echo "     |___/\__|____|  \____/|_|\_\ "
+          echo ""
+          echo "  st2 is installed and ready to use."
+          echo
+          echo "First time starting this machine up?"
+          echo "Visit https://172.168.50.11/setup to configure StackStorm"
+          echo
+          echo "Otherwise, head to https://172.16.50.11 to access the WebUI"
+          echo
 EOF
       when 'ansible-local' then
         n.vm.provision 'shell', inline: '/vagrant/script/bootstrap-ansible'

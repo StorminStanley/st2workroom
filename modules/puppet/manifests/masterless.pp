@@ -44,9 +44,16 @@ class puppet::masterless(
     content => "${::environment}\n",
   }
 
-  file { "${::settings::confdir}/current_role":
+  file { ['/etc/facter', '/etc/facter/facts.d']:
+    ensure => directory,
+    owner  => 'root',
+    group  => 'root',
+    mode   => '0755',
+  }
+
+  file { "/etc/facter/facts.d/role.txt":
     ensure  => file,
-    content => "${::role}\n",
+    content => "role=${::role}\n",
   }
 
   service { ['puppet', 'mcollective']:

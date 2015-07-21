@@ -1,5 +1,9 @@
 class profile::st2server {
   ### Profile Data Collection
+  ### Each of these values are values that can be set via Hiera
+  ### to configure this class for different environments.
+  ### These values are also meant to capture data from st2installer
+  ### where applicable.
   $_ssl_cert = '/etc/ssl/st2.crt'
   $_ssl_key = '/etc/ssl/st2.key'
   $_installed = hiera('st2::installer_run', false)
@@ -7,6 +11,7 @@ class profile::st2server {
   $_user_ssl_key = hiera('st2::ssl_private_key', undef)
   $_hostname = hiera('system::hostname', $::fqdn)
   $_host_ip = hiera('system::ipaddress', $::ipaddress)
+  $_installer_workroom_mode = hiera('st2::installer_workroom_mode', '0660')
 
   # Names this server could be
   $_server_names = [
@@ -167,7 +172,7 @@ class profile::st2server {
     content => $_ssl_key_content,
   }
 
-  # # Configure NGINX WebUI on 443
+  # Configure NGINX WebUI on 443
   nginx::resource::vhost { 'st2webui':
     ensure            => present,
     listen_port       => '443',
@@ -183,9 +188,23 @@ class profile::st2server {
     require           => X509_cert[$_ssl_cert],
   }
 
-  ## st2auth and st2api SSL proxies via nginx
+  file_line { 'st2 disable simple HTTP server':
+    path => '/etc/environment',
+    line => 'ST2_DISABLE_HTTPSERVER=true',
+  }
 
-  ### Shared proxy headers for each reverse proxy
+  ## st2auth and st2api SSL proxies via nginx
+  $_st2api_custom_options = "if (\$request_method = 'OPTIONS') {
+			add_header 'Access-Control-Allow-Origin' '*';
+			add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS';
+	 		add_header 'Access-Control-Allow-Headers' 'x-auth-token,DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+			add_header 'Access-Control-Max-Age' 1728000;
+			add_header 'Content-Type' 'text/plain charset=UTF-8';
+			add_header 'Content-Length' 0;
+
+			return 204;
+		 }"
+
   nginx::resource::vhost { 'st2api':
     ensure               => present,
     listen_ip            => $_host_ip,
@@ -199,6 +218,19 @@ class profile::st2server {
     server_name          => $_server_names,
     vhost_cfg_prepend    => $_ssl_options,
     proxy                => 'http://st2api',
+    proxy_set_header     => [
+      'Host $host',
+      "Connection ''",
+    ],
+    location_raw_prepend => [
+      $_st2api_custom_options,
+    ],
+    location_raw_append  => [
+      'proxy_http_version 1.1;',
+      'chunked_transfer_encoding off;',
+      'proxy_buffering off;',
+      'proxy_cache off;',
+    ],
   }
 
   nginx::resource::upstream { 'st2api':
@@ -238,6 +270,14 @@ class profile::st2server {
       'auth_pam_service_name "nginx";',
     ],
     proxy                => 'http://st2auth',
+    proxy_set_header     => [
+      'Host $host',
+      'X-Real-IP $remote_addr',
+      'X-Forwarded-For $proxy_add_x_forwarded_for',
+    ],
+    location_raw_append => [
+      'proxy_pass_header Authorization;',
+    ],
   }
 
   nginx::resource::upstream { 'st2auth':
@@ -281,6 +321,32 @@ class profile::st2server {
 
     nginx::resource::upstream { 'st2installer':
       members => ["127.0.0.1:${_st2installer_port}"],
+    }
+
+    ### Installer needs access to a few specific files
+    file { "${::settings::confdir}/hieradata/workroom.yaml":
+      ensure => file,
+      owner  => $_nginx_daemon_user,
+      group  => $_nginx_daemon_user,
+      mode   => $_installer_workroom_mode,
+    }
+
+    file { '/tmp/st2installer.log':
+      ensure => file,
+      owner  => $_nginx_daemon_user,
+      group  => $_nginx_daemon_user,
+      mode   => $_installer_workroom_mode,
+    }
+
+    ### Installer also needs the ability to kick off a Puppet run to converge the system
+    sudo::conf { "env_puppet":
+      priority => '5',
+      content  => 'Defaults!/usr/bin/puprun env_keep += "nocolor environment debug"',
+    }
+
+    sudo::conf { $_nginx_daemon_user:
+      priority => '10',
+      content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/bin/puprun",
     }
   }
 }

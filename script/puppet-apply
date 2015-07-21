@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run as root"
+  exit
+fi
+
 PROJECT_ROOT=/opt/puppet
 APT_UPDATE_FREQ=30
 NODE=$(hostname -s);
@@ -10,9 +15,11 @@ export cache_libraries=1
 
 cd $PROJECT_ROOT
 
+echo "Configuring system..."
+
 ### Setup the puppet directory
 if [ "$update_from_upstream" != "0" ]; then
-  git pull origin
+  git pull origin -q
 fi
 
 if [ "$debug" = "1" ]; then
@@ -21,6 +28,9 @@ if [ "$debug" = "1" ]; then
   RSYNC_DEBUG_ARGS="-v"
 fi
 
+if [ "$nocolor" = "1" ]; then
+  PUPPET_COLOR_ARGS="--color=false"
+fi
 
 # Install necessary gems
 if [ "$cache_libraries" = "1" ]; then
@@ -121,6 +131,6 @@ if [ -e /usr/bin/apt-get ]; then
 fi
 
 puppet apply $PUPPET_DEBUG_ARGS --verbose --environment $environment \
-  --config $PROJECT_ROOT/puppet.conf \
+  --config $PROJECT_ROOT/puppet.conf $PUPPET_COLOR_ARGS \
   --graph --graphdir $PROJECT_ROOT/graphs/${NODE} \
   $PROJECT_ROOT/environments/${environment}/manifests $@
