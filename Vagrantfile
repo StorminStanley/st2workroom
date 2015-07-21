@@ -227,7 +227,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
           echo "First time starting this machine up?"
           echo "Visit https://172.168.50.11/setup to configure StackStorm"
           echo
-          echo "Otherwise, head to https://172.16.50.11 to access the WebUI"
+          echo "Otherwise, head to https://172.168.50.11 to access the WebUI"
           echo
 EOF
       when 'ansible-local' then
