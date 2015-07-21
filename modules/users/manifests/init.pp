@@ -1,6 +1,7 @@
 define users(
   $ensure      = present,
   $username    = $name,
+  $password    = undef,
   $home        = "/home/${name}",
   $sshkey      = undef,
   $sshkeytype  = 'ssh-rsa',
@@ -49,6 +50,10 @@ define users(
         key         => $sshkey,
         require   => File["${home}/.ssh"]
       }
+    }
+
+    if $password {
+
     }
   } else {
     user{ $username:

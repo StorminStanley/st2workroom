@@ -12,6 +12,7 @@ class profile::st2server {
   $_hostname = hiera('system::hostname', $::fqdn)
   $_host_ip = hiera('system::ipaddress', $::ipaddress)
   $_installer_workroom_mode = hiera('st2::installer_workroom_mode', '0660')
+  $_st2auth = hiera('st2::installer_run', false)
 
   # Names this server could be
   $_server_names = [
@@ -73,9 +74,15 @@ class profile::st2server {
   # Install StackStorm, after all pre-requsities have been satisifed
   # Use proxy authentication for pam auth, and setup st2api and st2auth
   # listeners on localhost to add SSL reverse proxy via NGINX
+
+  # Authentication is not setup until *after* st2installer is run.
+  # Maybe the user doesn't want to change the defaults?! Anyway,
+  # doesn't make sense to enable it until then anyway when we have
+  # data about the authentication case.
   anchor { 'st2::pre_reqs': }
   -> class { '::st2::profile::client': }
   -> class { '::st2::profile::server':
+    auth              => $_st2auth,
     st2api_listen_ip  => '127.0.0.1',
     st2auth_listen_ip => '127.0.0.1',
   }
@@ -237,51 +244,58 @@ class profile::st2server {
     members => ["127.0.0.1:${_st2api_port}"],
   }
 
-  # ## Authentication
-  # ### Nginx needs access to make calls to PAM, and by
-  # ### extension, needs access to /etc/shadow to validate users.
-  # ### Let's at least try to do this safely and consistently
+  # Note this is in a flag. By default on first installation, authentication
+  # is not enabled. This allows for things like packs to install cleanly,
+  # and not be burdensome. It's a basic installation. If a user wants
+  # to take the experience and customize it for them, then auth
+  # will be enabled once the st2installer runs.
+  if $_st2auth {
+    # ## Authentication
+    # ### Nginx needs access to make calls to PAM, and by
+    # ### extension, needs access to /etc/shadow to validate users.
+    # ### Let's at least try to do this safely and consistently
 
-  # Let's add our nginx user to the `shadow` group, but do
-  # it after the package manager has installed and setup
-  # the user
-  user { $_nginx_daemon_user:
-    groups  => ['shadow'],
-  }
+    # Let's add our nginx user to the `shadow` group, but do
+    # it after the package manager has installed and setup
+    # the user
+    user { $_nginx_daemon_user:
+      groups  => ['shadow'],
+    }
 
-  pam::service { 'nginx':
-    content => '@include common-auth',
-  }
+    pam::service { 'nginx':
+      content => '@include common-auth',
+    }
 
-  nginx::resource::vhost { 'st2auth':
-    ensure               => present,
-    listen_ip            => $_host_ip,
-    listen_port          => 9100,
-    ssl                  => true,
-    ssl_port             => 9100,
-    ssl_cert             => $_ssl_cert,
-    ssl_key              => $_ssl_key,
-    ssl_protocols        => $_ssl_protocols,
-    ssl_ciphers          => $_cipher_list,
-    vhost_cfg_prepend    => $_ssl_options,
-    server_name          => $_server_names,
-    location_raw_prepend => [
-      'auth_pam "Restricted";',
-      'auth_pam_service_name "nginx";',
-    ],
-    proxy                => 'http://st2auth',
-    proxy_set_header     => [
-      'Host $host',
-      'X-Real-IP $remote_addr',
-      'X-Forwarded-For $proxy_add_x_forwarded_for',
-    ],
-    location_raw_append => [
-      'proxy_pass_header Authorization;',
-    ],
-  }
+    nginx::resource::vhost { 'st2auth':
+      ensure               => present,
+      listen_ip            => $_host_ip,
+      listen_port          => 9100,
+      ssl                  => true,
+      ssl_port             => 9100,
+      ssl_cert             => $_ssl_cert,
+      ssl_key              => $_ssl_key,
+      ssl_protocols        => $_ssl_protocols,
+      ssl_ciphers          => $_cipher_list,
+      vhost_cfg_prepend    => $_ssl_options,
+      server_name          => $_server_names,
+      location_raw_prepend => [
+        'auth_pam "Restricted";',
+        'auth_pam_service_name "nginx";',
+      ],
+      proxy                => 'http://st2auth',
+      proxy_set_header     => [
+        'Host $host',
+        'X-Real-IP $remote_addr',
+        'X-Forwarded-For $proxy_add_x_forwarded_for',
+      ],
+      location_raw_append => [
+        'proxy_pass_header Authorization;',
+      ],
+    }
 
-  nginx::resource::upstream { 'st2auth':
-    members => ["127.0.0.1:${_st2auth_port}"],
+    nginx::resource::upstream { 'st2auth':
+      members => ["127.0.0.1:${_st2auth_port}"],
+    }
   }
 
   # Setup the installer on initial provision, and get rid of it
