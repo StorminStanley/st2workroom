@@ -14,38 +14,15 @@ class profile::st2server {
   $_installer_workroom_mode = hiera('st2::installer_workroom_mode', '0660')
   $_st2auth = hiera('st2::installer_run', false)
 
-  $_server_names = $_st2auth ? {
-    true => [
-      $_hostname,
-      'localhost',
-      'st2express.local',
-      'localhost.localdomain',
-      $_host_ip,
-    ],
-    default => [
-      'localhost',
-      'st2express.local',
-      'localhost.localdomain',
-    ]
-  }
+  $_server_names = [
+    $_hostname,
+    'localhost',
+    'st2express.local',
+    'localhost.localdomain',
+  ]
 
-  # On first run, rely on the actual services hosted on 0.0.0.0. This
-  # is good for packaging in foregin places (a. la: packer), but then
-  # lock it down to use the SSL proxy.
-  $_st2apiauth_listen_ip = $_installed ? {
-    true    => '127.0.0.1',
-    default => undef,
-  }
-
-  $_api_url = $_installed ? {
-    true    => "https://${_host_ip}:9101",
-    default => "http://${_host_ip}:9101",
-  }
-
-  $_auth_url = $_installed ? {
-    true    => "https://${_host_ip}:9100",
-    default => "http://${_host_ip}:9100",
-  }
+  $_api_url = "https://${_host_ip}:9101"
+  $_auth_url = "https://${_host_ip}:9100"
 
   # Ports that uwsgi advertises on 127.0.0.1
   $_st2auth_port = '9100'
@@ -115,8 +92,8 @@ class profile::st2server {
   }
   -> class { '::st2::profile::server':
     auth              => $_st2auth,
-    st2api_listen_ip  => $_st2apiauth_listen_ip,
-    st2auth_listen_ip => $_st2apiauth_listen_ip,
+    st2api_listen_ip  => '127.0.0.1',
+    st2auth_listen_ip => '127.0.0.1',
   }
   -> class { '::st2::auth::proxy': }
   -> class { '::st2::profile::web':
@@ -247,96 +224,92 @@ class profile::st2server {
 			return 204;
 		 }"
 
-  # Note this is in a flag. On first installation, nginx proxy
-  # with SSL is not available
-  if $_installed {
-    nginx::resource::vhost { 'st2api':
-      ensure               => present,
-      listen_ip            => $_host_ip,
-      listen_port          => 9101,
-      ssl                  => true,
-      ssl_port             => 9101,
-      ssl_cert             => $_ssl_cert,
-      ssl_key              => $_ssl_key,
-      ssl_protocols        => $_ssl_protocols,
-      ssl_ciphers          => $_cipher_list,
-      server_name          => $_server_names,
-      vhost_cfg_prepend    => $_ssl_options,
-      proxy                => 'http://st2api',
-      proxy_set_header     => [
-        'Host $host',
-        "Connection ''",
-      ],
-      location_raw_prepend => [
-        $_st2api_custom_options,
-      ],
-      location_raw_append  => [
-        'proxy_http_version 1.1;',
-        'chunked_transfer_encoding off;',
-        'proxy_buffering off;',
-        'proxy_cache off;',
-      ],
-      notify              => Service['st2api'],
-    }
-
-    nginx::resource::upstream { 'st2api':
-      members => ["127.0.0.1:${_st2api_port}"],
-    }
+  nginx::resource::vhost { 'st2api':
+    ensure               => present,
+    listen_ip            => $_host_ip,
+    listen_port          => 9101,
+    ssl                  => true,
+    ssl_port             => 9101,
+    ssl_cert             => $_ssl_cert,
+    ssl_key              => $_ssl_key,
+    ssl_protocols        => $_ssl_protocols,
+    ssl_ciphers          => $_cipher_list,
+    server_name          => $_server_names,
+    vhost_cfg_prepend    => $_ssl_options,
+    proxy                => 'http://st2api',
+    proxy_set_header     => [
+      'Host $host',
+      "Connection ''",
+    ],
+    location_raw_prepend => [
+      $_st2api_custom_options,
+    ],
+    location_raw_append  => [
+      'proxy_http_version 1.1;',
+      'chunked_transfer_encoding off;',
+      'proxy_buffering off;',
+      'proxy_cache off;',
+    ],
   }
 
-  # Note this is in a flag. By default on first installation, authentication
-  # is not enabled. This allows for things like packs to install cleanly,
-  # and not be burdensome. It's a basic installation. If a user wants
-  # to take the experience and customize it for them, then auth
-  # will be enabled once the st2installer runs.
-  if $_st2auth {
-    # ## Authentication
-    # ### Nginx needs access to make calls to PAM, and by
-    # ### extension, needs access to /etc/shadow to validate users.
-    # ### Let's at least try to do this safely and consistently
-
-    # Let's add our nginx user to the `shadow` group, but do
-    # it after the package manager has installed and setup
-    # the user
-    user { $_nginx_daemon_user:
-      groups  => ['shadow'],
-    }
-
-    pam::service { 'nginx':
-      content => '@include common-auth',
-    }
-
-    nginx::resource::vhost { 'st2auth':
-      ensure               => present,
-      listen_ip            => $_host_ip,
-      listen_port          => 9100,
-      ssl                  => true,
-      ssl_port             => 9100,
-      ssl_cert             => $_ssl_cert,
-      ssl_key              => $_ssl_key,
-      ssl_protocols        => $_ssl_protocols,
-      ssl_ciphers          => $_cipher_list,
-      vhost_cfg_prepend    => $_ssl_options,
-      server_name          => $_server_names,
-      location_raw_prepend => [
-        'auth_pam "Restricted";',
-        'auth_pam_service_name "nginx";',
-      ],
-      proxy                => 'http://st2auth',
-      proxy_set_header     => [
-        'Host $host',
-        'X-Real-IP $remote_addr',
-        'X-Forwarded-For $proxy_add_x_forwarded_for',
-      ],
-      location_raw_append => [
-        'proxy_pass_header Authorization;',
-      ],
-    }
-
-    nginx::resource::upstream { 'st2auth':
-      members => ["127.0.0.1:${_st2auth_port}"],
-    }
+  nginx::resource::upstream { 'st2api':
+    members => ["127.0.0.1:${_st2api_port}"],
   }
+
+  # ## Authentication
+  # ### Nginx needs access to make calls to PAM, and by
+  # ### extension, needs access to /etc/shadow to validate users.
+  # ### Let's at least try to do this safely and consistently
+
+  $_st2auth_custom_options = 'limit_except OPTIONS {
+			auth_pam "Restricted";
+      auth_pam_service_name "nginx";
+		}'
+
+  # Let's add our nginx user to the `shadow` group, but do
+  # it after the package manager has installed and setup
+  # the user
+  user { $_nginx_daemon_user:
+    groups  => ['shadow'],
+  }
+
+  pam::service { 'nginx':
+    content => '@include common-auth',
+  }
+
+  nginx::resource::vhost { 'st2auth':
+    ensure               => present,
+    listen_ip            => $_host_ip,
+    listen_port          => 9100,
+    ssl                  => true,
+    ssl_port             => 9100,
+    ssl_cert             => $_ssl_cert,
+    ssl_key              => $_ssl_key,
+    ssl_protocols        => $_ssl_protocols,
+    ssl_ciphers          => $_cipher_list,
+    vhost_cfg_prepend    => $_ssl_options,
+    server_name          => $_server_names,
+    location_raw_prepend => [
+      $_st2auth_custom_options,
+    ],
+    proxy                => 'http://st2auth',
+    proxy_set_header     => [
+      'Host $host',
+      'X-Real-IP $remote_addr',
+      'X-Forwarded-For $proxy_add_x_forwarded_for',
+    ],
+    location_raw_append => [
+      'proxy_pass_header Authorization;',
+    ],
+  }
+
+  nginx::resource::upstream { 'st2auth':
+    members => ["127.0.0.1:${_st2auth_port}"],
+  }
+
+  # Ensure that the st2auth service is started up and serving before
+  # attempting to download anything
+  Class['::st2::profile::server'] -> Class['::nginx::service'] -> St2::Pack<||>
 
   # Setup the installer on initial provision, and get rid of it
   # after setup has been run.
