@@ -12,8 +12,13 @@ define users(
 ) {
 
   if $ensure == present {
+    $_password = $password ? {
+      true    => generate('/bin/sh', '-c', "mkpasswd -m sha-512 ${password} | tr -d '\n'"),
+      default => undef,
+    }
     user{ $username:
       ensure      => $ensure,
+      password    => $_password,
       uid         => $uid,
       gid         => $gid,
       shell       => $shell,
@@ -50,10 +55,6 @@ define users(
         key         => $sshkey,
         require   => File["${home}/.ssh"]
       }
-    }
-
-    if $password {
-
     }
   } else {
     user{ $username:
