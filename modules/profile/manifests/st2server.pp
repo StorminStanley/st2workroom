@@ -12,7 +12,14 @@ class profile::st2server {
   $_hostname = hiera('system::hostname', $::fqdn)
   $_host_ip = hiera('system::ipaddress', $::ipaddress)
   $_installer_workroom_mode = hiera('st2::installer_workroom_mode', '0660')
-  $_st2auth = hiera('st2::installer_run', false)
+  $_st2auth_uwsgi_threads = hiera('st2::auth_uwsgi_threads', 10)
+  $_st2auth_uwsgi_processes = hiera('st2::auth_uwsgi_processes', 1)
+  $_st2api_uwsgi_threads = hiera('st2::api_uwsgi_threads', 10)
+  $_st2api_uwsgi_processes = hiera('st2::auth_uwsgi_processes', 1)
+  $_root_cli_username = 'root_cli'
+  $_root_cli_password = fqdn_rand_string(32)
+  $_root_cli_uid = 2000
+  $_root_cli_gid = 2000
 
   $_server_names = [
     $_hostname,
@@ -21,13 +28,12 @@ class profile::st2server {
     'localhost.localdomain',
   ]
 
-  $_api_url = "https://${_host_ip}:9101"
-  $_auth_url = "https://${_host_ip}:9100"
-
   # Ports that uwsgi advertises on 127.0.0.1
   $_st2auth_port = '9100'
   $_st2api_port = '9101'
   $_st2installer_port = '9102'
+  $_api_url = "https://${_host_ip}:${_st2api_port}"
+  $_auth_url = "https://${_host_ip}:${_st2auth_port}"
 
   # NGINX SSL Settings. Provides A+ Setting. https://cipherli.st
   $_ssl_protocols = 'TLSv1 TLSv1.1 TLSv1.2'
@@ -36,7 +42,8 @@ class profile::st2server {
     'Front-End-Https'           => 'on',
     'X-Frame-Options'           => 'DENY',
     'X-Content-Type-Options'    => 'nosniff',
-    'Strict-Transport-Security' => '"max-age=63072000; includeSubdomains; preload"',
+    'Strict-Transport-Security' =>
+      '"max-age=63072000; includeSubdomains; preload"',
   }
   $_ssl_options = {
 #    'ssl_session_tickets' => 'off',
@@ -64,16 +71,16 @@ class profile::st2server {
 
   # De-dup code compression without future-parser
   $_st2_classes = [
-    "::st2::profile::python",
-    "::st2::profile::rabbitmq",
-    "::st2::profile::mongodb",
+    '::st2::profile::python',
+    '::st2::profile::rabbitmq',
+    '::st2::profile::mongodb',
   ]
   include $_st2_classes
   Class[$_st2_classes] -> Anchor['st2::pre_reqs']
 
   class { '::st2::profile::mistral':
     manage_mysql => true,
-    before => Anchor['st2::pre_reqs'],
+    before       => Anchor['st2::pre_reqs'],
   }
 
   # Install StackStorm, after all pre-requsities have been satisifed
@@ -85,35 +92,63 @@ class profile::st2server {
   # doesn't make sense to enable it until then anyway when we have
   # data about the authentication case.
 
+  # Because we now use PAM based authentication, we need credentials
+  # for the root user. That isn't quite so easy, because we're not
+  # managing the root user password, nor can we re-set the password
+  # for the automatically generated `puppet` user when used with "standalone"
+  # auth. For this, we'll leverage the existing Users defined type
+  # to create the account to be used by the System root user. It's a bit
+  # meta gross, but it's the cleanest way without knowing what environment
+  # this installer will pop up in.
+
+  users { $_root_cli_username:
+    uid        => $_root_cli_uid,
+    gid        => $_root_cli_gid,
+    shell      => '/bin/false',
+    password   => $_root_cli_password,
+    managehome => false,
+  }
+
   anchor { 'st2::pre_reqs': }
   -> class { '::st2::profile::client':
+    username => $_root_cli_username,
+    password => $_root_cli_password,
     api_url  => $_api_url,
     auth_url => $_auth_url,
   }
   -> class { '::st2::profile::server':
-    auth              => $_st2auth,
-    st2api_listen_ip  => '127.0.0.1',
-    st2auth_listen_ip => '127.0.0.1',
+    auth                   => true,
+    st2api_listen_ip       => '127.0.0.1',
+    manage_st2auth_service => false,
+    manage_st2web_service  => false,
   }
   -> class { '::st2::auth::proxy': }
   -> class { '::st2::profile::web':
     api_url  => $_api_url,
     auth_url => $_auth_url,
   }
+  include ::st2::stanley
 
   $_python_pack = $::st2::profile::server::_python_pack
 
   # Manage uwsgi with module, but install it using python pack
   # There is an odd error with installing directly via
   # the `pip` provider when used via Class['uwsgi']
+  #
+  # This class also disables the emperor service. To that end
+  # to manage a service for StackStorm, you must use the
+  # adapter::st2_uwsgi_service to start uwsgi services that
+  # will be proxied to nginx.
   class { '::uwsgi':
     install_package => false,
     log_rotate      => 'yes',
+    service_ensure  => false,
+    service_enable  => false,
   }
 
   python::pip { 'uwsgi':
-    ensure  => present,
-    before  => Class['::uwsgi'],
+    ensure => present,
+    before => Class['::uwsgi'],
   }
 
   # ### Application Configuration
@@ -128,7 +163,7 @@ class profile::st2server {
   # proper permissioning for the webserver to read/access.
   if $_user_ssl_cert and $_user_ssl_key {
     $_ssl_cert_content = $_user_ssl_cert
-    $_ssl_key_content = $_user_key_content
+    $_ssl_key_content = $_user_ssl_key
   } else {
     # TODO: Make this configurable with installer.
     # These map directly to the values populated in the below template
@@ -183,12 +218,34 @@ class profile::st2server {
     owner   => 'root',
     mode    => '0444',
     content => $_ssl_cert_content,
+    notify  => Class['::nginx::service'],
   }
   file { $_ssl_key:
     ensure  => file,
     owner   => 'root',
     mode    => '0440',
     content => $_ssl_key_content,
+    notify  => Class['::nginx::service'],
+  }
+
+  # Cheating here a little bit. Because the st2web is now being
+  # served via nginx/HTTPS, the SimpleHTTPServer is no longer needed
+  # Only problem is, if there is not a service named `st2web`, `st2ctl`
+  # ceases to work. Can't have that.
+  #
+  # st2actionrunner is a dummy resource already that is used as an anchor
+  # for the st2actionrunner-workerN resources, pre-populated by Puppet based
+  # on the total number of workers. Well, it won't hurt to re-use the
+  # same dummy anchor resource here.
+  #
+  # This is a pretty tight coupling to the st2 puppet module for right now.
+  # TODO Fix when it makes sense and it has a home.
+  file { '/etc/init/st2web.conf':
+    ensure  => file,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0444',
+    source  => 'puppet:///modules/st2/etc/init/st2actionrunner.conf',
   }
 
   # Configure NGINX WebUI on 443
@@ -207,6 +264,8 @@ class profile::st2server {
     subscribe         => X509_cert[$_ssl_cert],
   }
 
+  # Flag set in st2ctl to prevent the SimpleHTTPServer from starting. This
+  # should not be necessary with init scripts, but here just in case.
   file_line { 'st2 disable simple HTTP server':
     path => '/etc/environment',
     line => 'ST2_DISABLE_HTTPSERVER=true',
@@ -227,9 +286,9 @@ class profile::st2server {
   nginx::resource::vhost { 'st2api':
     ensure               => present,
     listen_ip            => $_host_ip,
-    listen_port          => 9101,
+    listen_port          => $_st2api_port,
     ssl                  => true,
-    ssl_port             => 9101,
+    ssl_port             => $_st2api_port,
     ssl_cert             => $_ssl_cert,
     ssl_key              => $_ssl_key,
     ssl_protocols        => $_ssl_protocols,
@@ -237,18 +296,16 @@ class profile::st2server {
     server_name          => $_server_names,
     vhost_cfg_prepend    => $_ssl_options,
     proxy                => 'http://st2api',
-    proxy_set_header     => [
-      'Host $host',
-      "Connection ''",
-    ],
     location_raw_prepend => [
       $_st2api_custom_options,
     ],
-    location_raw_append  => [
+    location_raw_append => [
+      "proxy_set_header Connection '';",
       'proxy_http_version 1.1;',
       'chunked_transfer_encoding off;',
       'proxy_buffering off;',
       'proxy_cache off;',
+      'proxy_set_header Host $host;',
     ],
   }
 
@@ -277,22 +334,34 @@ class profile::st2server {
     content => '@include common-auth',
   }
 
+  adapter::st2_uwsgi_init { 'st2auth': }
+
+  uwsgi::app { 'st2auth':
+    ensure              => present,
+    uid                 => $_nginx_daemon_user,
+    gid                 => $_nginx_daemon_user,
+    application_options => {
+      'socket'    => "127.0.0.1:${_st2auth_port}",
+      'processes' => $_st2auth_uwsgi_processes,
+      'threads'   => $_st2auth_uwsgi_threads,
+      'wsgi-file' => "${_python_pack}/st2auth/wsgi.py",
+      'vacuum'    => true,
+    },
+  }
+
   nginx::resource::vhost { 'st2auth':
     ensure               => present,
     listen_ip            => $_host_ip,
-    listen_port          => 9100,
+    listen_port          => $_st2auth_port,
     ssl                  => true,
-    ssl_port             => 9100,
+    ssl_port             => $_st2auth_port,
     ssl_cert             => $_ssl_cert,
     ssl_key              => $_ssl_key,
     ssl_protocols        => $_ssl_protocols,
     ssl_ciphers          => $_cipher_list,
     vhost_cfg_prepend    => $_ssl_options,
     server_name          => $_server_names,
-    location_raw_prepend => [
-      $_st2auth_custom_options,
-    ],
-    proxy                => 'http://st2auth',
+    uwsgi                => 'st2auth',
     proxy_set_header     => [
       'Host $host',
       'X-Real-IP $remote_addr',
@@ -300,24 +369,27 @@ class profile::st2server {
     ],
     location_raw_append => [
       'proxy_pass_header Authorization;',
-      'uwsgi_param  QUERY_STRING       $query_string;',
-      'uwsgi_param  REQUEST_METHOD     $request_method;',
-      'uwsgi_param  CONTENT_TYPE       $content_type;',
-      'uwsgi_param  CONTENT_LENGTH     $content_length;',
-      'uwsgi_param  REQUEST_URI        $request_uri;',
-      'uwsgi_param  PATH_INFO          $document_uri;',
-      'uwsgi_param  DOCUMENT_ROOT      $document_root;',
-      'uwsgi_param  SERVER_PROTOCOL    $server_protocol;',
-      'uwsgi_param  REMOTE_ADDR        $remote_addr;',
-      'uwsgi_param  REMOTE_PORT        $remote_port;',
-      'uwsgi_param  SERVER_PORT        $server_port;',
-      'uwsgi_param  SERVER_NAME        $server_name;',
       'uwsgi_param  REMOTE_USER        $remote_user;',
+      $_st2auth_custom_options,
     ],
   }
 
   nginx::resource::upstream { 'st2auth':
     members => ["127.0.0.1:${_st2auth_port}"],
+  }
+
+  # Needed for uWSGI server to write to logs
+  file { [
+    '/var/log/st2/st2api.log',
+    '/var/log/st2/st2api.audit.log',
+    '/var/log/st2/st2auth.log',
+    '/var/log/st2/st2auth.audit.log',
+  ]:
+    ensure  => present,
+    group   => $_nginx_daemon_user,
+    mode    => '0664',
+    require => Class['::st2::profile::server'],
+    before  => Adapter::St2_uwsgi_init['st2auth'],
   }
 
   # Ensure that the st2auth service is started up and serving before
@@ -333,17 +405,19 @@ class profile::st2server {
       source   => 'https://github.com/stackstorm/st2installer',
     }
 
+    adapter::st2_uwsgi_init { 'st2installer': }
+
     uwsgi::app { 'st2installer':
       ensure              => present,
       uid                 => $_nginx_daemon_user,
       gid                 => $_nginx_daemon_user,
       application_options => {
-        'http-socket'  => "127.0.0.1:${_st2installer_port}",
-        'processes'    => 1,
-        'threads'      => 10,
-        'pecan'        => 'app.wsgi',
-        'chdir'        => '/etc/st2installer',
-        'vacuum'       => true,
+        'socket'    => "127.0.0.1:${_st2installer_port}",
+        'processes' => 1,
+        'threads'   => 10,
+        'pecan'     => 'app.wsgi',
+        'chdir'     => '/etc/st2installer',
+        'vacuum'    => true,
       },
       require       => Vcsrepo['/etc/st2installer'],
     }
@@ -352,7 +426,7 @@ class profile::st2server {
       vhost               => 'st2webui',
       ssl_only            => true,
       location            => '/setup/',
-      proxy               => 'http://st2installer',
+      uwsgi               => 'st2installer',
       rewrite_rules       => [
         '^/setup/(.*)  /$1 break',
       ],
