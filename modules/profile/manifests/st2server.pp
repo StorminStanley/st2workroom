@@ -35,6 +35,14 @@ class profile::st2server {
   $_api_url = "https://${_host_ip}:${_st2api_port}"
   $_auth_url = "https://${_host_ip}:${_st2auth_port}"
 
+  ## This ensures that the setup endpoint goes away
+  ## After it has been run. Don't want to accidentally
+  ## overwrite a system.
+  $_st2installer_present = $_installed ? {
+    true    => absent,
+    default => present,
+  }
+
   # NGINX SSL Settings. Provides A+ Setting. https://cipherli.st
   $_ssl_protocols = 'TLSv1 TLSv1.1 TLSv1.2'
   $_cipher_list = 'EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH:ECDHE-RSA-AES128-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA128:DHE-RSA-AES128-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA128:ECDHE-RSA-AES128-SHA384:ECDHE-RSA-AES128-SHA128:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA128:DHE-RSA-AES128-SHA128:DHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA384:AES128-GCM-SHA128:AES128-SHA128:AES128-SHA128:AES128-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4'
@@ -124,8 +132,8 @@ class profile::st2server {
   }
   -> class { '::st2::auth::proxy': }
   -> class { '::st2::profile::web':
-    api_url  => $_api_url,
-    auth_url => $_auth_url,
+    api_url  => "https://:${_st2api_port}",
+    auth_url => "https://:${_st2auth_port}",
   }
   include ::st2::stanley
 
@@ -261,7 +269,7 @@ class profile::st2server {
     server_name       => $_server_names,
     add_header        => $_headers,
     www_root          => '/opt/stackstorm/static/webui/',
-    subscribe         => X509_cert[$_ssl_cert],
+    subscribe         => File[$_ssl_cert],
   }
 
   # Flag set in st2ctl to prevent the SimpleHTTPServer from starting. This
@@ -398,68 +406,77 @@ class profile::st2server {
 
   # Setup the installer on initial provision, and get rid of it
   # after setup has been run.
-  if ! $_installed {
-    vcsrepo { '/etc/st2installer':
-      ensure   => present,
-      provider => 'git',
-      source   => 'https://github.com/stackstorm/st2installer',
-    }
+  vcsrepo { '/etc/st2installer':
+    ensure   => present,
+    provider => 'git',
+    source   => 'https://github.com/stackstorm/st2installer',
+  }
 
-    adapter::st2_uwsgi_init { 'st2installer': }
+  adapter::st2_uwsgi_init { 'st2installer': }
 
-    uwsgi::app { 'st2installer':
-      ensure              => present,
-      uid                 => $_nginx_daemon_user,
-      gid                 => $_nginx_daemon_user,
-      application_options => {
-        'socket'    => "127.0.0.1:${_st2installer_port}",
-        'processes' => 1,
-        'threads'   => 10,
-        'pecan'     => 'app.wsgi',
-        'chdir'     => '/etc/st2installer',
-        'vacuum'    => true,
-      },
-      require       => Vcsrepo['/etc/st2installer'],
-    }
+  uwsgi::app { 'st2installer':
+    ensure              => present,
+    uid                 => $_nginx_daemon_user,
+    gid                 => $_nginx_daemon_user,
+    application_options => {
+      'socket'    => "127.0.0.1:${_st2installer_port}",
+      'processes' => 1,
+      'threads'   => 10,
+      'pecan'     => 'app.wsgi',
+      'chdir'     => '/etc/st2installer',
+      'vacuum'    => true,
+    },
+    require       => Vcsrepo['/etc/st2installer'],
+  }
 
-    nginx::resource::location { 'st2installer':
-      vhost               => 'st2webui',
-      ssl_only            => true,
-      location            => '/setup/',
-      uwsgi               => 'st2installer',
-      rewrite_rules       => [
-        '^/setup/(.*)  /$1 break',
-      ],
-    }
+  # This is how installer lockdown occurs. After installation,
+  # the path is basically locked only to localhost.
+  $_st2installer_acls = $_installed ? {
+    true => {
+      'allow' => '127.0.0.1',
+      'deny'  => 'all',
+    },
+    false => undef,
+  }
 
-    nginx::resource::upstream { 'st2installer':
-      members => ["127.0.0.1:${_st2installer_port}"],
-    }
+  nginx::resource::location { 'st2installer':
+    vhost               => 'st2webui',
+    ssl_only            => true,
+    location            => '/setup/',
+    uwsgi               => 'st2installer',
+    rewrite_rules       => [
+      '^/setup/(.*)  /$1 break',
+    ],
+    location_cfg_append => $_st2installer_acls,
+  }
 
-    ### Installer needs access to a few specific files
-    file { "${::settings::confdir}/hieradata/workroom.yaml":
-      ensure => file,
-      owner  => $_nginx_daemon_user,
-      group  => $_nginx_daemon_user,
-      mode   => $_installer_workroom_mode,
-    }
+  nginx::resource::upstream { 'st2installer':
+    members => ["127.0.0.1:${_st2installer_port}"],
+  }
 
-    file { '/tmp/st2installer.log':
-      ensure => file,
-      owner  => $_nginx_daemon_user,
-      group  => $_nginx_daemon_user,
-      mode   => $_installer_workroom_mode,
-    }
+  ### Installer needs access to a few specific files
+  file { "${::settings::confdir}/hieradata/workroom.yaml":
+    ensure => file,
+    owner  => $_nginx_daemon_user,
+    group  => $_nginx_daemon_user,
+    mode   => $_installer_workroom_mode,
+  }
 
-    ### Installer also needs the ability to kick off a Puppet run to converge the system
-    sudo::conf { "env_puppet":
-      priority => '5',
-      content  => 'Defaults!/usr/bin/puprun env_keep += "nocolor environment debug"',
-    }
+  file { '/tmp/st2installer.log':
+    ensure => file,
+    owner  => $_nginx_daemon_user,
+    group  => $_nginx_daemon_user,
+    mode   => $_installer_workroom_mode,
+  }
 
-    sudo::conf { $_nginx_daemon_user:
-      priority => '10',
-      content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/bin/puprun",
-    }
+  ### Installer also needs the ability to kick off a Puppet run to converge the system
+  sudo::conf { "env_puppet":
+    priority => '5',
+    content  => 'Defaults!/usr/bin/puprun env_keep += "nocolor environment debug"',
+  }
+
+  sudo::conf { $_nginx_daemon_user:
+    priority => '10',
+    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/bin/puprun",
   }
 }
