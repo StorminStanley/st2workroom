@@ -95,9 +95,10 @@ class profile::st2server {
     auth_url => $_auth_url,
   }
   -> class { '::st2::profile::server':
-    auth              => true,
-    st2api_listen_ip  => '127.0.0.1',
-    st2auth_listen_ip => '127.0.0.1',
+    auth                   => true,
+    st2api_listen_ip       => '127.0.0.1',
+    manage_st2auth_service => false,
+    manage_st2web_service  => false,
   }
   -> class { '::st2::auth::proxy': }
   -> class { '::st2::profile::web':
@@ -204,6 +205,26 @@ class profile::st2server {
     notify  => Class['::nginx::service'],
   }
 
+  # Cheating here a little bit. Because the st2web is now being
+  # served via nginx/HTTPS, the SimpleHTTPServer is no longer needed
+  # Only problem is, if there is not a service named `st2web`, `st2ctl`
+  # ceases to work. Can't have that.
+  #
+  # st2actionrunner is a dummy resource already that is used as an anchor
+  # for the st2actionrunner-workerN resources, pre-populated by Puppet based
+  # on the total number of workers. Well, it won't hurt to re-use the
+  # same dummy anchor resource here.
+  #
+  # This is a pretty tight coupling to the st2 puppet module for right now.
+  # TODO Fix when it makes sense and it has a home.
+  file { '/etc/init/st2web.conf':
+    ensure  => file,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0444',
+    source  => 'puppet:///modules/st2/etc/init/st2actionrunner.conf',
+  }
+
   # Configure NGINX WebUI on 443
   nginx::resource::vhost { 'st2webui':
     ensure            => present,
@@ -220,6 +241,8 @@ class profile::st2server {
     subscribe         => X509_cert[$_ssl_cert],
   }
 
+  # Flag set in st2ctl to prevent the SimpleHTTPServer from starting. This
+  # should not be necessary with init scripts, but here just in case.
   file_line { 'st2 disable simple HTTP server':
     path => '/etc/environment',
     line => 'ST2_DISABLE_HTTPSERVER=true',

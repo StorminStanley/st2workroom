@@ -25,14 +25,8 @@ define adapter::st2_uwsgi_init (
     'st2installer' => 'installer',
   }
   $_subsystem = $_subsystem_map[$subsystem]
-  $_subsystem_upcase = upcase($_subsystem)
 
-  file_line { "st2 disable standalone ${subsystem}":
-    path => '/etc/environment',
-    line => "ST2_DISABLE_${_subsystem_upcase}=true",
-  }
-
-  file { "/etc/init/st2${_subsystem}-uwsgi.conf":
+  file { "/etc/init/st2${_subsystem}.conf":
     ensure  => file,
     owner   => 'root',
     group   => 'root',
@@ -41,7 +35,7 @@ define adapter::st2_uwsgi_init (
     notify  => Service["st2${_subsystem}-uwsgi"],
   }
 
-  service { "st2${_subsystem}-uwsgi":
+  service { "st2${_subsystem}":
     ensure     => running,
     enable     => true,
     hasstatus  => true,
