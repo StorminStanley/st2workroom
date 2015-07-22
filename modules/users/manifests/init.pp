@@ -7,6 +7,7 @@ define users(
   $sshkeytype  = 'ssh-rsa',
   $shell       = '/bin/bash',
   $admin       = false,
+  $managehome  = true,
   $uid,
   $gid,
 ) {
@@ -21,7 +22,7 @@ define users(
       uid         => $uid,
       gid         => $gid,
       shell       => $shell,
-      managehome  => true,
+      managehome  => $managehome,
       require => Group[$username]
     }
 

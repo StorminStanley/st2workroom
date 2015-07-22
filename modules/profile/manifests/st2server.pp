@@ -16,6 +16,10 @@ class profile::st2server {
   $_st2auth_uwsgi_processes = hiera('st2::auth_uwsgi_processes', 1)
   $_st2api_uwsgi_threads = hiera('st2::api_uwsgi_threads', 10)
   $_st2api_uwsgi_processes = hiera('st2::auth_uwsgi_processes', 1)
+  $_root_cli_username = 'root_cli'
+  $_root_cli_password = fqdn_rand_string(32)
+  $_root_cli_uid = 2000
+  $_root_cli_gid = 2000
 
   $_server_names = [
     $_hostname,
@@ -30,7 +34,6 @@ class profile::st2server {
   $_st2installer_port = '9102'
   $_api_url = "https://${_host_ip}:${_st2api_port}"
   $_auth_url = "https://${_host_ip}:${_st2auth_port}"
-
 
   # NGINX SSL Settings. Provides A+ Setting. https://cipherli.st
   $_ssl_protocols = 'TLSv1 TLSv1.1 TLSv1.2'
@@ -89,8 +92,27 @@ class profile::st2server {
   # doesn't make sense to enable it until then anyway when we have
   # data about the authentication case.
 
+  # Because we now use PAM based authentication, we need credentials
+  # for the root user. That isn't quite so easy, because we're not
+  # managing the root user password, nor can we re-set the password
+  # for the automatically generated `puppet` user when used with "standalone"
+  # auth. For this, we'll leverage the existing Users defined type
+  # to create the account to be used by the System root user. It's a bit
+  # meta gross, but it's the cleanest way without knowing what environment
+  # this installer will pop up in.
+
+  users { $_root_cli_username:
+    uid        => $_root_cli_uid,
+    gid        => $_root_cli_gid,
+    shell      => '/bin/false',
+    password   => $_root_cli_password,
+    managehome => false,
+  }
+
   anchor { 'st2::pre_reqs': }
   -> class { '::st2::profile::client':
+    username => $_root_cli_username,
+    password => $_root_cli_password,
     api_url  => $_api_url,
     auth_url => $_auth_url,
   }
@@ -105,6 +127,7 @@ class profile::st2server {
     api_url  => $_api_url,
     auth_url => $_auth_url,
   }
+  include ::st2::stanley
 
   $_python_pack = $::st2::profile::server::_python_pack
 
