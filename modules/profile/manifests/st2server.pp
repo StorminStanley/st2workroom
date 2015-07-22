@@ -124,8 +124,8 @@ class profile::st2server {
   }
   -> class { '::st2::auth::proxy': }
   -> class { '::st2::profile::web':
-    api_url  => $_api_url,
-    auth_url => $_auth_url,
+    api_url  => "https://:${_st2api_port}",
+    auth_url => "https://:${_st2auth_port}",
   }
   include ::st2::stanley
 
@@ -261,7 +261,7 @@ class profile::st2server {
     server_name       => $_server_names,
     add_header        => $_headers,
     www_root          => '/opt/stackstorm/static/webui/',
-    subscribe         => X509_cert[$_ssl_cert],
+    subscribe         => File[$_ssl_cert],
   }
 
   # Flag set in st2ctl to prevent the SimpleHTTPServer from starting. This
