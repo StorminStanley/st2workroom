@@ -204,7 +204,7 @@ class profile::st2server {
     server_name       => $_server_names,
     add_header        => $_headers,
     www_root          => '/opt/stackstorm/static/webui/',
-    require           => X509_cert[$_ssl_cert],
+    subscribe         => X509_cert[$_ssl_cert],
   }
 
   file_line { 'st2 disable simple HTTP server':
