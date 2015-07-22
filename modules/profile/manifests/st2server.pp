@@ -12,7 +12,10 @@ class profile::st2server {
   $_hostname = hiera('system::hostname', $::fqdn)
   $_host_ip = hiera('system::ipaddress', $::ipaddress)
   $_installer_workroom_mode = hiera('st2::installer_workroom_mode', '0660')
-  $_st2auth = hiera('st2::installer_run', false)
+  $_st2auth_uwsgi_threads = hiera('st2::auth_uwsgi_threads', 10)
+  $_st2auth_uwsgi_processes = hiera('st2::auth_uwsgi_processes', 1)
+  $_st2api_uwsgi_threads = hiera('st2::api_uwsgi_threads', 10)
+  $_st2api_uwsgi_processes = hiera('st2::auth_uwsgi_processes', 1)
 
   $_server_names = [
     $_hostname,
@@ -21,13 +24,13 @@ class profile::st2server {
     'localhost.localdomain',
   ]
 
-  $_api_url = "https://${_host_ip}:9101"
-  $_auth_url = "https://${_host_ip}:9100"
-
   # Ports that uwsgi advertises on 127.0.0.1
   $_st2auth_port = '9100'
   $_st2api_port = '9101'
   $_st2installer_port = '9102'
+  $_api_url = "https://${_host_ip}:${_st2api_port}"
+  $_auth_url = "https://${_host_ip}:${_st2auth_port}"
+
 
   # NGINX SSL Settings. Provides A+ Setting. https://cipherli.st
   $_ssl_protocols = 'TLSv1 TLSv1.1 TLSv1.2'
@@ -36,7 +39,8 @@ class profile::st2server {
     'Front-End-Https'           => 'on',
     'X-Frame-Options'           => 'DENY',
     'X-Content-Type-Options'    => 'nosniff',
-    'Strict-Transport-Security' => '"max-age=63072000; includeSubdomains; preload"',
+    'Strict-Transport-Security' =>
+      '"max-age=63072000; includeSubdomains; preload"',
   }
   $_ssl_options = {
 #    'ssl_session_tickets' => 'off',
@@ -64,16 +68,16 @@ class profile::st2server {
 
   # De-dup code compression without future-parser
   $_st2_classes = [
-    "::st2::profile::python",
-    "::st2::profile::rabbitmq",
-    "::st2::profile::mongodb",
+    '::st2::profile::python',
+    '::st2::profile::rabbitmq',
+    '::st2::profile::mongodb',
   ]
   include $_st2_classes
   Class[$_st2_classes] -> Anchor['st2::pre_reqs']
 
   class { '::st2::profile::mistral':
     manage_mysql => true,
-    before => Anchor['st2::pre_reqs'],
+    before       => Anchor['st2::pre_reqs'],
   }
 
   # Install StackStorm, after all pre-requsities have been satisifed
@@ -91,7 +95,7 @@ class profile::st2server {
     auth_url => $_auth_url,
   }
   -> class { '::st2::profile::server':
-    auth              => $_st2auth,
+    auth              => true,
     st2api_listen_ip  => '127.0.0.1',
     st2auth_listen_ip => '127.0.0.1',
   }
@@ -106,14 +110,20 @@ class profile::st2server {
   # Manage uwsgi with module, but install it using python pack
   # There is an odd error with installing directly via
   # the `pip` provider when used via Class['uwsgi']
+  #
+  # This class also disables the emperor service. To that end
+  # to manage a service for StackStorm, you must use the
+  # adapter::st2_uwsgi_service to start uwsgi services that
+  # will be proxied to nginx.
   class { '::uwsgi':
-    install_package => false,
-    log_rotate      => 'yes',
+    install_package     => false,
+    log_rotate          => 'yes',
+    manage_service_file => false,
   }
 
   python::pip { 'uwsgi':
-    ensure  => present,
-    before  => Class['::uwsgi'],
+    ensure => present,
+    before => Class['::uwsgi'],
   }
 
   # ### Application Configuration
@@ -128,7 +138,7 @@ class profile::st2server {
   # proper permissioning for the webserver to read/access.
   if $_user_ssl_cert and $_user_ssl_key {
     $_ssl_cert_content = $_user_ssl_cert
-    $_ssl_key_content = $_user_key_content
+    $_ssl_key_content = $_user_ssl_key
   } else {
     # TODO: Make this configurable with installer.
     # These map directly to the values populated in the below template
@@ -224,12 +234,26 @@ class profile::st2server {
 			return 204;
 		 }"
 
+  adapter::st2_uwsgi_init { 'st2api': }
+
+  uwsgi::app { 'st2api':
+    ensure              => present,
+    uid                 => $_nginx_daemon_user,
+    gid                 => $_nginx_daemon_user,
+    application_options => {
+      'http-socket'  => "127.0.0.1:${_st2api_port}",
+      'processes'    => $_st2api_uwsgi_processes,
+      'threads'      => $_st2api_uwsgi_threads,
+      'vacuum'       => true,
+    },
+  }
+
   nginx::resource::vhost { 'st2api':
     ensure               => present,
     listen_ip            => $_host_ip,
-    listen_port          => 9101,
+    listen_port          => $_st2api_port,
     ssl                  => true,
-    ssl_port             => 9101,
+    ssl_port             => $_st2api_port,
     ssl_cert             => $_ssl_cert,
     ssl_key              => $_ssl_key,
     ssl_protocols        => $_ssl_protocols,
@@ -277,12 +301,26 @@ class profile::st2server {
     content => '@include common-auth',
   }
 
+  adapter::st2_uwsgi_init { 'st2auth': }
+
+  uwsgi::app { 'st2auth':
+    ensure              => present,
+    uid                 => $_nginx_daemon_user,
+    gid                 => $_nginx_daemon_user,
+    application_options => {
+      'http-socket'  => "127.0.0.1:${_st2auth_port}",
+      'processes'    => $_st2auth_uwsgi_processes,
+      'threads'      => $_st2auth_uwsgi_threads,
+      'vacuum'       => true,
+    },
+  }
+
   nginx::resource::vhost { 'st2auth':
     ensure               => present,
     listen_ip            => $_host_ip,
-    listen_port          => 9100,
+    listen_port          => $_st2auth_port,
     ssl                  => true,
-    ssl_port             => 9100,
+    ssl_port             => $_st2auth_port,
     ssl_cert             => $_ssl_cert,
     ssl_key              => $_ssl_key,
     ssl_protocols        => $_ssl_protocols,
@@ -332,6 +370,8 @@ class profile::st2server {
       provider => 'git',
       source   => 'https://github.com/stackstorm/st2installer',
     }
+
+    adapter::st2_uwsgi_init { 'st2api': }
 
     uwsgi::app { 'st2installer':
       ensure              => present,
