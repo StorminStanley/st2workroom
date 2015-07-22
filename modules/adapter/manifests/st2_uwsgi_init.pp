@@ -32,7 +32,7 @@ define adapter::st2_uwsgi_init (
     group   => 'root',
     mode    => '0444',
     content => template('adapter/st2_uwsgi_init/init.conf.erb'),
-    notify  => Service["st2${_subsystem}-uwsgi"],
+    notify  => Service["st2${_subsystem}"],
   }
 
   service { "st2${_subsystem}":
