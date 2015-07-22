@@ -7,8 +7,6 @@
 #
 define adapter::st2_uwsgi_init (
   $subsystem = $name,
-  $workers   = undef,
-  $port      = undef,
 ) {
   if ! defined(Class['uwsgi']) and ! defined(Class['::st2::profile::server']) {
     fail("[Adapter::St2_uwsgi_init[${name}]: This adapter can only be used in conjunction with 'uwsgi' and 'st2::profile::server")
@@ -19,21 +17,15 @@ define adapter::st2_uwsgi_init (
   }
 
   $_subsystem_map = {
-    'api'     => 'api',
-    'st2api'  => 'api',
-    'auth'    => 'auth',
-    'st2auth' => 'auth',
-  }
-  $_ports_map = {
-    'api'  => '9101',
-    'auth' => '9100',
+    'api'          => 'api',
+    'st2api'       => 'api',
+    'auth'         => 'auth',
+    'st2auth'      => 'auth',
+    'installer'    => 'installer',
+    'st2installer' => 'installer',
   }
   $_subsystem = $_subsystem_map[$subsystem]
   $_subsystem_upcase = upcase($_subsystem)
-  $_port = $port ? {
-    undef   => $_ports_map[$_subsystem_downcase],
-    default => $port,
-  }
 
   file_line { "st2 disable standalone ${subsystem}":
     path => '/etc/environment',
@@ -46,10 +38,10 @@ define adapter::st2_uwsgi_init (
     group   => 'root',
     mode    => '0444',
     content => template('adapter/st2_uwsgi_init/init.conf.erb'),
-    notify  => Service["${_subsystem}-uwsgi"],
+    notify  => Service["st2${_subsystem}-uwsgi"],
   }
 
-  service { "${_subsystem}-uwsgi":
+  service { "st2${_subsystem}-uwsgi":
     ensure     => running,
     enable     => true,
     hasstatus  => true,

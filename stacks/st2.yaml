@@ -18,7 +18,7 @@ st2dev:
 st2express:
   <<: *defaults
   hostname: st2express
-  box: stackstorm/st2express
+#  box: stackstorm/st2express
   puppet:
     facts:
       role: st2express

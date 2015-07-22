@@ -116,9 +116,10 @@ class profile::st2server {
   # adapter::st2_uwsgi_service to start uwsgi services that
   # will be proxied to nginx.
   class { '::uwsgi':
-    install_package     => false,
-    log_rotate          => 'yes',
-    manage_service_file => false,
+    install_package => false,
+    log_rotate      => 'yes',
+    service_ensure  => false,
+    service_enable  => false,
   }
 
   python::pip { 'uwsgi':
@@ -193,12 +194,14 @@ class profile::st2server {
     owner   => 'root',
     mode    => '0444',
     content => $_ssl_cert_content,
+    notify  => Class['::nginx::service'],
   }
   file { $_ssl_key:
     ensure  => file,
     owner   => 'root',
     mode    => '0440',
     content => $_ssl_key_content,
+    notify  => Class['::nginx::service'],
   }
 
   # Configure NGINX WebUI on 443
@@ -234,20 +237,6 @@ class profile::st2server {
 			return 204;
 		 }"
 
-  adapter::st2_uwsgi_init { 'st2api': }
-
-  uwsgi::app { 'st2api':
-    ensure              => present,
-    uid                 => $_nginx_daemon_user,
-    gid                 => $_nginx_daemon_user,
-    application_options => {
-      'http-socket'  => "127.0.0.1:${_st2api_port}",
-      'processes'    => $_st2api_uwsgi_processes,
-      'threads'      => $_st2api_uwsgi_threads,
-      'vacuum'       => true,
-    },
-  }
-
   nginx::resource::vhost { 'st2api':
     ensure               => present,
     listen_ip            => $_host_ip,
@@ -261,18 +250,16 @@ class profile::st2server {
     server_name          => $_server_names,
     vhost_cfg_prepend    => $_ssl_options,
     proxy                => 'http://st2api',
-    proxy_set_header     => [
-      'Host $host',
-      "Connection ''",
-    ],
     location_raw_prepend => [
       $_st2api_custom_options,
     ],
-    location_raw_append  => [
+    location_raw_append => [
+      "proxy_set_header Connection '';",
       'proxy_http_version 1.1;',
       'chunked_transfer_encoding off;',
       'proxy_buffering off;',
       'proxy_cache off;',
+      'proxy_set_header Host $host;',
     ],
   }
 
@@ -308,10 +295,11 @@ class profile::st2server {
     uid                 => $_nginx_daemon_user,
     gid                 => $_nginx_daemon_user,
     application_options => {
-      'http-socket'  => "127.0.0.1:${_st2auth_port}",
-      'processes'    => $_st2auth_uwsgi_processes,
-      'threads'      => $_st2auth_uwsgi_threads,
-      'vacuum'       => true,
+      'socket'    => "127.0.0.1:${_st2auth_port}",
+      'processes' => $_st2auth_uwsgi_processes,
+      'threads'   => $_st2auth_uwsgi_threads,
+      'wsgi-file' => "${_python_pack}/st2auth/wsgi.py",
+      'vacuum'    => true,
     },
   }
 
@@ -327,10 +315,7 @@ class profile::st2server {
     ssl_ciphers          => $_cipher_list,
     vhost_cfg_prepend    => $_ssl_options,
     server_name          => $_server_names,
-    location_raw_prepend => [
-      $_st2auth_custom_options,
-    ],
-    proxy                => 'http://st2auth',
+    uwsgi                => 'st2auth',
     proxy_set_header     => [
       'Host $host',
       'X-Real-IP $remote_addr',
@@ -338,24 +323,27 @@ class profile::st2server {
     ],
     location_raw_append => [
       'proxy_pass_header Authorization;',
-      'uwsgi_param  QUERY_STRING       $query_string;',
-      'uwsgi_param  REQUEST_METHOD     $request_method;',
-      'uwsgi_param  CONTENT_TYPE       $content_type;',
-      'uwsgi_param  CONTENT_LENGTH     $content_length;',
-      'uwsgi_param  REQUEST_URI        $request_uri;',
-      'uwsgi_param  PATH_INFO          $document_uri;',
-      'uwsgi_param  DOCUMENT_ROOT      $document_root;',
-      'uwsgi_param  SERVER_PROTOCOL    $server_protocol;',
-      'uwsgi_param  REMOTE_ADDR        $remote_addr;',
-      'uwsgi_param  REMOTE_PORT        $remote_port;',
-      'uwsgi_param  SERVER_PORT        $server_port;',
-      'uwsgi_param  SERVER_NAME        $server_name;',
       'uwsgi_param  REMOTE_USER        $remote_user;',
+      $_st2auth_custom_options,
     ],
   }
 
   nginx::resource::upstream { 'st2auth':
     members => ["127.0.0.1:${_st2auth_port}"],
+  }
+
+  # Needed for uWSGI server to write to logs
+  file { [
+    '/var/log/st2/st2api.log',
+    '/var/log/st2/st2api.audit.log',
+    '/var/log/st2/st2auth.log',
+    '/var/log/st2/st2auth.audit.log',
+  ]:
+    ensure  => present,
+    group   => $_nginx_daemon_user,
+    mode    => '0664',
+    require => Class['::st2::profile::server'],
+    before  => Adapter::St2_uwsgi_init['st2auth'],
   }
 
   # Ensure that the st2auth service is started up and serving before
@@ -371,19 +359,19 @@ class profile::st2server {
       source   => 'https://github.com/stackstorm/st2installer',
     }
 
-    adapter::st2_uwsgi_init { 'st2api': }
+    adapter::st2_uwsgi_init { 'st2installer': }
 
     uwsgi::app { 'st2installer':
       ensure              => present,
       uid                 => $_nginx_daemon_user,
       gid                 => $_nginx_daemon_user,
       application_options => {
-        'http-socket'  => "127.0.0.1:${_st2installer_port}",
-        'processes'    => 1,
-        'threads'      => 10,
-        'pecan'        => 'app.wsgi',
-        'chdir'        => '/etc/st2installer',
-        'vacuum'       => true,
+        'socket'    => "127.0.0.1:${_st2installer_port}",
+        'processes' => 1,
+        'threads'   => 10,
+        'pecan'     => 'app.wsgi',
+        'chdir'     => '/etc/st2installer',
+        'vacuum'    => true,
       },
       require       => Vcsrepo['/etc/st2installer'],
     }
@@ -392,7 +380,7 @@ class profile::st2server {
       vhost               => 'st2webui',
       ssl_only            => true,
       location            => '/setup/',
-      proxy               => 'http://st2installer',
+      uwsgi               => 'st2installer',
       rewrite_rules       => [
         '^/setup/(.*)  /$1 break',
       ],
