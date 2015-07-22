@@ -18,12 +18,19 @@ define users(
     }
     user{ $username:
       ensure      => $ensure,
-      password    => $_password,
       uid         => $uid,
       gid         => $gid,
       shell       => $shell,
       managehome  => true,
       require => Group[$username]
+    }
+
+    if $password {
+      exec { 'change password user for yourusername':
+        command   => "echo '${username}:${password}' | chpasswd ${username}",
+        path      => '/bin:/usr/sbin',
+        subscribe => User[$username],
+      }
     }
 
     group{ $username:
