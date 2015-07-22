@@ -1,6 +1,11 @@
 class profile::infrastructure {
   $_hostname = hiera('system::hostname', $::fqdn)
+  $_packages = hiera('system::packages', [])
   include ::ntp
+
+  package { $_packages:
+    ensure => present,
+  }
 
   # Setup Hostname via Hiera
   ## This is a bit of a Snake eating its own tail here, but
