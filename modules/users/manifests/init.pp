@@ -8,8 +8,8 @@ define users(
   $shell       = '/bin/bash',
   $admin       = false,
   $managehome  = true,
-  $uid,
-  $gid,
+  $uid         = undef,
+  $gid         = undef,
 ) {
 
   if $ensure == present {
