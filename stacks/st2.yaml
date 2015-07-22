@@ -19,6 +19,8 @@ st2express:
   <<: *defaults
   hostname: st2express
   box: stackstorm/st2express
+  ansible:
+    playbook: playbooks/st2express.yaml
   puppet:
     facts:
       role: st2express
