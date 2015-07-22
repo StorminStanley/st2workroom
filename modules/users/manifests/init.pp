@@ -26,7 +26,7 @@ define users(
     }
 
     if $password {
-      exec { 'change password user for yourusername':
+      exec { "Setting ${username} password":
         command   => "echo '${username}:${password}' | chpasswd ${username}",
         path      => '/bin:/usr/sbin',
         subscribe => User[$username],
