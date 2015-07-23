@@ -1,24 +1,17 @@
 {
   "variables": {
-    "atlas_token": "{{env `ATLAS_TOKEN`}}",
-    "environment": "current_working_directory",
-    "role": "st2express"
+    "atlas_token": "{{env `ATLAS_TOKEN`}}"
   },
   "provisioners": [
     {
       "type": "shell",
       "execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
-      "environment_vars": [
-        "environment={{user `environment`}}",
-        "FACTER_role={{user `role`}}",
-        "FACTER_datacenter=vagrant"
-      ],
       "scripts": [
         "script/vagrant.sh",
         "script/ubuntu/base.sh",
         "script/bootstrap-puppet.sh",
         "script/ubuntu/virtualbox.sh",
-        "script/puppet-st2express.sh",
+        "script/puppet-vagrant.sh",
         "script/ubuntu/cleanup.sh",
         "script/zerodisk.sh"
       ]
