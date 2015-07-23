@@ -427,6 +427,7 @@ class profile::st2server {
       'vacuum'    => true,
     },
     require       => Vcsrepo['/etc/st2installer'],
+    before        => Service['st2installer'],
   }
 
   # This is how installer lockdown occurs. After installation,

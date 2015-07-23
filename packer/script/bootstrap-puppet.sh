@@ -2,6 +2,7 @@
 # This stand-alone script should be able to be used to kickstart a new node
 
 PROJECT_ROOT=/opt/puppet
+export DEBIAN_FRONTEND=noninteractive
 
 # Install Pre-req for git
 if [ -f /usr/bin/apt-get ]; then
