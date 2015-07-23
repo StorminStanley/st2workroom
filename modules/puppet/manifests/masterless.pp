@@ -1,6 +1,7 @@
 class puppet::masterless(
-  $cron    = true,
-  $version = $::puppet::version,
+  $cron        = true,
+  $run_at_boot = false,
+  $version     = $::puppet::version,
 ) inherits puppet {
   $offset = fqdn_rand(30)
 
@@ -27,6 +28,15 @@ class puppet::masterless(
       ensure  => present,
       user    => 'root',
       minute  => $offset,
+      command => "${::settings::confdir}/script/puppet-apply",
+    }
+  }
+
+  if $run_at_boot {
+    cron { 'puppet-apply':
+      ensure  => present,
+      user    => 'root',
+      special => 'reboot',
       command => "${::settings::confdir}/script/puppet-apply",
     }
   }

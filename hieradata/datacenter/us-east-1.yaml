@@ -2,4 +2,4 @@
 classes:
   - profile::ec2
 puppet::masterless::cron: false
-
+puppet::masterless::run_at_boot: true
