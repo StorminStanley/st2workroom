@@ -430,16 +430,6 @@ class profile::st2server {
     before        => Service['st2installer'],
   }
 
-  # This is how installer lockdown occurs. After installation,
-  # the path is basically locked only to localhost.
-  $_st2installer_acls = $_installed ? {
-    true => {
-      'allow' => '127.0.0.1',
-      'deny'  => 'all',
-    },
-    false => undef,
-  }
-
   nginx::resource::location { 'st2installer':
     vhost               => 'st2webui',
     ssl_only            => true,
@@ -448,7 +438,6 @@ class profile::st2server {
     rewrite_rules       => [
       '^/setup/(.*)  /$1 break',
     ],
-    location_cfg_append => $_st2installer_acls,
   }
 
   nginx::resource::upstream { 'st2installer':
