@@ -1,0 +1,35 @@
+{
+  "variables": {
+    "environment": "current_working_directory",
+    "role": "st2express"
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "region": "us-east-1",
+      "source_ami": "ami-d05e75b8",
+      "instance_type": "m3.medium",
+      "ssh_username": "ubuntu",
+      "ami_name": "st2express {{timestamp}}"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
+      "environment_vars": [
+        "environment={{user `environment`}}",
+        "FACTER_role={{user `role`}}",
+        "FACTER_datacenter=ec2-east-1"
+      ],
+      "scripts": [
+        "script/ec2.sh",
+        "script/ubuntu/base.sh",
+        "script/bootstrap-puppet.sh",
+        "script/puppet-st2express.sh",
+        "script/ubuntu/cleanup.sh",
+        "script/zerodisk.sh"
+      ]
+    }
+  ]
+}
