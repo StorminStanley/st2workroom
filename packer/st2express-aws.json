@@ -12,7 +12,10 @@
       "source_ami": "{{user `ami`}}",
       "instance_type": "m3.medium",
       "ssh_username": "ubuntu",
-      "ami_name": "st2express {{timestamp}}"
+      "ami_name": "st2express {{timestamp}}",
+      "security_group_ids": [
+        "sg-d589fcb8"
+      ]
     }
   ],
   "provisioners": [
