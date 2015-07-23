@@ -1,26 +1,31 @@
 {
   "variables": {
     "environment": "current_working_directory",
-    "role": "st2express"
+    "role": "st2express",
+    "region": "us-east-1",
+    "ami": "ami-d05e75b8"
   },
   "builders": [
     {
       "type": "amazon-ebs",
-      "region": "us-east-1",
-      "source_ami": "ami-d05e75b8",
+      "region": "{{user `region`}}",
+      "source_ami": "{{user `ami`}}",
       "instance_type": "m3.medium",
       "ssh_username": "ubuntu",
-      "ami_name": "st2express {{timestamp}}"
+      "ami_name": "st2express {{timestamp}}",
+      "security_group_ids": [
+        "sg-d589fcb8"
+      ]
     }
   ],
   "provisioners": [
     {
       "type": "shell",
-      "execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
+      "execute_command": "echo 'ubuntu'|sudo -S sh '{{.Path}}'",
       "environment_vars": [
         "environment={{user `environment`}}",
         "FACTER_role={{user `role`}}",
-        "FACTER_datacenter=ec2-east-1"
+        "FACTER_datacenter={{user `region`}}"
       ],
       "scripts": [
         "script/ec2.sh",
