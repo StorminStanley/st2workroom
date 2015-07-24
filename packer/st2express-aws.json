@@ -1,7 +1,5 @@
 {
   "variables": {
-    "environment": "current_working_directory",
-    "role": "st2express",
     "region": "us-east-1",
     "ami": "ami-d05e75b8"
   },
@@ -21,14 +19,14 @@
   "provisioners": [
     {
       "type": "shell",
-      "execute_command": "echo 'ubuntu'|sudo -S sh '{{.Path}}'",
+      "execute_command": "echo 'ubuntu'|sudo -S bash '{{.Path}}'",
       "scripts": [
-        "script/ec2.sh",
         "script/ubuntu/base.sh",
+        "script/ubuntu/ec2/base.sh",
         "script/bootstrap-puppet.sh",
         "script/puppet-aws.sh",
         "script/ubuntu/cleanup.sh",
-        "script/zerodisk.sh"
+        "script/ubuntu/ec2/cleanup.sh"
       ]
     }
   ]
