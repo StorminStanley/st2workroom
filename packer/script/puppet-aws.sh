@@ -7,4 +7,3 @@ export environment=current_working_directory
 cd /opt/puppet
 script/bootstrap-linux
 script/puppet-apply
-
