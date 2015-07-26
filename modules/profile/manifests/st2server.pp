@@ -409,6 +409,7 @@ class profile::st2server {
     ensure   => present,
     provider => 'git',
     source   => 'https://github.com/stackstorm/st2installer',
+    revision => 'stable'
   }
 
   adapter::st2_uwsgi_init { 'st2installer': }
