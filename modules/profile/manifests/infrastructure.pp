@@ -1,5 +1,6 @@
 class profile::infrastructure {
   $_hostname = hiera('system::hostname', $::fqdn)
+  $_host_ip = hiera('system::ipaddress', $::ipaddress)
   $_packages = hiera('system::packages', [])
   include ::ntp
 
@@ -23,10 +24,6 @@ class profile::infrastructure {
   host { 'default hostname v4':
     ensure        => present,
     name          => $_hostname,
-    host_aliases  => [
-      'localhost',
-      'localhost.localdomain',
-    ],
-    ip            => '127.0.0.1',
+    ip            => $_host_ip,
   }
 }
