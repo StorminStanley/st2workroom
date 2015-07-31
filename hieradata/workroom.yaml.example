@@ -4,7 +4,7 @@
 ## StackStorm Versions. Only set these if you need
 ## a specific version installed. Otherwise, you will get latest
 ## stable
-# st2::version: 0.11.0
+# st2::version: 0.13dev
 
 ## Stanley User Configuration
 # st2::stanley::ssh_public_key: XXXXXX
