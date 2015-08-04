@@ -276,8 +276,8 @@ class profile::st2server {
     # ssl_key              => $_ssl_key,
     # ssl_protocols        => $_ssl_protocols,
     # ssl_ciphers          => $_cipher_list,
+    # vhost_cfg_prepend    => $_ssl_options,
     server_name          => $_server_names,
-    vhost_cfg_prepend    => $_ssl_options,
     uwsgi                => 'mistral',
   }
 
