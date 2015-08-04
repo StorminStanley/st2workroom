@@ -17,25 +17,26 @@ define adapter::st2_uwsgi_init (
   }
 
   $_subsystem_map = {
-    'api'          => 'api',
-    'st2api'       => 'api',
-    'auth'         => 'auth',
-    'st2auth'      => 'auth',
-    'installer'    => 'installer',
-    'st2installer' => 'installer',
+    'api'          => 'st2api',
+    'st2api'       => 'st2api',
+    'auth'         => 'st2auth',
+    'st2auth'      => 'st2auth',
+    'installer'    => 'st2installer',
+    'st2installer' => 'st2installer',
+    'mistral'      => 'mistral',
   }
   $_subsystem = $_subsystem_map[$subsystem]
 
-  file { "/etc/init/st2${_subsystem}.conf":
+  file { "/etc/init/${_subsystem}.conf":
     ensure  => file,
     owner   => 'root',
     group   => 'root',
     mode    => '0444',
     content => template('adapter/st2_uwsgi_init/init.conf.erb'),
-    notify  => Service["st2${_subsystem}"],
+    notify  => Service[$_subsystem],
   }
 
-  service { "st2${_subsystem}":
+  service { $_subsystem:
     ensure     => running,
     enable     => true,
     hasstatus  => true,

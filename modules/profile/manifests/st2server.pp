@@ -15,7 +15,9 @@ class profile::st2server {
   $_st2auth_uwsgi_threads = hiera('st2::auth_uwsgi_threads', 10)
   $_st2auth_uwsgi_processes = hiera('st2::auth_uwsgi_processes', 1)
   $_st2api_uwsgi_threads = hiera('st2::api_uwsgi_threads', 10)
-  $_st2api_uwsgi_processes = hiera('st2::auth_uwsgi_processes', 1)
+  $_st2api_uwsgi_processes = hiera('st2::api_uwsgi_processes', 1)
+  $_mistral_uwsgi_threads = hiera('st2::mistral_uwsgi_threads', 25)
+  $_mistral_uwsgi_processes = hiera('st2::mistral_uwsgi_processes', 1)
   $_root_cli_username = 'root_cli'
   $_root_cli_password = fqdn_rand_string(32)
   $_root_cli_uid = 2000
@@ -29,6 +31,7 @@ class profile::st2server {
   ]
 
   # Ports that uwsgi advertises on 127.0.0.1
+  $_mistral_port = '8989'
   $_st2auth_port = '9100'
   $_st2api_port = '9101'
   $_st2installer_port = '9102'
@@ -42,6 +45,10 @@ class profile::st2server {
     true    => absent,
     default => present,
   }
+
+  ## Application Directories. A tight coupling, but ok because it's a profile
+  $_python_pack = $::st2::profile::server::_python_pack
+  $_mistral_root = $::st2::profile::mistral::_mistral_root
 
   # NGINX SSL Settings. Provides A+ Setting. https://cipherli.st
   $_ssl_protocols = 'TLSv1 TLSv1.1 TLSv1.2'
@@ -86,8 +93,11 @@ class profile::st2server {
   Class[$_st2_classes] -> Anchor['st2::pre_reqs']
 
   class { '::st2::profile::mistral':
-    manage_mysql => true,
-    before       => Anchor['st2::pre_reqs'],
+    manage_mysql   => true,
+    manage_service => false,
+    api_url        => "https://${_hostname}",
+    api_port       => $_mistral_port,
+    before         => Anchor['st2::pre_reqs'],
   }
 
   # Install StackStorm, after all pre-requsities have been satisifed
@@ -136,7 +146,6 @@ class profile::st2server {
   }
   include ::st2::stanley
 
-  $_python_pack = $::st2::profile::server::_python_pack
 
   # Manage uwsgi with module, but install it using python pack
   # There is an odd error with installing directly via
@@ -233,6 +242,42 @@ class profile::st2server {
     mode    => '0440',
     content => $_ssl_key_content,
     notify  => Class['::nginx::service'],
+  }
+
+  ## Mistral uWSGI
+  adapter::st2_uwsgi_init { 'mistral': }
+
+  uwsgi::app { 'mistral':
+    ensure              => present,
+    uid                 => $_nginx_daemon_user,
+    gid                 => $_nginx_daemon_user,
+    application_options => {
+      'socket'    => "127.0.0.1:${_mistral_port}",
+      'processes' => $_mistral_uwsgi_processes,
+      'threads'   => $_mistral_uwsgi_threads,
+      'home'      => "${_mistral_root}/.venv/",
+      'wsgi-file' => "${_mistral_root}/mistral/api/wsgi.py",
+      'vacuum'    => true,
+    },
+  }
+
+  nginx::resource::vhost { 'mistral':
+    ensure               => present,
+    listen_ip            => $_host_ip,
+    listen_port          => $_mistral_port,
+    ssl                  => true,
+    ssl_port             => $_mistral_port,
+    ssl_cert             => $_ssl_cert,
+    ssl_key              => $_ssl_key,
+    ssl_protocols        => $_ssl_protocols,
+    ssl_ciphers          => $_cipher_list,
+    server_name          => $_server_names,
+    vhost_cfg_prepend    => $_ssl_options,
+    uwsgi                => 'mistral',
+  }
+
+  nginx::resource::upstream { 'mistral':
+    members => ["127.0.0.1:${_mistral_port}"],
   }
 
   # Cheating here a little bit. Because the st2web is now being

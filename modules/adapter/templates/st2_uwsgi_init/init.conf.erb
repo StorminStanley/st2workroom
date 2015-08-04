@@ -1,6 +1,6 @@
 # StackStorm <%= @_subsystem %> uWSGI script.
 #
-# Anchors to st2<%= @_subsystem %> parent init script
+# Anchors to <%= @_subsystem %> parent init script
 # to maintain compatability with st2ctl
 #
 # This file is managed by Puppet
@@ -8,8 +8,8 @@
 description     "StackStorm <%= @_subsystem %> uWSGI Daemon"
 author          "StackStorm Engineering <opsadmin@stackstorm.com>"
 
-start on starting st2<%= @_subsystem %>
-stop on stopping st2<%= @_subsystem %>
+start on starting <%= @_subsystem %>
+stop on stopping <%= @_subsystem %>
 
 respawn
 respawn limit 2 5
@@ -17,4 +17,4 @@ respawn limit 2 5
 umask 007
 kill timeout 60
 
-exec uwsgi --ini /etc/uwsgi.d/st2<%= @_subsystem %>.ini
+exec uwsgi --ini /etc/uwsgi.d/<%= @_subsystem %>.ini
