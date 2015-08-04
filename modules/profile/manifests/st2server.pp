@@ -37,6 +37,7 @@ class profile::st2server {
   $_st2installer_port = '9102'
   $_api_url = "https://${_host_ip}:${_st2api_port}"
   $_auth_url = "https://${_host_ip}:${_st2auth_port}"
+  $_mistral_url = "http://${_host_ip}"
 
   ## This ensures that the setup endpoint goes away
   ## After it has been run. Don't want to accidentally
@@ -47,8 +48,6 @@ class profile::st2server {
   }
 
   ## Application Directories. A tight coupling, but ok because it's a profile
-  $_python_pack = $::st2::profile::server::_python_pack
-  $_mistral_root = $::st2::profile::mistral::_mistral_root
 
   # NGINX SSL Settings. Provides A+ Setting. https://cipherli.st
   $_ssl_protocols = 'TLSv1 TLSv1.1 TLSv1.2'
@@ -95,10 +94,12 @@ class profile::st2server {
   class { '::st2::profile::mistral':
     manage_mysql   => true,
     manage_service => false,
-    api_url        => "https://${_hostname}",
+    api_url        => $_mistral_url,
     api_port       => $_mistral_port,
     before         => Anchor['st2::pre_reqs'],
   }
+  # $_mistral_root needs to be loaded here due to load-order
+  $_mistral_root = $::st2::profile::mistral::_mistral_root
 
   # Install StackStorm, after all pre-requsities have been satisifed
   # Use proxy authentication for pam auth, and setup st2api and st2auth
@@ -146,6 +147,8 @@ class profile::st2server {
   }
   include ::st2::stanley
 
+  # $_python_pack needs to be loaded here due to load-order
+  $_python_pack = $::st2::profile::server::_python_pack
 
   # Manage uwsgi with module, but install it using python pack
   # There is an odd error with installing directly via
@@ -265,12 +268,14 @@ class profile::st2server {
     ensure               => present,
     listen_ip            => $_host_ip,
     listen_port          => $_mistral_port,
-    ssl                  => true,
-    ssl_port             => $_mistral_port,
-    ssl_cert             => $_ssl_cert,
-    ssl_key              => $_ssl_key,
-    ssl_protocols        => $_ssl_protocols,
-    ssl_ciphers          => $_cipher_list,
+    # Disabling SSL temporarily while changes ported in
+    # JDF - 20150804
+    # ssl                  => true,
+    # ssl_port             => $_mistral_port,
+    # ssl_cert             => $_ssl_cert,
+    # ssl_key              => $_ssl_key,
+    # ssl_protocols        => $_ssl_protocols,
+    # ssl_ciphers          => $_cipher_list,
     server_name          => $_server_names,
     vhost_cfg_prepend    => $_ssl_options,
     uwsgi                => 'mistral',
