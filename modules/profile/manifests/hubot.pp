@@ -51,4 +51,12 @@ class profile::hubot(
       revision => undef,
     }
   }
+
+  #  Some hubot adapters are flakey, and randomly die. This is a workaround until
+  #  upstream PRs are merged.
+  cron { 'restart hubot':
+    command => 'service hubot restart',
+    user    => 'root',
+    hour    => '*/12',
+  }
 }
