@@ -16,6 +16,7 @@ class profile::st2server {
   $_st2auth_uwsgi_processes = hiera('st2::auth_uwsgi_processes', 1)
   $_st2api_uwsgi_threads = hiera('st2::api_uwsgi_threads', 10)
   $_st2api_uwsgi_processes = hiera('st2::api_uwsgi_processes', 1)
+  $_st2installer_branch = hiera('st2::installer_branch', 'stable')
   $_mistral_uwsgi_threads = hiera('st2::mistral_uwsgi_threads', 25)
   $_mistral_uwsgi_processes = hiera('st2::mistral_uwsgi_processes', 1)
   $_root_cli_username = 'root_cli'
@@ -460,7 +461,7 @@ class profile::st2server {
     ensure   => present,
     provider => 'git',
     source   => 'https://github.com/stackstorm/st2installer',
-    revision => 'stable'
+    revision => $_st2installer_branch,
   }
 
   adapter::st2_uwsgi_init { 'st2installer': }
@@ -517,9 +518,21 @@ class profile::st2server {
   }
 
   ### Installer also needs to try and send anonymous installation data via StackStorm
-  sudo::conf { "st2":
+  sudo::conf { "st2-call-home":
     priority => '5',
-    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/bin/st2 run st2.send_anonymous_install_data",
+    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/bin/st2 run st2.call_home",
+  }
+
+  ### Installer also needs access to reload packs into memory.
+  sudo::conf { "st2ctl-reload":
+    priority => '5',
+    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/bin/st2ctl reload --register-all",
+  }
+
+  ### Installer also to be able to tell Hubot to refresh its alias list
+  sudo::conf { "hubot-refresh-aliases":
+    priority => '5',
+    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/bin/st2 run hubot.refresh_aliases",
   }
 
   sudo::conf { $_nginx_daemon_user:
