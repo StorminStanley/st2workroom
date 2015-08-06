@@ -8,8 +8,8 @@
 description     "StackStorm <%= @_subsystem %> uWSGI Daemon"
 author          "StackStorm Engineering <opsadmin@stackstorm.com>"
 
-start on starting <%= @_subsystem %>
-stop on stopping <%= @_subsystem %>
+start on runlevel [2345]
+stop on runlevel [016]
 
 respawn
 respawn limit 2 5
