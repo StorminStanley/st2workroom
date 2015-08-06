@@ -173,6 +173,7 @@ class profile::st2server {
   # ### Application Configuration
   # ### Install any and all packs defined in Hiera.
   include ::st2::packs
+  include ::st2::kvs
 
   ## SSL Certificate
   # Generate a Self-signed cert if the user does not provide cert details
@@ -513,6 +514,12 @@ class profile::st2server {
   sudo::conf { "env_puppet":
     priority => '5',
     content  => 'Defaults!/usr/bin/puprun env_keep += "nocolor environment debug"',
+  }
+
+  ### Installer also needs to try and send anonymous installation data via StackStorm
+  sudo::conf { "st2":
+    priority => '5',
+    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/bin/st2 run st2.send_anonymous_install_data",
   }
 
   sudo::conf { $_nginx_daemon_user:
