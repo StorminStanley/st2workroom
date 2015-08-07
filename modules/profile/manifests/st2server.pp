@@ -570,7 +570,7 @@ class profile::st2server {
   }
 
   ### Installer needs access to a few specific files
-  file { "${::settings::confdir}/hieradata/workroom.yaml":
+  file { "${::settings::confdir}/hieradata/answers.yaml":
     ensure => file,
     owner  => $_nginx_daemon_user,
     group  => $_nginx_daemon_user,
@@ -613,7 +613,7 @@ class profile::st2server {
   ### Installer also to be able to restart nginx
   sudo::conf { "delete-answer-file":
     priority => '5',
-    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /bin/rm /opt/puppet/hieradata/workroom.yaml",
+    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /bin/rm /opt/puppet/hieradata/answers.yaml",
   }
   sudo::conf { "puppet":
     priority => '10',

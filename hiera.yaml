@@ -12,4 +12,5 @@
   - "osfamily/%{::osfamily}"
   - "datacenter/%{::datacenter}"
   - common
+  - answers
   - workroom
