@@ -16,6 +16,7 @@ class profile::st2server {
   $_st2auth_uwsgi_processes = hiera('st2::auth_uwsgi_processes', 1)
   $_st2api_uwsgi_threads = hiera('st2::api_uwsgi_threads', 10)
   $_st2api_uwsgi_processes = hiera('st2::api_uwsgi_processes', 1)
+  $_st2installer_branch = hiera('st2::installer_branch', 'stable')
   $_mistral_uwsgi_threads = hiera('st2::mistral_uwsgi_threads', 25)
   $_mistral_uwsgi_processes = hiera('st2::mistral_uwsgi_processes', 1)
   $_root_cli_username = 'root_cli'
@@ -23,11 +24,24 @@ class profile::st2server {
   $_root_cli_uid = 2000
   $_root_cli_gid = 2000
 
+  # In the event that we are packaging an image to be used 100% offline
+  # this flag exists to wrap any resource that may automatically update
+  # or make an external call to the internet. This avoids that, instead
+  # relying on the first-run packaging to have done the needful.
+  #
+  # We assume by default that the user has internet access, but this
+  # is not always the case (restricted VPC or images we want to otherwise
+  # freeze).
+  $_auto_update = hiera('st2::auto_update', true)
+
+  if $_user_ssl_cert and $_user_ssl_key {
+    $_self_signed_cert = false
+  } else {
+    $_self_signed_cert = true
+  }
+
   $_server_names = [
     $_hostname,
-    'localhost',
-    'st2express.local',
-    'localhost.localdomain',
   ]
 
   # Ports that uwsgi advertises on 127.0.0.1
@@ -52,18 +66,19 @@ class profile::st2server {
   # NGINX SSL Settings. Provides A+ Setting. https://cipherli.st
   $_ssl_protocols = 'TLSv1 TLSv1.1 TLSv1.2'
   $_cipher_list = 'EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH:ECDHE-RSA-AES128-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA128:DHE-RSA-AES128-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA128:ECDHE-RSA-AES128-SHA384:ECDHE-RSA-AES128-SHA128:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA128:DHE-RSA-AES128-SHA128:DHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA384:AES128-GCM-SHA128:AES128-SHA128:AES128-SHA128:AES128-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4'
-  $_headers = {
-    'Front-End-Https'           => 'on',
-    'X-Content-Type-Options'    => 'nosniff',
-    'Strict-Transport-Security' =>
-      '"max-age=63072000; includeSubdomains; preload"',
-  }
-  $_ssl_options = {
-#    'ssl_session_tickets' => 'off',
-#    'ssl_stapling'        => 'on',
-#    'ssl_stapling_verify' => 'on',
-    'resolver'            => '8.8.4.4 8.8.8.8 valid=300s',
-    'resolver_timeout'    => '5s',
+
+  # Disable HSTS if the user provides a self-signed cert
+  $_headers = $_self_signed_cert ? {
+    true => {
+      'Front-End-Https'           => 'on',
+      'X-Content-Type-Options'    => 'nosniff',
+    },
+    default => {
+      'Front-End-Https'           => 'on',
+      'X-Content-Type-Options'    => 'nosniff',
+      'Strict-Transport-Security' =>
+        '"max-age=63072000; includeSubdomains; preload"',
+    }
   }
 
   #########################################################
@@ -71,9 +86,20 @@ class profile::st2server {
   #########################################################
 
   ### Infrastructure/Application Pre-requsites
-  ## nginx-full contains PAM bits
+
+  ## Note: nginx-full contains PAM bits
+  ## Note: Service restart is setup this way to prevent puppet runs from
+  ##       triggering a restart. Instead, nginx restart must be executed
+  ##       manually by the user
+  $_nginx_configtest = $::installer_running ? {
+    undef   => undef,
+    default => true,
+  }
+
   class { '::nginx':
-    package_name => 'nginx-full',
+    package_name      => 'nginx-full',
+    service_restart   => '/etc/init.d/nginx configtest',
+    configtest_enable => $_nginx_configtest,
   }
 
   # We need to grab the group nginx belongs to in order to provide
@@ -181,7 +207,7 @@ class profile::st2server {
   # a user provides a key, we pass that content down through to the resource.
   # Otherwise, the cert is generated. Either way, the resources below ensure
   # proper permissioning for the webserver to read/access.
-  if $_user_ssl_cert and $_user_ssl_key {
+  if ! $_self_signed_cert {
     $_ssl_cert_content = $_user_ssl_cert
     $_ssl_key_content = $_user_ssl_key
   } else {
@@ -207,11 +233,33 @@ class profile::st2server {
       owner   => $_nginx_daemon_user,
       mode    => '0444',
       content => template('openssl/cert.cnf.erb'),
+      notify  => Exec['remove old self-signed certs'],
+    }
+
+    # In the event that the configuration is refreshed, clean
+    # up the old certificates to prevent cert mismatches and
+    # CORS errors
+    exec { 'remove old self-signed certs':
+      command => "rm -rf ${_ssl_key} ${_ssl_cert}",
+      path    => [
+        '/usr/bin',
+        '/usr/sbin',
+        '/bin',
+        '/sbin',
+      ],
+      refreshonly => true,
+      before      => [
+        Ssl_pkey[$_ssl_key],
+        X509_cert[$_ssl_cert],
+      ],
     }
 
     ssl_pkey { $_ssl_key:
       ensure => present,
-      before => File[$_ssl_key],
+      before => [
+        File[$_ssl_key],
+        Class['nginx::service'],
+      ]
     }
 
     x509_cert { $_ssl_cert:
@@ -224,8 +272,14 @@ class profile::st2server {
         Ssl_pkey[$_ssl_key],
         File[$_ssl_template],
       ],
-      before      => File[$_ssl_cert],
+      before      => [
+        File[$_ssl_cert],
+        Class['nginx::service'],
+      ],
     }
+
+    # Nginx needs to reload with new certificate for things to work properly
+    Class['nginx::service'] -> Exec<| tag == 'st2::kv' |>
   }
 
   # Ensure the SSL Certificates are owned by the proper
@@ -238,18 +292,26 @@ class profile::st2server {
     owner   => 'root',
     mode    => '0444',
     content => $_ssl_cert_content,
-    notify  => Class['::nginx::service'],
+    before  => Class['::nginx::service'],
   }
   file { $_ssl_key:
     ensure  => file,
     owner   => 'root',
     mode    => '0440',
     content => $_ssl_key_content,
-    notify  => Class['::nginx::service'],
+    before  => Class['::nginx::service'],
   }
 
   ## Mistral uWSGI
   adapter::st2_uwsgi_init { 'mistral': }
+
+  # File permissions to allow uWSGI process to write logs
+  file { '/var/log/mistral.log':
+    ensure => file,
+    owner  => $_nginx_daemon_user,
+    group  => $_nginx_daemon_user,
+    mode   => '0664',
+  }
 
   uwsgi::app { 'mistral':
     ensure              => present,
@@ -262,6 +324,7 @@ class profile::st2server {
       'home'      => "${_mistral_root}/.venv/",
       'wsgi-file' => "${_mistral_root}/mistral/api/wsgi.py",
       'vacuum'    => true,
+      'logto'     => '/var/log/mistral.log',
     },
   }
 
@@ -277,7 +340,6 @@ class profile::st2server {
     # ssl_key              => $_ssl_key,
     # ssl_protocols        => $_ssl_protocols,
     # ssl_ciphers          => $_cipher_list,
-    # vhost_cfg_prepend    => $_ssl_options,
     server_name          => $_server_names,
     uwsgi                => 'mistral',
   }
@@ -315,7 +377,6 @@ class profile::st2server {
     ssl_key           => $_ssl_key,
     ssl_protocols     => $_ssl_protocols,
     ssl_ciphers       => $_cipher_list,
-    vhost_cfg_prepend => $_ssl_options,
     server_name       => $_server_names,
     add_header        => $_headers,
     www_root          => '/opt/stackstorm/static/webui/',
@@ -352,7 +413,6 @@ class profile::st2server {
     ssl_protocols        => $_ssl_protocols,
     ssl_ciphers          => $_cipher_list,
     server_name          => $_server_names,
-    vhost_cfg_prepend    => $_ssl_options,
     proxy                => 'http://st2api',
     location_raw_prepend => [
       $_st2api_custom_options,
@@ -394,6 +454,11 @@ class profile::st2server {
 
   adapter::st2_uwsgi_init { 'st2auth': }
 
+  # File permissions to allow uWSGI process to write logs
+  File<| title == '/var/log/st2/st2auth.log' |> {
+    owner  => $_nginx_daemon_user,
+  }
+
   uwsgi::app { 'st2auth':
     ensure              => present,
     uid                 => $_nginx_daemon_user,
@@ -404,6 +469,7 @@ class profile::st2server {
       'threads'   => $_st2auth_uwsgi_threads,
       'wsgi-file' => "${_python_pack}/st2auth/wsgi.py",
       'vacuum'    => true,
+      'logto'     => '/var/log/st2/st2auth.log',
     },
   }
 
@@ -417,7 +483,6 @@ class profile::st2server {
     ssl_key              => $_ssl_key,
     ssl_protocols        => $_ssl_protocols,
     ssl_ciphers          => $_cipher_list,
-    vhost_cfg_prepend    => $_ssl_options,
     server_name          => $_server_names,
     uwsgi                => 'st2auth',
     proxy_set_header     => [
@@ -460,10 +525,18 @@ class profile::st2server {
     ensure   => present,
     provider => 'git',
     source   => 'https://github.com/stackstorm/st2installer',
-    revision => 'stable'
+    revision => $_st2installer_branch,
   }
 
   adapter::st2_uwsgi_init { 'st2installer': }
+
+  # File permissions to allow uWSGI process to write logs
+  file { '/var/log/st2/st2installer.log':
+    ensure => file,
+    owner  => $_nginx_daemon_user,
+    group  => $_nginx_daemon_user,
+    mode   => '0664',
+  }
 
   uwsgi::app { 'st2installer':
     ensure              => present,
@@ -476,6 +549,7 @@ class profile::st2server {
       'pecan'     => 'app.wsgi',
       'chdir'     => '/etc/st2installer',
       'vacuum'    => true,
+      'logto'     => '/var/log/st2/st2installer.log',
     },
     require       => Vcsrepo['/etc/st2installer'],
     before        => Service['st2installer'],
@@ -510,19 +584,33 @@ class profile::st2server {
     mode   => $_installer_workroom_mode,
   }
 
+  ### st2installer needs access to run a few commands post-install.
   ### Installer also needs the ability to kick off a Puppet run to converge the system
   sudo::conf { "env_puppet":
     priority => '5',
-    content  => 'Defaults!/usr/bin/puprun env_keep += "nocolor environment debug"',
+    content  => 'Defaults!/usr/bin/puprun env_keep += "nocolor environment debug FACTER_installer_running"',
   }
-
   ### Installer also needs to try and send anonymous installation data via StackStorm
-  sudo::conf { "st2":
+  sudo::conf { "st2-call-home":
     priority => '5',
-    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/bin/st2 run st2.send_anonymous_install_data",
+    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/bin/st2 run st2.call_home",
   }
-
-  sudo::conf { $_nginx_daemon_user:
+  ### Installer also needs access to reload packs into memory.
+  sudo::conf { "st2ctl-reload":
+    priority => '5',
+    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/bin/st2ctl reload --register-all",
+  }
+  ### Installer also to be able to tell Hubot to refresh its alias list
+  sudo::conf { "hubot-refresh-aliases":
+    priority => '5',
+    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/sbin/service hubot restart",
+  }
+  ### Installer also to be able to restart nginx
+  sudo::conf { "restart-nginx":
+    priority => '5',
+    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/sbin/service nginx restart",
+  }
+  sudo::conf { "puppet":
     priority => '10',
     content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/bin/puprun",
   }
