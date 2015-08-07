@@ -24,6 +24,16 @@ class profile::st2server {
   $_root_cli_uid = 2000
   $_root_cli_gid = 2000
 
+  # In the event that we are packaging an image to be used 100% offline
+  # this flag exists to wrap any resource that may automatically update
+  # or make an external call to the internet. This avoids that, instead
+  # relying on the first-run packaging to have done the needful.
+  #
+  # We assume by default that the user has internet access, but this
+  # is not always the case (restricted VPC or images we want to otherwise
+  # freeze).
+  $_auto_update = hiera('st2::auto_update', true)
+
   if $_user_ssl_cert and $_user_ssl_key {
     $_self_signed_cert = false
   } else {
@@ -269,8 +279,7 @@ class profile::st2server {
     }
 
     # Nginx needs to reload with new certificate for things to work properly
-    Class['nginx::service'] -> St2::Kv<||>
-    Class['nginx::service'] -> St2::Pack<||>
+    Class['nginx::service'] -> Exec<| tag == 'st2::kv' |>
   }
 
   # Ensure the SSL Certificates are owned by the proper
@@ -296,6 +305,14 @@ class profile::st2server {
   ## Mistral uWSGI
   adapter::st2_uwsgi_init { 'mistral': }
 
+  # File permissions to allow uWSGI process to write logs
+  file { '/var/log/mistral.log':
+    ensure => file,
+    owner  => $_nginx_daemon_user,
+    group  => $_nginx_daemon_user,
+    mode   => '0664',
+  }
+
   uwsgi::app { 'mistral':
     ensure              => present,
     uid                 => $_nginx_daemon_user,
@@ -307,6 +324,7 @@ class profile::st2server {
       'home'      => "${_mistral_root}/.venv/",
       'wsgi-file' => "${_mistral_root}/mistral/api/wsgi.py",
       'vacuum'    => true,
+      'logto'     => '/var/log/mistral.log',
     },
   }
 
@@ -436,6 +454,11 @@ class profile::st2server {
 
   adapter::st2_uwsgi_init { 'st2auth': }
 
+  # File permissions to allow uWSGI process to write logs
+  File<| title == '/var/log/st2/st2auth.log' |> {
+    owner  => $_nginx_daemon_user,
+  }
+
   uwsgi::app { 'st2auth':
     ensure              => present,
     uid                 => $_nginx_daemon_user,
@@ -446,6 +469,7 @@ class profile::st2server {
       'threads'   => $_st2auth_uwsgi_threads,
       'wsgi-file' => "${_python_pack}/st2auth/wsgi.py",
       'vacuum'    => true,
+      'logto'     => '/var/log/st2/st2auth.log',
     },
   }
 
@@ -506,6 +530,14 @@ class profile::st2server {
 
   adapter::st2_uwsgi_init { 'st2installer': }
 
+  # File permissions to allow uWSGI process to write logs
+  file { '/var/log/st2/st2installer.log':
+    ensure => file,
+    owner  => $_nginx_daemon_user,
+    group  => $_nginx_daemon_user,
+    mode   => '0664',
+  }
+
   uwsgi::app { 'st2installer':
     ensure              => present,
     uid                 => $_nginx_daemon_user,
@@ -517,6 +549,7 @@ class profile::st2server {
       'pecan'     => 'app.wsgi',
       'chdir'     => '/etc/st2installer',
       'vacuum'    => true,
+      'logto'     => '/var/log/st2/st2installer.log',
     },
     require       => Vcsrepo['/etc/st2installer'],
     before        => Service['st2installer'],
