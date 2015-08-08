@@ -522,7 +522,7 @@ class profile::st2server {
   # Setup the installer on initial provision, and get rid of it
   # after setup has been run.
   vcsrepo { '/etc/st2installer':
-    ensure   => present,
+    ensure   => latest,
     provider => 'git',
     source   => 'https://github.com/stackstorm/st2installer',
     revision => $_st2installer_branch,
