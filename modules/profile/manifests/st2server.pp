@@ -532,10 +532,11 @@ class profile::st2server {
 
   # File permissions to allow uWSGI process to write logs
   file { '/var/log/st2/st2installer.log':
-    ensure => file,
-    owner  => $_nginx_daemon_user,
-    group  => $_nginx_daemon_user,
-    mode   => '0664',
+    ensure  => file,
+    owner   => $_nginx_daemon_user,
+    group   => $_nginx_daemon_user,
+    mode    => '0664',
+    require => Class['::st2::profile::server'],
   }
 
   uwsgi::app { 'st2installer':
