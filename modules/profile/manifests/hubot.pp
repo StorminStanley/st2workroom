@@ -2,13 +2,28 @@ class profile::hubot(
   $bot_name = 'hubot',
 ) {
   ## Common
-  include ::hubot
-
-  if $::osfamily == 'Debian' {
-    package { 'npm':
-      ensure => present,
-    }
+  class { '::hubot':
+    install_nodejs => false,
   }
+  class { '::nodejs':
+    nodejs_dev_package_ensure => 'present',
+    npm_package_ensure        => 'present',
+  }
+
+  $_hubot_bin_dir = '/opt/hubot/hubot'
+  $_hubot_user    = 'hubot'
+
+  # These packages are used to pre-download a ton of chat
+  # adapters and their dependencies for offline usage.
+  $_npm_packages  = [
+    'hubot-scripts',
+    'hubot-stackstorm',
+    'hubot-irc',
+    'hubot-flowdock',
+    'hubot-slack',
+    'hubot-xmpp',
+    'hubot-hipchat',
+  ]
 
   file { '/usr/bin/node':
     ensure => symlink,
@@ -47,7 +62,7 @@ class profile::hubot(
       provider => upstart,
     }
     File<| tag == 'hubot::config' |> ->
-    Vcsrepo<| title == '/opt/hubot/hubot' |> {
+    Vcsrepo<| title == $_hubot_bin_dir |> {
       revision => undef,
     }
   }
@@ -58,5 +73,15 @@ class profile::hubot(
     command => 'service hubot restart',
     user    => 'root',
     hour    => '*/12',
+  }
+
+  # Pre-install all the necessary adapters for offline use
+  Exec<| tag == 'nodejs::npm' |> {
+    environment => 'HOME=/opt/hubot',
+  }
+  nodejs::npm { $_npm_packages:
+    ensure => present,
+    target => $_hubot_bin_dir,
+    user   => $_hubot_user,
   }
 }

@@ -72,7 +72,7 @@ if [ "$cache_libraries" = "1" ]; then
   OLD_SHA=$(cat .puppetfile)
   CURRENT_SHA=$(git hash-object Puppetfile)
   if [ "$OLD_SHA" != "$CURRENT_SHA" ]; then
-    bundle exec r10k puppetfile install --path shared
+    bundle exec librarian-puppet install --path shared
     echo $CURRENT_SHA > .puppetfile
   fi
 else
