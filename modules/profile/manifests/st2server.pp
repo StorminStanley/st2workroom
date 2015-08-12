@@ -620,4 +620,12 @@ class profile::st2server {
     priority => '10',
     content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/bin/puprun",
   }
+
+  # Dependencies
+  # Here lies odd dependencies that need to be put in this file. Please document them.
+
+  ## Because authentication is now being passed via Nginx, we need to make sure that
+  ## the service for nginx is up and running before responding to any CLI requests
+  Service['nginx'] -> Exec<| tag == 'st2::key' |>
+  Service['nginx'] -> Exec<| tag == 'st2::pack' |>
 }
