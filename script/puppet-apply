@@ -57,7 +57,7 @@ fi
 
 # Deploy Environments from upstream
 if [ "$generate_all_environments" != "0" ]; then
-  bundle exec r10k deploy environment -p -c $PROJECT_ROOT/r10k.yaml $R10K_DEBUG_ARGS
+  bundle exec rake environments:update
 fi
 
 # Bootstrap Modules for current_working_directory
@@ -72,11 +72,11 @@ if [ "$cache_libraries" = "1" ]; then
   OLD_SHA=$(cat .puppetfile)
   CURRENT_SHA=$(git hash-object Puppetfile)
   if [ "$OLD_SHA" != "$CURRENT_SHA" ]; then
-    bundle exec r10k puppetfile install $R10K_DEBUG_ARGS
+    bundle exec librarian-puppet install --path shared
     echo $CURRENT_SHA > .puppetfile
   fi
 else
-  bundle exec r10k puppetfile install $R10K_DEBUG_ARGS
+  bundle exec librarian-puppet install --path shared
 fi
 
 # Make sure the current working directory is an environment too!
