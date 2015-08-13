@@ -22,4 +22,4 @@ apt-get -y install unzip wget ruby ruby-dev git
 apt-get -y install puppet-agent ruby-bundler unzip wget ruby ruby-dev git
 gem install bundler deep_merge --no-ri --no-rdoc
 
-touch /etc/vagrant-bootstrapped
+touch /etc/st2workroom-bootstrapped
