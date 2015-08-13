@@ -26,3 +26,6 @@ if [ ! -d /etc/facter/facts.d ]; then
   mkdir -p /etc/facter/facts.d
 fi
 
+# Start up the st2express bootstrap
+${PROJECT_ROOT}/script/bootstrap-linux
+
