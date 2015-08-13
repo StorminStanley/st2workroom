@@ -19,7 +19,6 @@ class profile::st2server {
   $_st2installer_branch = hiera('st2::installer_branch', 'stable')
   $_mistral_uwsgi_threads = hiera('st2::mistral_uwsgi_threads', 25)
   $_mistral_uwsgi_processes = hiera('st2::mistral_uwsgi_processes', 1)
-  $_offline_installation = hiera('st2::offline_installation', false)
   $_root_cli_username = 'root_cli'
   $_root_cli_password = fqdn_rand_string(32)
   $_root_cli_uid = 2000
