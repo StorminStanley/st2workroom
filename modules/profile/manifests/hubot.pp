@@ -6,8 +6,7 @@ class profile::hubot(
     install_nodejs => false,
   }
   class { '::nodejs':
-    nodejs_dev_package_ensure => 'present',
-    npm_package_ensure        => 'present',
+    npm_package_ensure => 'present',
   }
 
   $_hubot_bin_dir = '/opt/hubot/hubot'
