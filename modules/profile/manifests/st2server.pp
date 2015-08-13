@@ -32,7 +32,7 @@ class profile::st2server {
   # We assume by default that the user has internet access, but this
   # is not always the case (restricted VPC or images we want to otherwise
   # freeze).
-  $_auto_update = hiera('st2::auto_update', true)
+  $_autoupdate = hiera('st2::autoupdate', true)
 
   if $_user_ssl_cert and $_user_ssl_key {
     $_self_signed_cert = false
@@ -117,12 +117,19 @@ class profile::st2server {
   include $_st2_classes
   Class[$_st2_classes] -> Anchor['st2::pre_reqs']
 
+  # In the event that we are in offline mode, detach all downstream dependencies
+  # as the vcsrepo action failing will cause all downsteam dependencies to fail.
+  # It is safe to assume the requirements have been met at the time of run
+  $_st2_profile_mistral_before = $_autoupdate ? {
+    true    => Anchor['st2::pre_reqs'],
+    default => undef,
+  }
   class { '::st2::profile::mistral':
     manage_mysql   => true,
     manage_service => false,
     api_url        => $_mistral_url,
     api_port       => $_mistral_port,
-    before         => Anchor['st2::pre_reqs'],
+    before         => $_st2_profile_mistral_before,
   }
   # $_mistral_root needs to be loaded here due to load-order
   $_mistral_root = $::st2::profile::mistral::_mistral_root
@@ -521,11 +528,17 @@ class profile::st2server {
 
   # Setup the installer on initial provision, and get rid of it
   # after setup has been run.
+
+  $_st2installer_before = $_autoupdate ? {
+    true    => Uwsgi::App['st2installer'],
+    default => undef,
+  }
   vcsrepo { '/etc/st2installer':
     ensure   => latest,
     provider => 'git',
     source   => 'https://github.com/stackstorm/st2installer',
     revision => $_st2installer_branch,
+    before   => $_st2installer_before,
   }
 
   adapter::st2_uwsgi_init { 'st2installer': }
@@ -552,7 +565,6 @@ class profile::st2server {
       'vacuum'    => true,
       'logto'     => '/var/log/st2/st2installer.log',
     },
-    require       => Vcsrepo['/etc/st2installer'],
     before        => Service['st2installer'],
   }
 

@@ -4,3 +4,4 @@ classes:
 
 puppet::masterless::cron: false
 st2::installer_workroom_mode: "0666"
+st2::autoupdate: true
