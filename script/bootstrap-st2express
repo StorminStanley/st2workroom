@@ -24,8 +24,11 @@ fi
 if [ ! -d /etc/facter/facts.d ]; then
   echo "Setting up facter.d..."
   mkdir -p /etc/facter/facts.d
+  echo "role=st2express" > /etc/facter/facts.d/role.txt
 fi
 
 # Start up the st2express bootstrap
 ${PROJECT_ROOT}/script/bootstrap-linux
 
+# Converge the system
+${PROJECT_ROOT}/script/puppet-apply
