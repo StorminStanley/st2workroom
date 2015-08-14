@@ -12,9 +12,14 @@ if [ ! $(which curl) ]; then
 fi
 
 # Install Puppet Source
-rm /etc/apt/sources.list.d/puppetlabs.list
-curl -O http://apt.puppetlabs.com/puppetlabs-release-pc1-${DISTRIB_CODENAME}.deb
-dpkg -i puppetlabs-release-pc1-${DISTRIB_CODENAME}.deb
+if [ -f /etc/apt/sources.list.d/puppetlabs.list ]; then
+  rm /etc/apt/sources.list.d/puppetlabs.list
+fi
+
+if [ ! -f /etc/apt/sources.list.d/puppetlabs-pc1.list ]; then
+  curl -O http://apt.puppetlabs.com/puppetlabs-release-pc1-${DISTRIB_CODENAME}.deb
+  dpkg -i puppetlabs-release-pc1-${DISTRIB_CODENAME}.deb
+fi
 
 apt-get update
 

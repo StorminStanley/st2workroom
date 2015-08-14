@@ -1,7 +1,7 @@
 {
   "variables": {
     "atlas_token": "{{env `ATLAS_TOKEN`}}",
-    "release_version": "{{env `RELEASE_VERSION`}}"
+    "release_version": "0.1.0"
   },
   "provisioners": [
     {
@@ -58,7 +58,7 @@
         "artifact_type": "vagrant.box",
         "artifact": "stackstorm/st2express",
         "metadata": {
-          "provider": "vmware_workstation",
+          "provider": "vmware_desktop",
           "created_at": "{{timestamp}}",
           "version": "{{user `release_version`}}"
         }

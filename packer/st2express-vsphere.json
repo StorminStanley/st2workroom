@@ -1,7 +1,4 @@
 {
-  "variables": {
-    "atlas_token": "{{env `ATLAS_TOKEN`}}"
-  },
   "provisioners": [
     {
       "type": "shell",
