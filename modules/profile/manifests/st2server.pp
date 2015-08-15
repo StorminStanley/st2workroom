@@ -53,13 +53,8 @@ class profile::st2server {
   $_auth_url = "https://${_host_ip}:${_st2auth_port}"
   $_mistral_url = "http://${_host_ip}"
 
-  ## This ensures that the setup endpoint goes away
-  ## After it has been run. Don't want to accidentally
-  ## overwrite a system.
-  $_st2installer_present = $_installed ? {
-    true    => absent,
-    default => present,
-  }
+  $_st2installer_root = '/etc/st2installer'
+  $_st2installer_logfile = '/var/log/st2/st2installer.log'
 
   ## Application Directories. A tight coupling, but ok because it's a profile
 
@@ -533,7 +528,9 @@ class profile::st2server {
     true    => Uwsgi::App['st2installer'],
     default => undef,
   }
-  vcsrepo { '/etc/st2installer':
+
+  # Install updated pecan
+  vcsrepo { $_st2installer_root:
     ensure   => latest,
     provider => 'git',
     source   => 'https://github.com/stackstorm/st2installer',
@@ -541,10 +538,20 @@ class profile::st2server {
     before   => $_st2installer_before,
   }
 
+  python::virtualenv { $_st2installer_root:
+    ensure       => present,
+    version      => 'system',
+    systempkgs   => false,
+    venv_dir     => "${_st2installer_root}/.venv",
+    cwd          => $_mistral_root,
+    requirements => "${_st2installer_root}/requirements.txt",
+    before       => Service['st2installer'],
+  }
+
   adapter::st2_uwsgi_init { 'st2installer': }
 
   # File permissions to allow uWSGI process to write logs
-  file { '/var/log/st2/st2installer.log':
+  file { $_st2installer_logfile:
     ensure  => file,
     owner   => $_nginx_daemon_user,
     group   => $_nginx_daemon_user,
@@ -557,15 +564,16 @@ class profile::st2server {
     uid                 => $_nginx_daemon_user,
     gid                 => $_nginx_daemon_user,
     application_options => {
-      'socket'    => "127.0.0.1:${_st2installer_port}",
-      'processes' => 1,
-      'threads'   => 10,
-      'pecan'     => 'app.wsgi',
-      'chdir'     => '/etc/st2installer',
-      'vacuum'    => true,
-      'logto'     => '/var/log/st2/st2installer.log',
+      'socket'     => "127.0.0.1:${_st2installer_port}",
+      'processes'  => 1,
+      'threads'    => 10,
+      'wsgi-file'  => 'app.wsgi',
+      'chdir'      => '/etc/st2installer',
+      'vacuum'     => true,
+      'logto'      => $_st2installer_logfile,
+      'virtualenv' => "${_st2installer_root}/.venv",
     },
-    before        => Service['st2installer'],
+    before         => Service['st2installer'],
   }
 
   nginx::resource::location { 'st2installer':
