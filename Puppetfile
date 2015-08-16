@@ -3,7 +3,7 @@ forge "https://forgeapi.puppetlabs.com"
 mod 'puppetlabs-stdlib',             '4.6.0'
 
 mod 'maestrodev-git',                '1.0.6'
-mod 'maestrodev-wget',               '1.5.6'
+mod 'maestrodev-wget',               '1.7.0'
 mod 'nanliu-staging',                '1.0.2'
 mod 'saz-sudo',                      '3.0.9'
 mod 'stankevich-python',             '1.7.15'
