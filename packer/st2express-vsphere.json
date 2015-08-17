@@ -4,11 +4,11 @@
       "type": "shell",
       "execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
       "scripts": [
-        "script/vagrant.sh",
+        "script/vsphere.sh",
         "script/ubuntu/base.sh",
         "script/bootstrap-puppet.sh",
         "script/ubuntu/vmware.sh",
-        "script/puppet-vagrant.sh",
+        "script/puppet-vsphere.sh",
         "script/ubuntu/cleanup.sh",
         "script/zerodisk.sh"
       ]
@@ -55,8 +55,8 @@
       "iso_checksum": "9e5fecc94b3925bededed0fdca1bd417",
       "iso_checksum_type": "md5",
       "iso_url": "http://releases.ubuntu.com/14.04/ubuntu-14.04.3-server-amd64.iso",
-      "ssh_username": "vagrant",
-      "ssh_password": "vagrant",
+      "ssh_username": "stackstorm",
+      "ssh_password": "stackstorm",
       "ssh_port": 22,
       "ssh_wait_timeout": "10000s",
       "shutdown_command": "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
