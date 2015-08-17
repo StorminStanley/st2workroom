@@ -37,7 +37,8 @@
     [
       {
         "type": "vagrant",
-        "keep_input_artifact": false
+        "keep_input_artifact": false,
+        "compression_level": 9
       },
       {
         "type": "atlas",

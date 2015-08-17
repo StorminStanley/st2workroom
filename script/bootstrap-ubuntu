@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+APT_UPDATE_FREQ=30
 source $DIR/shared-functions
 
 export DEBIAN_FRONTEND=noninteractive
@@ -12,11 +13,22 @@ if [ ! $(which curl) ]; then
 fi
 
 # Install Puppet Source
-rm /etc/apt/sources.list.d/puppetlabs.list
-curl -O http://apt.puppetlabs.com/puppetlabs-release-pc1-${DISTRIB_CODENAME}.deb
-dpkg -i puppetlabs-release-pc1-${DISTRIB_CODENAME}.deb
+if [ -f /etc/apt/sources.list.d/puppetlabs.list ]; then
+  rm /etc/apt/sources.list.d/puppetlabs.list
+fi
 
-apt-get update
+if [ ! -f /etc/apt/sources.list.d/puppetlabs-pc1.list ]; then
+  curl -O http://apt.puppetlabs.com/puppetlabs-release-pc1-${DISTRIB_CODENAME}.deb
+  dpkg -i puppetlabs-release-pc1-${DISTRIB_CODENAME}.deb
+fi
+
+if [ -f /var/lib/apt/periodic/update-success-stamp ]; then
+  if [ `find /var/lib/apt/periodic/update-success-stamp -mmin +${APT_UPDATE_FREQ} | grep apt` ]; then
+    apt-get update
+  fi
+else
+  apt-get update
+fi
 
 apt-get -y install unzip wget ruby ruby-dev git
 apt-get -y install puppet-agent ruby-bundler unzip wget ruby ruby-dev git

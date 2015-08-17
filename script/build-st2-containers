@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
-export CURRENT_ST2_REF=$(cd /opt/stackstorm/src; git rev-parse HEAD)
+if [ -z $ST2_TAG ]; then
+  echo "ST2_TAG must be set to build"
+  exit 1
+fi
+
+export CURRENT_ST2_REF=$(cd /opt/stackstorm/src; git rev-parse $ST2_TAG)
 export SUBSYSTEMS=( actionrunner api auth notifier resultstracker rulesengine sensorcontainer )
 
-export DOCKER_TAG=latest
+export DOCKER_TAG=$ST2_TAG
 
 cd /opt/puppet
 docker pull ubuntu:14.04
