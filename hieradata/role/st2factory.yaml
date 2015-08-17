@@ -1,5 +1,3 @@
 ---
 classes:
   - 'role::st2factory'
-
-docker::version: 1.3.3

@@ -34,3 +34,6 @@ st2factory:
       role: st2factory
   private_networks:
     - 172.168.50.12
+  mounts:
+    - "/opt/stackstorm/packages:/Users/jfryman/stackstorm/st2-packages"
+    - "/opt/stackstorm/src:/Users/jfryman/stackstorm/st2"

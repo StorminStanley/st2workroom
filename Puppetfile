@@ -3,7 +3,6 @@ forge "https://forgeapi.puppetlabs.com"
 mod 'puppetlabs-stdlib',             '4.6.0'
 
 mod 'maestrodev-git',                '1.0.6'
-mod 'maestrodev-wget',               '1.5.6'
 mod 'nanliu-staging',                '1.0.2'
 mod 'saz-sudo',                      '3.0.9'
 mod 'stankevich-python',             '1.7.15'
@@ -39,3 +38,7 @@ mod 'jfryman-hubot',
 mod 'jfryman-uwsgi',
   :git => 'https://github.com/jfryman/puppet-uwsgi',
   :ref => 'toggle-package-install'
+
+mod 'maestrodev-wget',
+  :git => 'https://github.com/maestrodev/puppet-wget',
+  :ref => 'master'
