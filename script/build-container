@@ -52,7 +52,7 @@ if [ ${#MISSING_ARGS[@]} -ne 0 ]; then
 fi
 
 # Try and determine if we're running in the Vagrant workroom
-if [ -f /etc/vagrant-bootstrapped ]; then
+if [ -f /etc/st2workroom-bootstrapped ]; then
   packer build $PROJECT_ROOT/packer/$PACKER_CONFIG
 else
   vagrant up st2factory
