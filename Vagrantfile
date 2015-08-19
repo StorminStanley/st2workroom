@@ -142,7 +142,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
       n.ssh.forward_agent = config['ssh']['forward_agent'] || true
       n.ssh.pty           = config['ssh']['pty'] || false
 
-      n.vm.provider 'vmware_desktop' do |vmware|
+      n.vm.provider 'vmware_fusion' do |vmware|
+        vmware.vmx['memsize']  = config['memory'].to_s
+        vmware.vmx['numvcpus'] = config['cpus'].to_s
+      end
+
+      n.vm.provider 'vmware_workstation' do |vmware|
         vmware.vmx['memsize']  = config['memory'].to_s
         vmware.vmx['numvcpus'] = config['cpus'].to_s
       end
