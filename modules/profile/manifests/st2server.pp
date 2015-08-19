@@ -304,6 +304,28 @@ class profile::st2server {
     before  => Class['::nginx::service'],
   }
 
+  ## Add the certificate to the trusted root store to get rid
+  ## of annoying issues related to self-signed or trusted
+  file { '/usr/local/share/ca-certificates/st2':
+    ensure => directory,
+    owner  => 'root',
+    group  => 'root',
+    mode   => '0755',
+  }
+  file { '/usr/local/share/ca-certificates/st2/st2_trusted_cert.crt':
+    ensure  => file,
+    owner   => 'root',
+    mode    => '0444',
+    source  => $_ssl_cert,
+    require => File[$_ssl_cert],
+    notify  => Exec['update-ca-certificates'],
+  }
+  exec { 'update-ca-certificates':
+    command     => 'update-ca-certificates',
+    path        => '/usr/bin:/usr/sbin:/bin:/sbin',
+    refreshonly => true,
+  }
+
   ## Mistral uWSGI
   adapter::st2_uwsgi_init { 'mistral': }
 
