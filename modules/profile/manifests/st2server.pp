@@ -671,4 +671,15 @@ class profile::st2server {
   ## the service for nginx is up and running before responding to any CLI requests
   Service['nginx'] -> Exec<| tag == 'st2::key' |>
   Service['nginx'] -> Exec<| tag == 'st2::pack' |>
+
+  ## First Run
+  # Here lies a few things that need to be done only on the first run. Make sure at some point
+  # that we converge all of the content on the machine. This is needed to reduce shipping size
+  # of the final asset, so databases are sent un-populated.
+  exec { 'register all st2 content':
+    command => 'st2ctl reload --register-all',
+    unless  => 'st2 action list | grep packs.install',
+    path    => '/usr/bin:/usr/sbin:/bin:/sbin',
+    require => Service['nginx'],
+  }
 }

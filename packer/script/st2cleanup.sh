@@ -15,6 +15,11 @@ rm -rf /var/log/st2/*
 echo "Cleaning RabbitMQ Queue data..."
 rm -rf /var/lib/rabbitmq/mnesia/*
 
+# Get rid of MongoDB data and recreate on startup
+# Needed because of space savings
+echo "Removing MongoDB data..."
+rm -rf /var/lib/mongodb/*
+
 # Get rid of any user-generated SSL certs
 # Needed if hostname changes
 echo "cleaning up ssl certs for first run"
