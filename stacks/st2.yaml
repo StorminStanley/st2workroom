@@ -26,6 +26,8 @@ st2express:
       role: st2express
   private_networks:
     - 172.168.50.11
+  mounts:
+    - "/opt/stackstorm/packs/packer:/Users/jfryman/stackstorm/st2contrib/packs/packer"
 st2factory:
   <<: *defaults
   hostname: st2factory
