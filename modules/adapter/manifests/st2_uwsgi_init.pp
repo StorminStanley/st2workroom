@@ -42,4 +42,7 @@ define adapter::st2_uwsgi_init (
     hasstatus  => true,
     hasrestart => true,
   }
+
+  # Subscribe to Uwsgi Apps of the same name.
+  File["/etc/uwsgi.d/${_subsystem}.ini"] ~> Service[$_subsystem]
 }
