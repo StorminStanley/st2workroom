@@ -320,13 +320,14 @@ class profile::st2server {
     uid                 => $_nginx_daemon_user,
     gid                 => $_nginx_daemon_user,
     application_options => {
-      'socket'    => "127.0.0.1:${_mistral_port}",
-      'processes' => $_mistral_uwsgi_processes,
-      'threads'   => $_mistral_uwsgi_threads,
-      'home'      => "${_mistral_root}/.venv/",
-      'wsgi-file' => "${_mistral_root}/mistral/api/wsgi.py",
-      'vacuum'    => true,
-      'logto'     => '/var/log/mistral.log',
+      'socket'      => "127.0.0.1:${_mistral_port}",
+      'processes'   => $_mistral_uwsgi_processes,
+      'threads'     => $_mistral_uwsgi_threads,
+      'home'        => "${_mistral_root}/.venv/",
+      'wsgi-file'   => "${_mistral_root}/mistral/api/wsgi.py",
+      'vacuum'      => true,
+      'logto'       => '/var/log/mistral.log',
+      'buffer-size' => '32768',
     },
   }
 
