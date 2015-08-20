@@ -26,7 +26,8 @@
         "script/bootstrap-puppet.sh",
         "script/puppet-aws.sh",
         "script/ubuntu/cleanup.sh",
-        "script/ubuntu/ec2/cleanup.sh"
+        "script/ubuntu/ec2/cleanup.sh",
+        "script/st2cleanup.sh"
       ]
     }
   ]

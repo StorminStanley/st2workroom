@@ -16,6 +16,7 @@
             "script/ubuntu/virtualbox.sh",
             "script/puppet-vagrant.sh",
             "script/ubuntu/cleanup.sh",
+            "script/st2cleanup.sh",
             "script/zerodisk.sh"
           ]
         },
@@ -27,6 +28,7 @@
             "script/ubuntu/vmware.sh",
             "script/puppet-vagrant.sh",
             "script/ubuntu/cleanup.sh",
+            "script/st2cleanup.sh",
             "script/zerodisk.sh"
           ]
         }
