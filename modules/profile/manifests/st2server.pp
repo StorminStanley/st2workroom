@@ -53,8 +53,8 @@ class profile::st2server {
   $_st2auth_port = '9100'
   $_st2api_port = '9101'
   $_st2installer_port = '9102'
-  $_api_url = "https://${_host_ip}:${_st2api_port}"
-  $_auth_url = "https://${_host_ip}:${_st2auth_port}"
+  $_api_url = "https://${_hostname}${_st2api_port}"
+  $_auth_url = "https://${_hostname}:${_st2auth_port}"
   $_mistral_url = $_hostname
 
   $_st2installer_root = '/etc/st2installer'
@@ -372,13 +372,6 @@ class profile::st2server {
     uwsgi                => "unix://${_mistral_socket}",
   }
 
-  file { $_mistral_socket:
-    ensure => file,
-    owner  => $_nginx_daemon_user,
-    group  => $_nginx_daemon_user,
-    mode   => '0664',
-  }
-
   # Cheating here a little bit. Because the st2web is now being
   # served via nginx/HTTPS, the SimpleHTTPServer is no longer needed
   # Only problem is, if there is not a service named `st2web`, `st2ctl`
@@ -528,13 +521,6 @@ class profile::st2server {
     ],
   }
 
-  file { $_st2auth_socket:
-    ensure => file,
-    owner  => $_nginx_daemon_user,
-    group  => $_nginx_daemon_user,
-    mode   => '0664',
-  }
-
   # Needed for uWSGI server to write to logs
   file { [
     '/var/log/st2/st2api.log',
@@ -617,13 +603,6 @@ class profile::st2server {
     rewrite_rules       => [
       '^/setup/(.*)  /$1 break',
     ],
-  }
-
-  file { $_st2installer_socket:
-    ensure => file,
-    owner  => $_nginx_daemon_user,
-    group  => $_nginx_daemon_user,
-    mode   => '0664',
   }
 
   ### Installer needs access to a few specific files
