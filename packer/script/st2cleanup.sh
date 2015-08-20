@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
 
 # Stop all services
-components=(st2actionrunner st2sensorcontainer st2api st2auth st2resultstracker st2rulesengine mistral st2web rabbitmq-server mongodb st2notifier)
-for i in "${components[@]}"; do
-  service $i stop
-done
+service mistral stop
+service st2actionrunner stop
+service st2api stop
+service st2auth stop
+service st2notifier stop
+service st2resultstracker stop
+service st2rulesengine stop
+service st2sensorcontainer stop
+service st2web stop
+service rabbitmq-server stop
+service mongodb stop
 
 # Cleanup any logfiles
 echo "Removing all log files..."
