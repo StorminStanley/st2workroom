@@ -45,6 +45,10 @@ class profile::st2server {
   ]
 
   # Ports that uwsgi advertises on 127.0.0.1
+  $_st2auth_socket = '/tmp/st2auth.sock'
+  $_st2api_socket = '/tmp/st2api.sock'
+  $_st2installer_socket = '/tmp/st2installer.sock'
+  $_mistral_socket = '/tmp/mistral.sock'
   $_mistral_port = '8989'
   $_st2auth_port = '9100'
   $_st2api_port = '9101'
@@ -342,20 +346,19 @@ class profile::st2server {
     uid                 => $_nginx_daemon_user,
     gid                 => $_nginx_daemon_user,
     application_options => {
-      'socket'    => "127.0.0.1:${_mistral_port}",
-      'processes' => $_mistral_uwsgi_processes,
-      'threads'   => $_mistral_uwsgi_threads,
-      'home'      => "${_mistral_root}/.venv/",
-      'wsgi-file' => "${_mistral_root}/mistral/api/wsgi.py",
-      'vacuum'    => true,
-      'logto'     => '/var/log/mistral.log',
-      'protocol'  => 'http',
+      'socket'       => $_mistral_socket,
+      'processes'    => $_mistral_uwsgi_processes,
+      'threads'      => $_mistral_uwsgi_threads,
+      'home'         => "${_mistral_root}/.venv/",
+      'wsgi-file'    => "${_mistral_root}/mistral/api/wsgi.py",
+      'vacuum'       => true,
+      'logto'        => '/var/log/mistral.log',
+      'chmod-socket' => '644',
     },
   }
 
   nginx::resource::vhost { 'mistral':
     ensure               => present,
-    listen_ip            => $_host_ip,
     listen_port          => $_mistral_port,
     # Disabling SSL temporarily while changes ported in
     # JDF - 20150804
@@ -366,11 +369,14 @@ class profile::st2server {
     # ssl_protocols        => $_ssl_protocols,
     # ssl_ciphers          => $_cipher_list,
     server_name          => $_server_names,
-    uwsgi                => 'mistral',
+    uwsgi                => "unix://${_mistral_socket}",
   }
 
-  nginx::resource::upstream { 'mistral':
-    members => ["127.0.0.1:${_mistral_port}"],
+  file { $_mistral_socket:
+    ensure => file,
+    owner  => $_nginx_daemon_user,
+    group  => $_nginx_daemon_user,
+    mode   => '0664',
   }
 
   # Cheating here a little bit. Because the st2web is now being
@@ -489,18 +495,18 @@ class profile::st2server {
     uid                 => $_nginx_daemon_user,
     gid                 => $_nginx_daemon_user,
     application_options => {
-      'socket'    => "127.0.0.1:${_st2auth_port}",
-      'processes' => $_st2auth_uwsgi_processes,
-      'threads'   => $_st2auth_uwsgi_threads,
-      'wsgi-file' => "${_python_pack}/st2auth/wsgi.py",
-      'vacuum'    => true,
-      'logto'     => '/var/log/st2/st2auth.log',
+      'socket'       => $_st2auth_socket,
+      'processes'    => $_st2auth_uwsgi_processes,
+      'threads'      => $_st2auth_uwsgi_threads,
+      'wsgi-file'    => "${_python_pack}/st2auth/wsgi.py",
+      'vacuum'       => true,
+      'logto'        => '/var/log/st2/st2auth.log',
+      'chmod-socket' => '644',
     },
   }
 
   nginx::resource::vhost { 'st2auth':
     ensure               => present,
-    listen_ip            => $_host_ip,
     listen_port          => $_st2auth_port,
     ssl                  => true,
     ssl_port             => $_st2auth_port,
@@ -509,7 +515,7 @@ class profile::st2server {
     ssl_protocols        => $_ssl_protocols,
     ssl_ciphers          => $_cipher_list,
     server_name          => $_server_names,
-    uwsgi                => 'st2auth',
+    uwsgi                => "unix://${_st2auth_socket}",
     proxy_set_header     => [
       'Host $host',
       'X-Real-IP $remote_addr',
@@ -522,8 +528,11 @@ class profile::st2server {
     ],
   }
 
-  nginx::resource::upstream { 'st2auth':
-    members => ["127.0.0.1:${_st2auth_port}"],
+  file { $_st2auth_socket:
+    ensure => file,
+    owner  => $_nginx_daemon_user,
+    group  => $_nginx_daemon_user,
+    mode   => '0664',
   }
 
   # Needed for uWSGI server to write to logs
@@ -587,14 +596,15 @@ class profile::st2server {
     uid                 => $_nginx_daemon_user,
     gid                 => $_nginx_daemon_user,
     application_options => {
-      'socket'     => "127.0.0.1:${_st2installer_port}",
-      'processes'  => 1,
-      'threads'    => 10,
-      'wsgi-file'  => 'app.wsgi',
-      'chdir'      => '/etc/st2installer',
-      'vacuum'     => true,
-      'logto'      => $_st2installer_logfile,
-      'virtualenv' => "${_st2installer_root}/.venv",
+      'socket'       => $_st2installer_socket,
+      'processes'    => 1,
+      'threads'      => 10,
+      'wsgi-file'    => 'app.wsgi',
+      'chdir'        => '/etc/st2installer',
+      'vacuum'       => true,
+      'logto'        => $_st2installer_logfile,
+      'virtualenv'   => "${_st2installer_root}/.venv",
+      'chmod-socket' => '644',
     },
     before         => Service['st2installer'],
   }
@@ -603,14 +613,17 @@ class profile::st2server {
     vhost               => 'st2webui',
     ssl_only            => true,
     location            => '/setup/',
-    uwsgi               => 'st2installer',
+    uwsgi               => "unix://${_st2installer_socket}",
     rewrite_rules       => [
       '^/setup/(.*)  /$1 break',
     ],
   }
 
-  nginx::resource::upstream { 'st2installer':
-    members => ["127.0.0.1:${_st2installer_port}"],
+  file { $_st2installer_socket:
+    ensure => file,
+    owner  => $_nginx_daemon_user,
+    group  => $_nginx_daemon_user,
+    mode   => '0664',
   }
 
   ### Installer needs access to a few specific files
