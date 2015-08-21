@@ -23,16 +23,20 @@ define adapter::st2_uwsgi_init (
     'st2auth'      => 'st2auth',
     'installer'    => 'st2installer',
     'st2installer' => 'st2installer',
-    'mistral'      => 'mistral',
+    'mistral'      => 'mistral-api',
   }
   $_subsystem = $_subsystem_map[$subsystem]
+  $_template = $_subsystem ? {
+    'mistral-api' => 'anchor.conf.erb',
+    default       => 'init.conf.erb',
+  }
 
   file { "/etc/init/${_subsystem}.conf":
     ensure  => file,
     owner   => 'root',
     group   => 'root',
     mode    => '0444',
-    content => template('adapter/st2_uwsgi_init/init.conf.erb'),
+    content => template("adapter/st2_uwsgi_init/${_template}"),
     notify  => Service[$_subsystem],
   }
 

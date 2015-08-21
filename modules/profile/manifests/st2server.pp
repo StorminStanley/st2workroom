@@ -56,12 +56,13 @@ class profile::st2server {
   $_st2auth_port = '9100'
   $_st2api_port = '9101'
   $_st2installer_port = '9102'
-  $_api_url = "https://${_hostname}${_st2api_port}"
+  $_api_url = "https://${_hostname}:${_st2api_port}"
   $_auth_url = "https://${_hostname}:${_st2auth_port}"
   $_mistral_url = $_hostname
 
   $_st2installer_root = '/etc/st2installer'
   $_st2installer_logfile = '/var/log/st2/st2installer.log'
+  $_mistral_logfile = '/var/log/mistral-api.log'
 
   ## Application Directories. A tight coupling, but ok because it's a profile
 
@@ -127,11 +128,11 @@ class profile::st2server {
     default => undef,
   }
   class { '::st2::profile::mistral':
-    manage_mysql   => true,
-    manage_service => false,
-    api_url        => $_mistral_url,
-    api_port       => $_mistral_port,
-    before         => $_st2_profile_mistral_before,
+    manage_postgresql => true,
+    api_url           => $_mistral_url,
+    api_port          => $_mistral_port,
+    disable_api       => true,
+    before            => $_st2_profile_mistral_before,
   }
   # $_mistral_root needs to be loaded here due to load-order
   $_mistral_root = $::st2::profile::mistral::_mistral_root
@@ -334,17 +335,19 @@ class profile::st2server {
   }
 
   ## Mistral uWSGI
+  ## This creates the init script to start the
+  ## mistral api service via uwsgi
   adapter::st2_uwsgi_init { 'mistral': }
 
   # File permissions to allow uWSGI process to write logs
-  file { '/var/log/mistral.log':
+  file { $_mistral_logfile:
     ensure => file,
     owner  => $_nginx_daemon_user,
     group  => $_nginx_daemon_user,
     mode   => '0664',
   }
 
-  uwsgi::app { 'mistral':
+  uwsgi::app { 'mistral-api':
     ensure              => present,
     uid                 => $_nginx_daemon_user,
     gid                 => $_nginx_daemon_user,
@@ -355,12 +358,12 @@ class profile::st2server {
       'home'         => "${_mistral_root}/.venv/",
       'wsgi-file'    => "${_mistral_root}/mistral/api/wsgi.py",
       'vacuum'       => true,
-      'logto'        => '/var/log/mistral.log',
+      'logto'        => $_mistral_logfile,
       'chmod-socket' => '644',
     },
   }
 
-  nginx::resource::vhost { 'mistral':
+  nginx::resource::vhost { 'mistral-api':
     ensure               => present,
     listen_port          => $_mistral_port,
     # Disabling SSL temporarily while changes ported in
@@ -479,6 +482,8 @@ class profile::st2server {
     content => '@include common-auth',
   }
 
+  ## This creates the init script to start the
+  ## st2auth service via uwsgi
   adapter::st2_uwsgi_init { 'st2auth': }
 
   # File permissions to allow uWSGI process to write logs
@@ -599,6 +604,8 @@ class profile::st2server {
     before       => Service['st2installer'],
   }
 
+  ## This creates the init script to start the
+  ## st2installer service via uwsgi
   adapter::st2_uwsgi_init { 'st2installer': }
 
   # File permissions to allow uWSGI process to write logs
