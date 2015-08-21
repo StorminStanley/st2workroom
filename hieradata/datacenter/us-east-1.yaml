@@ -6,4 +6,4 @@ puppet::masterless::run_at_boot: true
 
 st2::installer::lockdown: true
 st2::installer::username: "installer"
-st2::installer::password: "%{::ec2_instance_id}"
+st2::installer::password: "%{::ec2_metadata.instance-id}"
