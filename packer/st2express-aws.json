@@ -2,7 +2,7 @@
   "variables": {
     "region": "us-east-1",
     "ami": "ami-d05e75b8",
-    "security_group": "sg-d580fcb8",
+    "security_group": "sg-d589fcb8",
     "instance_type": "m3.medium",
     "ssh_username": "ubuntu",
     "aws_access_key": "",
