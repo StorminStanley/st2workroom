@@ -566,6 +566,7 @@ class profile::st2server {
       mechanism => 'basic',
       realm     => $_st2installer_auth_basic,
       notify    => Class['nginx::service'],
+      require   => Vcsrepo[$_st2installer_root],
     }
     file { $_auth_file:
       ensure  => file,
