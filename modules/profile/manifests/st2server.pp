@@ -529,6 +529,7 @@ class profile::st2server {
     '/var/log/st2/st2auth.audit.log',
   ]:
     ensure  => present,
+    owner   => $_nginx_daemon_user,
     group   => $_nginx_daemon_user,
     mode    => '0664',
     require => Class['::st2::profile::server'],
