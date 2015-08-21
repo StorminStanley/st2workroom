@@ -31,3 +31,9 @@ rm -rf /var/lib/mongodb/*
 # Needed if hostname changes
 echo "cleaning up ssl certs for first run"
 rm -rf /etc/ssl/st2.*
+
+# Other cleanup
+rm -rf /root/.cache
+rm -rf /opt/puppet/.tmp
+rm -rf /opt/puppet/vendor/bundle
+rm -rf /opt/puppet/environments/*

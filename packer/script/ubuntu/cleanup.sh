@@ -9,7 +9,9 @@ mkdir /etc/udev/rules.d/70-persistent-net.rules
 rm -rf /dev/.udev/
 rm /lib/udev/rules.d/75-persistent-net-generator.rules
 
+find /var/cache/apt/ -type f -exec rm -v {} \;
+find /var/lib/apt/lists -type f -exec rm -v {} \;
+
 ## Cleaning unneeded packages
-apt-get -y remove linux-headers-$(uname -r) build-essential ruby-dev
 apt-get -y autoremove
 apt-get -y clean
