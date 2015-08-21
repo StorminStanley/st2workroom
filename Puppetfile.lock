@@ -62,7 +62,7 @@ FORGE
     puppetlabs-vcsrepo (1.2.0)
     saz-sudo (3.0.9)
       puppetlabs-stdlib (>= 2.3.0)
-    stackstorm-st2 (0.6.5)
+    stackstorm-st2 (0.6.6)
       jamtur01-httpauth (>= 0.0.3)
       jfryman-tiller (>= 0.1.0)
       maestrodev-git (>= 1.0.6)
@@ -138,6 +138,6 @@ DEPENDENCIES
   puppetlabs-stdlib (= 4.6.0)
   puppetlabs-vcsrepo (= 1.2.0)
   saz-sudo (= 3.0.9)
-  stackstorm-st2 (= 0.6.5)
+  stackstorm-st2 (= 0.6.6)
   stankevich-python (= 1.7.15)
 
