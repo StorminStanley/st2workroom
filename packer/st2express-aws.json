@@ -3,11 +3,11 @@
     "region": "us-east-1",
     "ami": "ami-d05e75b8",
     "security_group": "sg-d580fcb8",
-    "aws_access_key": "{{env `AWS_ACCESS_KEY'}}",
-    "aws_secret_access_key": "{{env `AWS_SECRET_ACCESS_KEY`}}",
     "instance_type": "m3.medium",
     "ssh_username": "ubuntu",
-    "release_version": "",
+    "aws_access_key": "",
+    "aws_secret_access_key": "",
+    "release_version": ""
   },
   "builders": [
     {
