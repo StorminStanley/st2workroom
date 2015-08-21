@@ -19,6 +19,9 @@ class profile::st2server {
   $_st2installer_branch = hiera('st2::installer_branch', 'stable')
   $_mistral_uwsgi_threads = hiera('st2::mistral_uwsgi_threads', 25)
   $_mistral_uwsgi_processes = hiera('st2::mistral_uwsgi_processes', 1)
+  $_installer_lockdown = hiera('st2::installer::lockdown', false)
+  $_installer_username = hiera('st2::installer::username', 'installer')
+  $_installer_password = hiera('st2::installer::password', fqdn_rand_string(32))
   $_root_cli_username = 'root_cli'
   $_root_cli_password = fqdn_rand_string(32)
   $_root_cli_uid = 2000
@@ -548,6 +551,34 @@ class profile::st2server {
     default => undef,
   }
 
+  # In some environments, the Installer must be locked down to prevent
+  # it from being run by a bad actor on a public machine. If this is true,
+  # then create an htaccess file, and apply it to the installer endpoint
+  if $_installer_lockdown {
+    $_auth_file = "${_st2installer_root}/.htaccess"
+    $_st2installer_auth_basic = "StackStorm Installer"
+    $_st2installer_auth_basic_user_file = $_auth_file
+
+    httpauth { $_installer_username:
+      ensure    => present,
+      file      => $_auth_file,
+      password  => $_installer_password,
+      mechanism => 'basic',
+      realm     => $_st2installer_auth_basic,
+      notify    => Class['nginx::service'],
+    }
+    file { $_auth_file:
+      ensure  => file,
+      owner   => $_nginx_daemon_user,
+      group   => $_nginx_daemon_user,
+      mode    => '0440',
+      require => Httpauth[$_installer_username],
+    }
+  } else {
+    $_st2installer_auth_basic = undef
+    $_st2installer_auth_basic_user_file = undef
+  }
+
   # Install updated pecan
   vcsrepo { $_st2installer_root:
     ensure   => latest,
@@ -597,11 +628,13 @@ class profile::st2server {
   }
 
   nginx::resource::location { 'st2installer':
-    vhost               => 'st2webui',
-    ssl_only            => true,
-    location            => '/setup/',
-    uwsgi               => "unix://${_st2installer_socket}",
-    rewrite_rules       => [
+    vhost                => 'st2webui',
+    ssl_only             => true,
+    location             => '/setup/',
+    uwsgi                => "unix://${_st2installer_socket}",
+    auth_basic           => $_st2installer_auth_basic,
+    auth_basic_user_file => $_st2installer_auth_basic_user_file,
+    rewrite_rules        => [
       '^/setup/(.*)  /$1 break',
     ],
   }
