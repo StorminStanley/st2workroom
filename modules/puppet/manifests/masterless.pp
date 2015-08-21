@@ -41,7 +41,7 @@ class puppet::masterless(
     }
   }
 
-  file { '/usr/bin/puprun':
+  file { ['/usr/bin/puprun', '/usr/bin/update-system']:
     ensure => file,
     owner  => 'root',
     group  => 'root',
