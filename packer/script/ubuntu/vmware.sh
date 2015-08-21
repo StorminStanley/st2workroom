@@ -5,6 +5,8 @@ if [[ `facter virtual` != "vmware" ]]; then
     exit 0
 fi
 
+apt-get -y install build-essential linux-headers-$(uname -r)
+
 # Install the VMware Fusion guest tools
 cd /tmp
 mkdir -p /mnt/cdrom
