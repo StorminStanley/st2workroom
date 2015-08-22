@@ -8,9 +8,6 @@ for user in `ls /home`; do
   rm -rf /home/$user/.ssh/authorized_keys
 done
 
-echo "Removing cached Puppet libraries..."
-rm -rf /opt/puppet/vendor
-
 echo "Shredding SSH host key pairs..."
 shred -u /etc/ssh/*_key /etc/ssh/*_key.pub
 
