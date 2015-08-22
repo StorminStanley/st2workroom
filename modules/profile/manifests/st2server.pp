@@ -175,10 +175,11 @@ class profile::st2server {
 
   anchor { 'st2::pre_reqs': }
   -> class { '::st2::profile::client':
-    username => $_root_cli_username,
-    password => $_root_cli_password,
-    api_url  => $_api_url,
-    auth_url => $_auth_url,
+    username    => $_root_cli_username,
+    password    => $_root_cli_password,
+    api_url     => $_api_url,
+    auth_url    => $_auth_url,
+    cache_token => false,
   }
   -> class { '::st2::profile::server':
     auth                   => true,
