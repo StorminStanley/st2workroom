@@ -88,6 +88,16 @@ class profile::st2server {
   ########## BEGIN RESOURCE DEFINITIONS ###################
   #########################################################
 
+  ### Breadcrumbs
+  ## Leave a breadcrumb if need to get data outside of Puppet. Do it via Facter
+  file { '/etc/facter/facts.d/st2_ip.txt':
+    ensure  => file,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0444',
+    content => "st2_ip=${_host_ip}",
+  }
+
   ### Infrastructure/Application Pre-requsites
 
   ## Note: nginx-full contains PAM bits
