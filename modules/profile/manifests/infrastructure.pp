@@ -3,6 +3,7 @@ class profile::infrastructure {
   $_host_ip = hiera('system::ipaddress', $::ipaddress)
   $_packages = hiera('system::packages', [])
   include ::ntp
+  include ::profile::rsyslog
 
   package { $_packages:
     ensure => present,

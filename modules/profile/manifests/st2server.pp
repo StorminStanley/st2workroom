@@ -175,6 +175,7 @@ class profile::st2server {
     st2api_listen_ip       => '127.0.0.1',
     manage_st2auth_service => false,
     manage_st2web_service  => false,
+    syslog                 => true,
   }
   -> class { '::st2::auth::proxy': }
   -> class { '::st2::profile::web':
@@ -182,6 +183,7 @@ class profile::st2server {
     auth_url => "https://:${_st2auth_port}",
   }
   include ::st2::stanley
+  include ::st2::logging::rsyslog
 
   # $_python_pack needs to be loaded here due to load-order
   $_python_pack = $::st2::profile::server::_python_pack
