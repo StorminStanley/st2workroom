@@ -220,20 +220,44 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
           export FACTER_stack=#{@stack.stack}
           /opt/puppet/script/puppet-apply
 
-          echo "          _   ___     ____  _  __ "
-          echo "         | | |__ \   / __ \| |/ / "
-          echo "      ___| |_   ) | | |  | | ' /  "
-          echo "     / __| __| / /  | |  | |  <   "
-          echo "     \__ \ |_ / /_  | |__| | . \  "
-          echo "     |___/\__|____|  \____/|_|\_\ "
-          echo ""
-          echo "  st2 is installed and ready to use."
-          echo
-          echo "First time starting this machine up?"
-          echo "Visit https://172.168.50.11/setup to configure StackStorm"
-          echo
-          echo "Otherwise, head to https://172.168.50.11 to access the WebUI"
-          echo
+          ST2_PATH=$(which st2)
+          ST2_IP=$(facter st2_ip)
+          ST2_FQDN=$(facter fqdn)
+          if [ -x "${ST2_PATH}" ]; then
+            sudo st2 run core.local date &> /dev/null
+            ACTIONEXIT=$?
+            if [ ! "${ACTIONEXIT}" == 0 ]; then
+              echo ""
+              echo "OH NOES!"
+              echo "Don't worry! Occasionally something goes wrong, and you just have"
+              echo "to kick the tires a bit. Try re-provisioning the workroom with"
+              echo ""
+              echo "vagrant provision st2express"
+              echo ""
+              echo "If you don't happen to get the "OK" after that, give us a shout!"
+              echo "We don't want to leave you hanging! Come find your favorite way to"
+              echo "contact us (slack, irc, groups, or just plain ol email) at"
+              echo "http://stackstorm.com/contact"
+              echo
+              exit 2
+            else
+              echo ""
+              echo ""
+              echo "███████╗████████╗██████╗      ██████╗ ██╗  ██╗";
+              echo "██╔════╝╚══██╔══╝╚════██╗    ██╔═══██╗██║ ██╔╝";
+              echo "███████╗   ██║    █████╔╝    ██║   ██║█████╔╝ ";
+              echo "╚════██║   ██║   ██╔═══╝     ██║   ██║██╔═██╗ ";
+              echo "███████║   ██║   ███████╗    ╚██████╔╝██║  ██╗";
+              echo "╚══════╝   ╚═╝   ╚══════╝     ╚═════╝ ╚═╝  ╚═╝";
+              echo ""
+              echo "  st2 is installed and ready to use."
+              echo ""
+              echo "First time starting this machine up?"
+              echo "Visit https://${ST2_IP}/setup to configure StackStorm"
+              echo ""
+              echo "Otherwise, head to https://${ST2_FQDN} to access the WebUI"
+            fi
+          fi
 EOF
       when 'ansible-local' then
         n.vm.provision 'shell', inline: '/vagrant/script/bootstrap-ansible'
