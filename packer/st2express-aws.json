@@ -1,32 +1,41 @@
 {
   "variables": {
     "region": "us-east-1",
-    "ami": "ami-d05e75b8"
+    "ami": "ami-d05e75b8",
+    "security_group": "sg-d589fcb8",
+    "instance_type": "m3.medium",
+    "ssh_username": "ubuntu",
+    "aws_access_key": "",
+    "aws_secret_access_key": "",
+    "release_version": ""
   },
   "builders": [
     {
       "type": "amazon-ebs",
       "region": "{{user `region`}}",
       "source_ami": "{{user `ami`}}",
-      "instance_type": "m3.medium",
-      "ssh_username": "ubuntu",
-      "ami_name": "st2express {{timestamp}}",
+      "instance_type": "{{user `instance_type`}}",
+      "ssh_username": "{{user `ssh_username`}}",
+      "ami_name": "st2express {{user `release_version`}} {{timestamp}}",
+      "access_key": "{{user `aws_access_key`}}",
+      "secret_key": "{{user `aws_secret_access_key`}}",
       "security_group_ids": [
-        "sg-d589fcb8"
+        "{{user `security_group`}}"
       ]
     }
   ],
   "provisioners": [
     {
       "type": "shell",
-      "execute_command": "echo 'ubuntu'|sudo -S bash '{{.Path}}'",
+      "execute_command": "echo '{{user `ssh_username`}}'|sudo -S bash '{{.Path}}'",
       "scripts": [
         "script/ubuntu/base.sh",
         "script/ubuntu/ec2/base.sh",
         "script/bootstrap-puppet.sh",
         "script/puppet-aws.sh",
         "script/ubuntu/cleanup.sh",
-        "script/ubuntu/ec2/cleanup.sh"
+        "script/ubuntu/ec2/cleanup.sh",
+        "script/st2cleanup.sh"
       ]
     }
   ]

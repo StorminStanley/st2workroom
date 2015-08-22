@@ -19,6 +19,9 @@ class profile::st2server {
   $_st2installer_branch = hiera('st2::installer_branch', 'stable')
   $_mistral_uwsgi_threads = hiera('st2::mistral_uwsgi_threads', 25)
   $_mistral_uwsgi_processes = hiera('st2::mistral_uwsgi_processes', 1)
+  $_installer_lockdown = hiera('st2::installer::lockdown', false)
+  $_installer_username = hiera('st2::installer::username', 'installer')
+  $_installer_password = hiera('st2::installer::password', fqdn_rand_string(32))
   $_root_cli_username = 'root_cli'
   $_root_cli_password = fqdn_rand_string(32)
   $_root_cli_uid = 2000
@@ -45,16 +48,21 @@ class profile::st2server {
   ]
 
   # Ports that uwsgi advertises on 127.0.0.1
+  $_st2auth_socket = '/tmp/st2auth.sock'
+  $_st2api_socket = '/tmp/st2api.sock'
+  $_st2installer_socket = '/tmp/st2installer.sock'
+  $_mistral_socket = '/tmp/mistral.sock'
   $_mistral_port = '8989'
   $_st2auth_port = '9100'
   $_st2api_port = '9101'
   $_st2installer_port = '9102'
-  $_api_url = "https://${_host_ip}:${_st2api_port}"
-  $_auth_url = "https://${_host_ip}:${_st2auth_port}"
-  $_mistral_url = "http://${_host_ip}"
+  $_api_url = "https://${_hostname}:${_st2api_port}"
+  $_auth_url = "https://${_hostname}:${_st2auth_port}"
+  $_mistral_url = $_hostname
 
   $_st2installer_root = '/etc/st2installer'
   $_st2installer_logfile = '/var/log/st2/st2installer.log'
+  $_mistral_logfile = '/var/log/mistral-api.log'
 
   ## Application Directories. A tight coupling, but ok because it's a profile
 
@@ -79,6 +87,16 @@ class profile::st2server {
   #########################################################
   ########## BEGIN RESOURCE DEFINITIONS ###################
   #########################################################
+
+  ### Breadcrumbs
+  ## Leave a breadcrumb if need to get data outside of Puppet. Do it via Facter
+  file { '/etc/facter/facts.d/st2_ip.txt':
+    ensure  => file,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0444',
+    content => "st2_ip=${_host_ip}",
+  }
 
   ### Infrastructure/Application Pre-requsites
 
@@ -120,11 +138,11 @@ class profile::st2server {
     default => undef,
   }
   class { '::st2::profile::mistral':
-    manage_mysql   => true,
-    manage_service => false,
-    api_url        => $_mistral_url,
-    api_port       => $_mistral_port,
-    before         => $_st2_profile_mistral_before,
+    manage_postgresql => true,
+    api_url           => $_mistral_url,
+    api_port          => $_mistral_port,
+    disable_api       => true,
+    before            => $_st2_profile_mistral_before,
   }
   # $_mistral_root needs to be loaded here due to load-order
   $_mistral_root = $::st2::profile::mistral::_mistral_root
@@ -157,16 +175,18 @@ class profile::st2server {
 
   anchor { 'st2::pre_reqs': }
   -> class { '::st2::profile::client':
-    username => $_root_cli_username,
-    password => $_root_cli_password,
-    api_url  => $_api_url,
-    auth_url => $_auth_url,
+    username    => $_root_cli_username,
+    password    => $_root_cli_password,
+    api_url     => $_api_url,
+    auth_url    => $_auth_url,
+    cache_token => false,
   }
   -> class { '::st2::profile::server':
     auth                   => true,
     st2api_listen_ip       => '127.0.0.1',
     manage_st2auth_service => false,
     manage_st2web_service  => false,
+    syslog                 => true,
   }
   -> class { '::st2::auth::proxy': }
   -> class { '::st2::profile::web':
@@ -174,6 +194,7 @@ class profile::st2server {
     auth_url => "https://:${_st2auth_port}",
   }
   include ::st2::stanley
+  include ::st2::logging::rsyslog
 
   # $_python_pack needs to be loaded here due to load-order
   $_python_pack = $::st2::profile::server::_python_pack
@@ -304,35 +325,59 @@ class profile::st2server {
     before  => Class['::nginx::service'],
   }
 
+  ## Add the certificate to the trusted root store to get rid
+  ## of annoying issues related to self-signed or trusted
+  file { '/usr/local/share/ca-certificates/st2':
+    ensure => directory,
+    owner  => 'root',
+    group  => 'root',
+    mode   => '0755',
+  }
+  file { '/usr/local/share/ca-certificates/st2/st2_trusted_cert.crt':
+    ensure  => file,
+    owner   => 'root',
+    mode    => '0444',
+    source  => $_ssl_cert,
+    require => File[$_ssl_cert],
+    notify  => Exec['update-ca-certificates'],
+  }
+  exec { 'update-ca-certificates':
+    command     => 'update-ca-certificates',
+    path        => '/usr/bin:/usr/sbin:/bin:/sbin',
+    refreshonly => true,
+  }
+
   ## Mistral uWSGI
+  ## This creates the init script to start the
+  ## mistral api service via uwsgi
   adapter::st2_uwsgi_init { 'mistral': }
 
   # File permissions to allow uWSGI process to write logs
-  file { '/var/log/mistral.log':
+  file { $_mistral_logfile:
     ensure => file,
     owner  => $_nginx_daemon_user,
     group  => $_nginx_daemon_user,
     mode   => '0664',
   }
 
-  uwsgi::app { 'mistral':
+  uwsgi::app { 'mistral-api':
     ensure              => present,
     uid                 => $_nginx_daemon_user,
     gid                 => $_nginx_daemon_user,
     application_options => {
-      'socket'    => "127.0.0.1:${_mistral_port}",
-      'processes' => $_mistral_uwsgi_processes,
-      'threads'   => $_mistral_uwsgi_threads,
-      'home'      => "${_mistral_root}/.venv/",
-      'wsgi-file' => "${_mistral_root}/mistral/api/wsgi.py",
-      'vacuum'    => true,
-      'logto'     => '/var/log/mistral.log',
+      'socket'       => $_mistral_socket,
+      'processes'    => $_mistral_uwsgi_processes,
+      'threads'      => $_mistral_uwsgi_threads,
+      'home'         => "${_mistral_root}/.venv/",
+      'wsgi-file'    => "${_mistral_root}/mistral/api/wsgi.py",
+      'vacuum'       => true,
+      'logto'        => $_mistral_logfile,
+      'chmod-socket' => '644',
     },
   }
 
-  nginx::resource::vhost { 'mistral':
+  nginx::resource::vhost { 'mistral-api':
     ensure               => present,
-    listen_ip            => $_host_ip,
     listen_port          => $_mistral_port,
     # Disabling SSL temporarily while changes ported in
     # JDF - 20150804
@@ -343,11 +388,7 @@ class profile::st2server {
     # ssl_protocols        => $_ssl_protocols,
     # ssl_ciphers          => $_cipher_list,
     server_name          => $_server_names,
-    uwsgi                => 'mistral',
-  }
-
-  nginx::resource::upstream { 'mistral':
-    members => ["127.0.0.1:${_mistral_port}"],
+    uwsgi                => "unix://${_mistral_socket}",
   }
 
   # Cheating here a little bit. Because the st2web is now being
@@ -454,6 +495,8 @@ class profile::st2server {
     content => '@include common-auth',
   }
 
+  ## This creates the init script to start the
+  ## st2auth service via uwsgi
   adapter::st2_uwsgi_init { 'st2auth': }
 
   # File permissions to allow uWSGI process to write logs
@@ -466,18 +509,18 @@ class profile::st2server {
     uid                 => $_nginx_daemon_user,
     gid                 => $_nginx_daemon_user,
     application_options => {
-      'socket'    => "127.0.0.1:${_st2auth_port}",
-      'processes' => $_st2auth_uwsgi_processes,
-      'threads'   => $_st2auth_uwsgi_threads,
-      'wsgi-file' => "${_python_pack}/st2auth/wsgi.py",
-      'vacuum'    => true,
-      'logto'     => '/var/log/st2/st2auth.log',
+      'socket'       => $_st2auth_socket,
+      'processes'    => $_st2auth_uwsgi_processes,
+      'threads'      => $_st2auth_uwsgi_threads,
+      'wsgi-file'    => "${_python_pack}/st2auth/wsgi.py",
+      'vacuum'       => true,
+      'logto'        => '/var/log/st2/st2auth.log',
+      'chmod-socket' => '644',
     },
   }
 
   nginx::resource::vhost { 'st2auth':
     ensure               => present,
-    listen_ip            => $_host_ip,
     listen_port          => $_st2auth_port,
     ssl                  => true,
     ssl_port             => $_st2auth_port,
@@ -486,7 +529,7 @@ class profile::st2server {
     ssl_protocols        => $_ssl_protocols,
     ssl_ciphers          => $_cipher_list,
     server_name          => $_server_names,
-    uwsgi                => 'st2auth',
+    uwsgi                => "unix://${_st2auth_socket}",
     proxy_set_header     => [
       'Host $host',
       'X-Real-IP $remote_addr',
@@ -499,10 +542,6 @@ class profile::st2server {
     ],
   }
 
-  nginx::resource::upstream { 'st2auth':
-    members => ["127.0.0.1:${_st2auth_port}"],
-  }
-
   # Needed for uWSGI server to write to logs
   file { [
     '/var/log/st2/st2api.log',
@@ -511,6 +550,7 @@ class profile::st2server {
     '/var/log/st2/st2auth.audit.log',
   ]:
     ensure  => present,
+    owner   => $_nginx_daemon_user,
     group   => $_nginx_daemon_user,
     mode    => '0664',
     require => Class['::st2::profile::server'],
@@ -527,6 +567,35 @@ class profile::st2server {
   $_st2installer_before = $_autoupdate ? {
     true    => Uwsgi::App['st2installer'],
     default => undef,
+  }
+
+  # In some environments, the Installer must be locked down to prevent
+  # it from being run by a bad actor on a public machine. If this is true,
+  # then create an htaccess file, and apply it to the installer endpoint
+  if $_installer_lockdown {
+    $_auth_file = "${_st2installer_root}/.htaccess"
+    $_st2installer_auth_basic = "StackStorm Installer"
+    $_st2installer_auth_basic_user_file = $_auth_file
+
+    httpauth { $_installer_username:
+      ensure    => present,
+      file      => $_auth_file,
+      password  => $_installer_password,
+      mechanism => 'basic',
+      realm     => $_st2installer_auth_basic,
+      notify    => Class['nginx::service'],
+      require   => Vcsrepo[$_st2installer_root],
+    }
+    file { $_auth_file:
+      ensure  => file,
+      owner   => $_nginx_daemon_user,
+      group   => $_nginx_daemon_user,
+      mode    => '0440',
+      require => Httpauth[$_installer_username],
+    }
+  } else {
+    $_st2installer_auth_basic = undef
+    $_st2installer_auth_basic_user_file = undef
   }
 
   # Install updated pecan
@@ -548,6 +617,8 @@ class profile::st2server {
     before       => Service['st2installer'],
   }
 
+  ## This creates the init script to start the
+  ## st2installer service via uwsgi
   adapter::st2_uwsgi_init { 'st2installer': }
 
   # File permissions to allow uWSGI process to write logs
@@ -564,30 +635,29 @@ class profile::st2server {
     uid                 => $_nginx_daemon_user,
     gid                 => $_nginx_daemon_user,
     application_options => {
-      'socket'     => "127.0.0.1:${_st2installer_port}",
-      'processes'  => 1,
-      'threads'    => 10,
-      'wsgi-file'  => 'app.wsgi',
-      'chdir'      => '/etc/st2installer',
-      'vacuum'     => true,
-      'logto'      => $_st2installer_logfile,
-      'virtualenv' => "${_st2installer_root}/.venv",
+      'socket'       => $_st2installer_socket,
+      'processes'    => 1,
+      'threads'      => 10,
+      'wsgi-file'    => 'app.wsgi',
+      'chdir'        => '/etc/st2installer',
+      'vacuum'       => true,
+      'logto'        => $_st2installer_logfile,
+      'virtualenv'   => "${_st2installer_root}/.venv",
+      'chmod-socket' => '644',
     },
     before         => Service['st2installer'],
   }
 
   nginx::resource::location { 'st2installer':
-    vhost               => 'st2webui',
-    ssl_only            => true,
-    location            => '/setup/',
-    uwsgi               => 'st2installer',
-    rewrite_rules       => [
+    vhost                => 'st2webui',
+    ssl_only             => true,
+    location             => '/setup/',
+    uwsgi                => "unix://${_st2installer_socket}",
+    auth_basic           => $_st2installer_auth_basic,
+    auth_basic_user_file => $_st2installer_auth_basic_user_file,
+    rewrite_rules        => [
       '^/setup/(.*)  /$1 break',
     ],
-  }
-
-  nginx::resource::upstream { 'st2installer':
-    members => ["127.0.0.1:${_st2installer_port}"],
   }
 
   ### Installer needs access to a few specific files
@@ -648,4 +718,15 @@ class profile::st2server {
   ## the service for nginx is up and running before responding to any CLI requests
   Service['nginx'] -> Exec<| tag == 'st2::key' |>
   Service['nginx'] -> Exec<| tag == 'st2::pack' |>
+
+  ## First Run
+  # Here lies a few things that need to be done only on the first run. Make sure at some point
+  # that we converge all of the content on the machine. This is needed to reduce shipping size
+  # of the final asset, so databases are sent un-populated.
+  exec { 'register all st2 content':
+    command => 'st2ctl reload --register-all',
+    unless  => 'st2 action list | grep packs.install',
+    path    => '/usr/bin:/usr/sbin:/bin:/sbin',
+    require => Service['nginx'],
+  }
 }

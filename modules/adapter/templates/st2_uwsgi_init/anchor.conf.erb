@@ -1,0 +1,20 @@
+# StackStorm <%= @_subsystem %> uWSGI script.
+#
+# Anchors to <%= @subsystem %> parent init script
+# to maintain compatability with st2ctl
+#
+# This file is managed by Puppet
+
+description     "StackStorm <%= @_subsystem %> uWSGI Daemon"
+author          "StackStorm Engineering <opsadmin@stackstorm.com>"
+
+start on starting <%= @subsystem %>
+stop on stopping <%= @subsystem %>
+
+respawn
+respawn limit 2 5
+
+umask 007
+kill timeout 60
+
+exec uwsgi --ini /etc/uwsgi.d/<%= @_subsystem %>.ini

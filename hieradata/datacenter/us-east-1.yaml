@@ -3,3 +3,7 @@ classes:
   - profile::ec2
 puppet::masterless::cron: false
 puppet::masterless::run_at_boot: true
+
+st2::installer::lockdown: true
+st2::installer::username: "installer"
+st2::installer::password: "%{::ec2_metadata.instance-id}"
