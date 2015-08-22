@@ -13,7 +13,7 @@ apt-get update
 apt-get -y upgrade
 apt-get -y install linux-headers-$(uname -r) build-essential
 apt-get -y install unzip wget ruby ruby-dev git curl
-apt-get -y install puppet-agent ruby-bundler unzip wget ruby ruby-dev git
+apt-get -y install ruby-bundler unzip wget ruby ruby-dev git
 gem install bundler deep_merge --no-ri --no-rdoc
 
 # Install Puppet Source
@@ -26,3 +26,4 @@ if [ ! -f /etc/apt/sources.list.d/puppetlabs-pc1.list ]; then
   dpkg -i puppetlabs-release-pc1-${DISTRIB_CODENAME}.deb
 fi
 
+apt-get -y install puppet-agent
