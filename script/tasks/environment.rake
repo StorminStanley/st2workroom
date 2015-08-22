@@ -18,7 +18,7 @@ namespace :environments do
 
     # Unless specified, only deploy the requested branch
     branch.eql?('all') ? deploy = branches : deploy = branch
-    
+
     Rake::Task['environments:cleanup'].invoke(envs_dir, branches)
     Rake::Task['environments:setup'].invoke(envs_dir, repo_dir, deploy)
     Rake::Task['environments:symlink'].invoke(envs_dir)
@@ -79,7 +79,7 @@ namespace :environments do
       FileUtils.rm_rf "#{env_checkout}.old" if File.directory? "#{env_checkout}.old"
     end
   end
-  
+
   task :symlink, :environments_dir do |_, args|
     environments_dir = args[:environments_dir]
 

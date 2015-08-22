@@ -24,6 +24,6 @@ def ln_nfs(source, dest)
 end
 
 def log(message)
-  timestr = Time.now.strftime("%M:%M:%S")
+  timestr = Time.now.strftime("%H:%M:%S")
   puts "[#{timestr}] #{message}"
 end
