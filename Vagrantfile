@@ -222,7 +222,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
 
           ST2_PATH=$(which st2)
           ST2_IP=$(facter st2_ip)
-          ST2_HOSTNAME=$(facter fqdn)
+          ST2_FQDN=$(facter fqdn)
           if [ -x "${ST2_PATH}" ]; then
             sudo st2 run core.local date &> /dev/null
             ACTIONEXIT=$?
