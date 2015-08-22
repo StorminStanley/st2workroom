@@ -5,7 +5,7 @@
   "provisioners": [
     {
       "type": "shell",
-      "execute_command": "echo 'stackstorm'|sudo -S sh '{{.Path}}'",
+      "execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
       "scripts": [
         "script/vsphere.sh",
         "script/ubuntu/base.sh",
