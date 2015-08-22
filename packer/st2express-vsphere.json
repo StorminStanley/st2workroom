@@ -1,11 +1,8 @@
 {
-  "variables": {
-    "ssh_password": "{{env `ST2_SSH_PASSWORD`}}"
-  },
   "provisioners": [
     {
       "type": "shell",
-      "execute_command": "echo 'stackstorm'|sudo -S sh '{{.Path}}'",
+      "execute_command": "echo 'vagrant'|sudo -S sh '{{.Path}}'",
       "scripts": [
         "script/vsphere.sh",
         "script/ubuntu/base.sh",
@@ -14,7 +11,8 @@
         "script/puppet-vsphere.sh",
         "script/ubuntu/cleanup.sh",
         "script/st2cleanup.sh",
-        "script/zerodisk.sh"
+        "script/zerodisk.sh",
+        "script/ubuntu/vsphere/cleanup.sh"
       ]
     }
   ],
@@ -59,11 +57,11 @@
       "iso_checksum": "9e5fecc94b3925bededed0fdca1bd417",
       "iso_checksum_type": "md5",
       "iso_url": "http://releases.ubuntu.com/14.04/ubuntu-14.04.3-server-amd64.iso",
-      "ssh_username": "stackstorm",
-      "ssh_password": "{{user `ssh_password`}}",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
       "ssh_port": 22,
       "ssh_wait_timeout": "10000s",
-      "shutdown_command": "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'stackstorm'|sudo -S sh '/tmp/shutdown.sh'",
+      "shutdown_command": "echo 'shutdown -P now' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
       "vmx_data": {
         "memsize": "1024",
         "numvcpus": "1",
