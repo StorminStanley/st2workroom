@@ -56,3 +56,4 @@ modules/tiller
 modules/uwsgi
 modules/vcsrepo
 modules/wget
+packer/output*

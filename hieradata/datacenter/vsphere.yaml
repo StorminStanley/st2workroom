@@ -1,0 +1,3 @@
+---
+puppet::masterless::cron: false
+st2::autoupdate: false

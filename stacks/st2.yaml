@@ -2,7 +2,7 @@
 # Defaults can be defined and reused with YAML anchors
 defaults: &defaults
   domain: stackstorm.net
-  memory: 1024
+  memory: 2048
   cpus: 1
   box: puppetlabs/ubuntu-14.04-64-puppet
 st2dev:
