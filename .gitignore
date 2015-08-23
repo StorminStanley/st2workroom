@@ -56,4 +56,6 @@ modules/tiller
 modules/uwsgi
 modules/vcsrepo
 modules/wget
+modules/rsyslog
 packer/output*
+
