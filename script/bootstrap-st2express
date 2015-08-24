@@ -35,17 +35,5 @@ ${PROJECT_ROOT}/script/puppet-apply
 
 IPADDRESS=$(facter ipaddress)
 
-echo "          _   ___     ____  _  __ "
-echo "         | | |__ \   / __ \| |/ / "
-echo "      ___| |_   ) | | |  | | ' /  "
-echo "     / __| __| / /  | |  | |  <   "
-echo "     \__ \ |_ / /_  | |__| | . \  "
-echo "     |___/\__|____|  \____/|_|\_\ "
-echo ""
-echo "  st2 is installed and ready to use."
-echo
-echo "First time starting this machine up?"
-echo "Visit https://${IPADDRESS}/setup to configure StackStorm"
-echo
-echo "Otherwise, head to https://${IPADDRESS} to access the WebUI"
-echo
+# Check to see if StackStorm is running properly
+${PROJECT_ROOT}/script/check-st2-ok
