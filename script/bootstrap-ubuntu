@@ -6,32 +6,9 @@ source $DIR/shared-functions
 
 export DEBIAN_FRONTEND=noninteractive
 
-# Make sure we have the bare minimum
-if [ ! $(which curl) ]; then
-  apt-get update
-  apt-get install -y curl
-fi
-
-# Install Puppet Source
-if [ -f /etc/apt/sources.list.d/puppetlabs.list ]; then
-  rm /etc/apt/sources.list.d/puppetlabs.list
-fi
-
-if [ ! -f /etc/apt/sources.list.d/puppetlabs-pc1.list ]; then
-  curl -O http://apt.puppetlabs.com/puppetlabs-release-pc1-${DISTRIB_CODENAME}.deb
-  dpkg -i puppetlabs-release-pc1-${DISTRIB_CODENAME}.deb
-fi
-
-if [ -f /var/lib/apt/periodic/update-success-stamp ]; then
-  if [ `find /var/lib/apt/periodic/update-success-stamp -mmin +${APT_UPDATE_FREQ} | grep apt` ]; then
-    apt-get update
-  fi
-else
-  apt-get update
-fi
-
-apt-get -y install unzip wget ruby ruby-dev git
-apt-get -y install puppet-agent ruby-bundler unzip wget ruby ruby-dev git
+apt-get update
+apt-get -y install unzip wget ruby ruby-dev git curl
+apt-get -y install ruby-bundler unzip wget ruby ruby-dev git
 gem install bundler deep_merge --no-ri --no-rdoc
 
 touch /etc/st2workroom-bootstrapped
