@@ -11,7 +11,6 @@ NODE=$(hostname -s);
 BUNDLER_ARGS=""
 
 export PATH=/opt/puppetlabs/bin:/usr/local/bin:$PATH
-export cache_libraries=1
 
 cd $PROJECT_ROOT
 
