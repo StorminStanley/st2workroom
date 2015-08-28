@@ -716,7 +716,7 @@ class profile::st2server {
 
   ## Because authentication is now being passed via Nginx, we need to make sure that
   ## the service for nginx is up and running before responding to any CLI requests
-  Service['nginx'] -> Exec<| tag == 'st2::key' |>
+  Service['nginx'] -> Exec<| tag == 'st2::kv' |>
   Service['nginx'] -> Exec<| tag == 'st2::pack' |>
 
   ## First Run
