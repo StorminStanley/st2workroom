@@ -4,12 +4,8 @@
 ## Need to install dotenv in your vagrant environment
 ## vagrant plugin install vagrant-dotenv
 REQUIRED_PLUGINS = %w(dotenv deep_merge)
-exit unless REQUIRED_PLUGINS.all? do |plugin|
-  Vagrant.has_plugin?(plugin) || (
-  puts "The #{plugin} plugin is required. Please install it with:"
-  puts "$ vagrant plugin install #{plugin}"
-  false
-  )
+REQUIRED_PLUGINS.each do |plugin|
+    exec "vagrant plugin install #{plugin};vagrant #{ARGV.join(" ")}" unless Vagrant.has_plugin? plugin || ARGV[0] == 'plugin'
 end
 
 begin
@@ -198,8 +194,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
       ## Bootstrap using different provisioners.
       case PROVISIONER
       when 'puppet-apply' then
-        n.vm.synced_folder '.', ROOT_DIR, type: @synced_folder_type
-        n.vm.provision 'shell', inline: "#{ROOT_DIR}/script/bootstrap-linux"
+        n.vm.synced_folder '.', '/opt/puppet', type: config['sync_type']
+        n.vm.provision 'shell', inline: '/opt/puppet/script/bootstrap-linux'
         n.vm.provision 'shell', inline: <<-EOF
           # Skips the `git pull` step, since you're working out of it directly
           export update_from_upstream=0

@@ -12,7 +12,6 @@ sed -i -e 's/%sudo  ALL=(ALL:ALL) ALL/%sudo  ALL=NOPASSWD:ALL/g' /etc/sudoers
 
 echo "UseDNS no" >> /etc/ssh/sshd_config
 
-
 # Install Puppet Source
 if [ -f /etc/apt/sources.list.d/puppetlabs.list ]; then
   rm /etc/apt/sources.list.d/puppetlabs.list
@@ -24,7 +23,6 @@ if [ ! -f /etc/apt/sources.list.d/puppetlabs-pc1.list ]; then
 fi
 
 apt-get update
-apt-get -y upgrade
 apt-get -y install linux-headers-$(uname -r) build-essential
 apt-get -y install unzip wget ruby ruby-dev git
 apt-get -y install puppet-agent ruby-bundler unzip wget ruby ruby-dev git
