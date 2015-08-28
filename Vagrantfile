@@ -32,6 +32,7 @@ DIR = Pathname.new(__FILE__).dirname
 
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
 VAGRANTFILE_API_VERSION = '2'
+ROOT_DIR='/opt/puppet'
 
 ## These environment variables allows the Vagrant Environment to be used to
 ## prototype any environment at runtime. The same functionality allows
@@ -214,8 +215,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
           # Collect facts for reference within puppet
           #{config['puppet']['facts'].collect { |k,v| "export FACTER_#{k}=#{v}"}.join("\n")}
           export FACTER_stack=#{@stack.stack}
-          /opt/puppet/script/puppet-apply
-          /opt/puppet/script/check-st2-ok
+          #{ROOT_DIR}/script/puppet-apply
+          #{ROOT_DIR}/script/check-st2-ok
 EOF
       when 'ansible-local' then
         n.vm.provision 'shell', inline: '/vagrant/script/bootstrap-ansible'

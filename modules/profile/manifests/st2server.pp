@@ -704,7 +704,7 @@ class profile::st2server {
   ### Installer also to be able to restart nginx
   sudo::conf { "delete-answer-file":
     priority => '5',
-    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /bin/rm /opt/puppet/hieradata/answers.yaml",
+    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /bin/rm ${::settings::confdir}/hieradata/answers.yaml",
   }
   sudo::conf { "puppet":
     priority => '10',

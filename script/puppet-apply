@@ -10,7 +10,7 @@ APT_UPDATE_FREQ=30
 NODE=$(hostname -s);
 BUNDLER_ARGS=""
 
-export PATH=/opt/puppetlabs/bin:/usr/local/bin:$PATH
+export PATH=${PROJECT_ROOT}/bin:/usr/local/bin:$PATH
 
 cd $PROJECT_ROOT
 
@@ -129,7 +129,7 @@ if [ -e /usr/bin/apt-get ]; then
   fi
 fi
 
-puppet apply $PUPPET_DEBUG_ARGS --verbose --environment $environment \
+bundle exec puppet apply $PUPPET_DEBUG_ARGS --verbose --environment $environment \
   --config $PROJECT_ROOT/puppet.conf $PUPPET_COLOR_ARGS \
   --graph --graphdir $PROJECT_ROOT/graphs/${NODE} \
   $PROJECT_ROOT/environments/${environment}/manifests $@

@@ -24,8 +24,9 @@ fi
 if [ ! -d /etc/facter/facts.d ]; then
   echo "Setting up facter.d..."
   mkdir -p /etc/facter/facts.d
-  echo "role=st2express" > /etc/facter/facts.d/role.txt
 fi
+
+echo "role=st2express" > /etc/facter/facts.d/role.txt
 
 # Start up the st2express bootstrap
 ${PROJECT_ROOT}/script/bootstrap-linux
