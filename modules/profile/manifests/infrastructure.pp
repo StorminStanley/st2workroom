@@ -1,5 +1,5 @@
 class profile::infrastructure {
-  $_hostname = hiera('system::hostname', $::fqdn)
+  $_hostname = hiera('system::hostname', $::hostname)
   $_host_ip = hiera('system::ipaddress', $::ipaddress)
   $_packages = hiera('system::packages', [])
   include ::ntp
@@ -38,6 +38,6 @@ class profile::infrastructure {
     ensure       => present,
     name         => $_hostname,
     ip           => $_host_ip,
-    host_aliases => $::hostname,
+    host_aliases => $::fqdn,
   }
 }
