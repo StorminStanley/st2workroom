@@ -2,6 +2,7 @@
 
 PROJECT_ROOT=/opt/puppet
 export PATH=${PROJECT_ROOT}/bin:/usr/local/bin:$PATH
+cd $PROJECT_ROOT
 
 ST2_PATH=$(which st2)
 ST2_IP=$(bundle exec facter st2_ip)
