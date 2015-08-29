@@ -13,21 +13,21 @@ class deprecate::os_rabbitmq_0001(
 
   case $_stage {
     undef: {
-      $_current_stage = 'stopped'
       $_service_ensure = 'stopped'
       $_service_manage = true
       $_package_ensure = 'absent'
-      $_converged = false
+
+      $_next_stage = 'stopped'
     }
     'stopped': {
-      $_current_stage = 'removed'
       $_service_ensure = undef
       $_service_manage = false
       $_package_ensure = 'absent'
-      $_converged = true
+
+      $_next_stage = 'removed'
     }
     default: {
-      $_converged = true
+      $_next_stage = undef
     }
   }
 
@@ -40,14 +40,15 @@ class deprecate::os_rabbitmq_0001(
       package_ensure => $_package_ensure,
     }
 
-# Set the breadcrumb for the next run.
-    file { '/etc/facter/facts.d/deprecate_os_rabbitmq_0001_stage.txt':
-      ensure  => file,
-      owner   => 'root',
-      group   => 'root',
-      mode    => '0444',
-      content => "deprecate_os_rabbitmq_0001_stage=${_current_stage}",
-      require => Class['::rabbitmq'],
+    if $_next_stage {
+      file { '/etc/facter/facts.d/deprecate_os_rabbitmq_0001_stage.txt':
+        ensure  => file,
+        owner   => 'root',
+        group   => 'root',
+        mode    => '0444',
+        content => "deprecate_os_rabbitmq_0001_stage=${_next_stage}",
+        require => Class['::rabbitmq'],
+      }
     }
   }
 }
