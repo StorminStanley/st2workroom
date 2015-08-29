@@ -1,7 +1,11 @@
 #!/bin/bash
 
+PROJECT_ROOT=/opt/puppet
+export PATH=${PROJECT_ROOT}/bin:/usr/local/bin:$PATH
+cd $PROJECT_ROOT
+
 # Bail if we are not running inside VMWare.
-if [ $(facter virtual) != "vmware" ]; then
+if [ $(bundle exec facter virtual) != "vmware" ]; then
     exit 0
 fi
 

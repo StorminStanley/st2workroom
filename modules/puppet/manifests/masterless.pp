@@ -1,7 +1,6 @@
 class puppet::masterless(
   $cron        = true,
   $run_at_boot = false,
-  $version     = $::puppet::version,
 ) inherits puppet {
   $offset = fqdn_rand(30)
 
@@ -51,12 +50,5 @@ class puppet::masterless(
   file { "/etc/facter/facts.d/role.txt":
     ensure  => file,
     content => "role=${::role}\n",
-  }
-
-  service { ['puppet', 'mcollective']:
-    ensure     => stopped,
-    enable     => false,
-    hasstatus  => true,
-    hasrestart => true,
   }
 }

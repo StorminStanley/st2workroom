@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 
+PROJECT_ROOT=/opt/puppet
+export PATH=${PROJECT_ROOT}/bin:/usr/local/bin:$PATH
+cd $PROJECT_ROOT
+
 ST2_PATH=$(which st2)
-ST2_IP=$(facter st2_ip)
-ST2_FQDN=$(facter fqdn)
-ST2_DATACENTER=$(facter datacenter)
+ST2_IP=$(bundle exec facter st2_ip)
+ST2_FQDN=$(bundle exec facter fqdn)
+ST2_DATACENTER=$(bundle exec facter datacenter)
 
 case $ST2_DATACENTER in
   vagrant)

@@ -18,8 +18,7 @@ class deprecate::os_mongodb_0001(
       $_package_ensure = undef
 
       # The next stage to process
-      $_converged = false
-      $_current_stage = 'stopped'
+      $_next_stage = 'stopped'
     }
     'stopped': {
       $_service_ensure = 'stopped'
@@ -27,10 +26,11 @@ class deprecate::os_mongodb_0001(
       $_package_ensure = 'absent'
 
       # The next stage to process
-      $_converged = true
-      $_current_stage = 'uninstalled'
+      $_next_stage = 'uninstalled'
     }
-    default: { }
+    default: {
+      $_next_stage = undef
+    }
   }
 
   if $enforce {
@@ -40,17 +40,16 @@ class deprecate::os_mongodb_0001(
     }
 
     # Set the breadcrumb for the next run.
-    file { '/etc/facter/facts.d/deprecate_os_mongodb_0001_stage.txt':
-      ensure  => file,
-      owner   => 'root',
-      group   => 'root',
-      mode    => '0444',
-      content => "deprecate_os_mongodb_0001_stage=${_current_stage}",
-      require => Class['::mongodb::server'],
-    }
 
-    if ! $_converged {
-      notify { "[deprecate::os_mongodb_0001]: WARNING: This module has not converged fully, currently on stage ${_current_stage} Please re-run puppet": }
+    if $_next_stage {
+      file { '/etc/facter/facts.d/deprecate_os_mongodb_0001_stage.txt':
+        ensure  => file,
+        owner   => 'root',
+        group   => 'root',
+        mode    => '0444',
+        content => "deprecate_os_mongodb_0001_stage=${_next_stage}",
+        require => Class['::mongodb::server'],
+      }
     }
   }
 }
