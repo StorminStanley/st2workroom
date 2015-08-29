@@ -9,7 +9,7 @@ class profile::st2server {
   $_installed = hiera('st2::installer_run', false)
   $_user_ssl_cert = hiera('st2::ssl_public_key', undef)
   $_user_ssl_key = hiera('st2::ssl_private_key', undef)
-  $_hostname = hiera('system::hostname', $::fqdn)
+  $_hostname = hiera('system::hostname', $::hostname)
   $_host_ip = hiera('system::ipaddress', $::ipaddress_eth0)
   $_installer_workroom_mode = hiera('st2::installer_workroom_mode', '0660')
   $_st2auth_uwsgi_threads = hiera('st2::auth_uwsgi_threads', 10)
