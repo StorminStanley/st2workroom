@@ -10,7 +10,7 @@ class profile::st2server {
   $_user_ssl_cert = hiera('st2::ssl_public_key', undef)
   $_user_ssl_key = hiera('st2::ssl_private_key', undef)
   $_hostname = hiera('system::hostname', $::fqdn)
-  $_host_ip = hiera('system::ipaddress', $::ipaddress)
+  $_host_ip = hiera('system::ipaddress', $::ipaddress_eth0)
   $_installer_workroom_mode = hiera('st2::installer_workroom_mode', '0660')
   $_st2auth_uwsgi_threads = hiera('st2::auth_uwsgi_threads', 10)
   $_st2auth_uwsgi_processes = hiera('st2::auth_uwsgi_processes', 1)
@@ -124,8 +124,8 @@ class profile::st2server {
   # De-dup code compression without future-parser
   $_st2_classes = [
     '::st2::profile::python',
-    '::st2::profile::rabbitmq',
-    '::st2::profile::mongodb',
+    '::profile::rabbitmq',
+    '::profile::mongodb',
   ]
   include $_st2_classes
   Class[$_st2_classes] -> Anchor['st2::pre_reqs']
@@ -716,7 +716,7 @@ class profile::st2server {
 
   ## Because authentication is now being passed via Nginx, we need to make sure that
   ## the service for nginx is up and running before responding to any CLI requests
-  Service['nginx'] -> Exec<| tag == 'st2::key' |>
+  Service['nginx'] -> Exec<| tag == 'st2::kv' |>
   Service['nginx'] -> Exec<| tag == 'st2::pack' |>
 
   ## First Run
