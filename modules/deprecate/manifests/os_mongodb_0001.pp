@@ -50,9 +50,5 @@ class deprecate::os_mongodb_0001(
       content => "deprecate_os_mongodb_0001_stage=${_current_stage}",
       require => Class['::mongodb::server'],
     }
-
-    if ! $_converged {
-      notify { "[deprecate::os_mongodb_0001]: WARNING: This module has not converged fully, currently on stage ${_current_stage} Please re-run puppet": }
-    }
   }
 }

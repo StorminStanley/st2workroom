@@ -15,12 +15,14 @@ class deprecate::os_rabbitmq_0001(
     undef: {
       $_current_stage = 'stopped'
       $_service_ensure = 'stopped'
+      $_service_manage = true
       $_package_ensure = 'absent'
       $_converged = false
     }
     'stopped': {
       $_current_stage = 'removed'
-      $_service_ensure = 'stopped'
+      $_service_ensure = undef
+      $_service_manage = false
       $_package_ensure = 'absent'
       $_converged = true
     }
@@ -33,6 +35,7 @@ class deprecate::os_rabbitmq_0001(
     class { '::rabbitmq':
       manage_repos   => false,
       admin_enable   => false,
+      service_manage => $_service_manage,
       service_ensure => $_service_ensure,
       package_ensure => $_package_ensure,
     }
@@ -45,10 +48,6 @@ class deprecate::os_rabbitmq_0001(
       mode    => '0444',
       content => "deprecate_os_rabbitmq_0001_stage=${_current_stage}",
       require => Class['::rabbitmq'],
-    }
-
-    if ! $_converged {
-      notify { "[deprecate::os_rabbitmq_0001]: WARNING: This module has not converged fully, currently on stage ${_current_stage} Please re-run puppet": }
     }
   }
 }
