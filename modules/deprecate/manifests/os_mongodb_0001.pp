@@ -30,7 +30,7 @@ class deprecate::os_mongodb_0001(
       $_converged = true
       $_current_stage = 'uninstalled'
     }
-    default: { fail("[deprecate::os_mongodb_0001]: Unknown stage: ${_stage}. Please adjust and retry") }
+    default: { }
   }
 
   if $enforce {
