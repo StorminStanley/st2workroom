@@ -13,18 +13,18 @@ class deprecate::os_rabbitmq_0001(
 
   case $_stage {
     undef: {
-      $_service_ensure = 'stopped'
       $_service_manage = true
-      $_package_ensure = 'absent'
+      $_service_ensure = 'stopped'
+      $_package_ensure = undef
 
-      $_next_stage = 'stopped'
+      $_next_stage = 'remove'
     }
-    'stopped': {
+    'remove': {
       $_service_ensure = undef
       $_service_manage = false
       $_package_ensure = 'absent'
 
-      $_next_stage = 'removed'
+      $_next_stage = 'complete'
     }
     default: {
       $_next_stage = undef
