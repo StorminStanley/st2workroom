@@ -2,8 +2,6 @@
 classes:
   - 'puppet::masterless'
 
-st2::version: 0.13.0
-st2::revision: 1
 st2::ng_init: true
 
 st2::packs:
