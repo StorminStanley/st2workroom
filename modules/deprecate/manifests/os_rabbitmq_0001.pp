@@ -24,7 +24,7 @@ class deprecate::os_rabbitmq_0001(
       $_package_ensure = 'absent'
       $_converged = true
     }
-    default: { fail("[deprecate::os_rabbitmq_0001]: Unknown stage: ${_stage}. Please adjust and retry") }
+    default: { }
   }
 
   if $enforce {
@@ -35,7 +35,7 @@ class deprecate::os_rabbitmq_0001(
       package_ensure => $_package_ensure,
     }
 
-    # Set the breadcrumb for the next run.
+# Set the breadcrumb for the next run.
     file { '/etc/facter/facts.d/deprecate_os_rabbitmq_0001_stage.txt':
       ensure  => file,
       owner   => 'root',
