@@ -2,8 +2,8 @@
 classes:
   - 'puppet::masterless'
 
+sudo::purge: false
 st2::ng_init: true
-
 st2::packs:
   hubot:
     ensure: present
