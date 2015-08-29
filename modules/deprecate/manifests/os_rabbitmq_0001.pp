@@ -24,7 +24,9 @@ class deprecate::os_rabbitmq_0001(
       $_package_ensure = 'absent'
       $_converged = true
     }
-    default: { }
+    default: {
+      $_converged = true
+    }
   }
 
   if $enforce {

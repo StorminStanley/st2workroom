@@ -30,7 +30,9 @@ class deprecate::os_mongodb_0001(
       $_converged = true
       $_current_stage = 'uninstalled'
     }
-    default: { }
+    default: {
+      $_converged = true
+    }
   }
 
   if $enforce {
