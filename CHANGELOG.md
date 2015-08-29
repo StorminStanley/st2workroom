@@ -2,6 +2,7 @@
 
 ## In Development
 * Fix mongodb/rabbitmq OS packages from reinstalling/restarting in a loop (*bugfix*)
+* Fix connection errors when host machine does not have FQDN defined (*bugfix*)
 
 ## v0.2.1 / Aug 29, 2015
 * Remove unnecessary `fail` on deprecation convergence logic. (*bugfix*)
