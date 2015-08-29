@@ -1,6 +1,10 @@
 # Changelog
 
-## In Development
+## v0.2.1 / Aug 29, 2015
+* Remove unnecessary `fail` on deprecation convergence logic. (*bugfix*)
+* Keep existing `sudoers` entries on host during installation (*bugfix*)
+* Stop managing `puppet` and `mcollective` services with masterless (*bugfix*)
+* Fix `check-st2-ok: line 4: facter: command not found` (*bugfix*)
 
 ## v0.2.0 / Aug 28, 2015
 
