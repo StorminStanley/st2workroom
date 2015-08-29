@@ -1,5 +1,8 @@
 # Changelog
 
+## In Development
+* Fix mongodb/rabbitmq OS packages from reinstalling/restarting in a loop (*bugfix*)
+
 ## v0.2.1 / Aug 29, 2015
 * Remove unnecessary `fail` on deprecation convergence logic. (*bugfix*)
 * Keep existing `sudoers` entries on host during installation (*bugfix*)

@@ -27,6 +27,10 @@ class deprecate::os_rabbitmq_0001(
       $_next_stage = 'complete'
     }
     default: {
+      $_service_ensure = undef
+      $_service_manage = false
+      $_package_ensure = 'absent'
+
       $_next_stage = undef
     }
   }
