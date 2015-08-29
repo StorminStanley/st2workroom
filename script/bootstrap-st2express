@@ -12,7 +12,7 @@ if [ -f /usr/bin/yum ]; then
   yum install -y git-core
 fi
 
-if [ ! -f ${PROJECT_ROOT}/.git ]; then
+if [ ! -d ${PROJECT_ROOT}/.git ]; then
   # Backup the directory in the event that masterless setup goes south
   if [ -d ${PROJECT_ROOT} ]; then
     mv ${PROJECT_ROOT} ${PROJECT_ROOT}.old
