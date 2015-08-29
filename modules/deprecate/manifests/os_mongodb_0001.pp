@@ -29,6 +29,10 @@ class deprecate::os_mongodb_0001(
       $_next_stage = 'uninstalled'
     }
     default: {
+      $_service_ensure = 'stopped'
+      $_service_enable = 'false'
+      $_package_ensure = 'absent'
+
       $_next_stage = undef
     }
   }
