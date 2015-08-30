@@ -193,7 +193,6 @@ class profile::st2server {
     api_url  => "https://:${_st2api_port}",
     auth_url => "https://:${_st2auth_port}",
   }
-  include ::st2::stanley
   include ::st2::logging::rsyslog
 
   # $_python_pack needs to be loaded here due to load-order
