@@ -10,6 +10,7 @@ class profile::st2server {
   $_user_ssl_cert = hiera('st2::ssl_public_key', undef)
   $_user_ssl_key = hiera('st2::ssl_private_key', undef)
   $_hostname = hiera('system::hostname', $::hostname)
+  $_fqdn = hiera('system::fqdn', $::fqdn)
   $_host_ip = hiera('system::ipaddress', $::ipaddress_eth0)
   $_installer_workroom_mode = hiera('st2::installer_workroom_mode', '0660')
   $_st2auth_uwsgi_threads = hiera('st2::auth_uwsgi_threads', 10)
@@ -45,6 +46,8 @@ class profile::st2server {
 
   $_server_names = [
     $_hostname,
+    $_fqdn,
+    $_host_ip,
   ]
 
   # Ports that uwsgi advertises on 127.0.0.1
@@ -224,6 +227,11 @@ class profile::st2server {
   include ::st2::packs
   include ::st2::kvs
 
+  ## Because authentication is now being passed via Nginx, we need to make sure that
+  ## the service for nginx is up and running before responding to any CLI requests
+  Service['nginx'] -> Exec['restart st2'] -> Exec<| tag == 'st2::kv' |>
+  Service['nginx'] -> Exec['restart st2'] -> Exec<| tag == 'st2::pack' |>
+
   ## SSL Certificate
   # Generate a Self-signed cert if the user does not provide cert details
   # This works by controlling the SSL Cert/Key file resources below. If
@@ -279,10 +287,7 @@ class profile::st2server {
 
     ssl_pkey { $_ssl_key:
       ensure => present,
-      before => [
-        File[$_ssl_key],
-        Class['nginx::service'],
-      ]
+      before => File[$_ssl_key],
     }
 
     x509_cert { $_ssl_cert:
@@ -295,14 +300,8 @@ class profile::st2server {
         Ssl_pkey[$_ssl_key],
         File[$_ssl_template],
       ],
-      before      => [
-        File[$_ssl_cert],
-        Class['nginx::service'],
-      ],
+      before      => File[$_ssl_cert],
     }
-
-    # Nginx needs to reload with new certificate for things to work properly
-    Class['nginx::service'] -> Exec<| tag == 'st2::kv' |>
   }
 
   # Ensure the SSL Certificates are owned by the proper
@@ -315,14 +314,14 @@ class profile::st2server {
     owner   => 'root',
     mode    => '0444',
     content => $_ssl_cert_content,
-    before  => Class['::nginx::service'],
+    notify  => Class['::nginx::service'],
   }
   file { $_ssl_key:
     ensure  => file,
     owner   => 'root',
     mode    => '0440',
     content => $_ssl_key_content,
-    before  => Class['::nginx::service'],
+    notify  => Class['::nginx::service'],
   }
 
   ## Add the certificate to the trusted root store to get rid
@@ -374,6 +373,7 @@ class profile::st2server {
       'logto'        => $_mistral_logfile,
       'chmod-socket' => '644',
     },
+    notify              => Service['mistral-api'],
   }
 
   nginx::resource::vhost { 'mistral-api':
@@ -517,6 +517,7 @@ class profile::st2server {
       'logto'        => '/var/log/st2/st2auth.log',
       'chmod-socket' => '644',
     },
+    notify             => Service['st2auth'],
   }
 
   nginx::resource::vhost { 'st2auth':
@@ -614,6 +615,7 @@ class profile::st2server {
     venv_dir     => "${_st2installer_root}/.venv",
     cwd          => $_mistral_root,
     requirements => "${_st2installer_root}/requirements.txt",
+    require      => Vcsrepo[$_st2installer_root],
     before       => Service['st2installer'],
   }
 
@@ -628,6 +630,7 @@ class profile::st2server {
     group   => $_nginx_daemon_user,
     mode    => '0664',
     require => Class['::st2::profile::server'],
+    before  => Service['st2installer'],
   }
 
   uwsgi::app { 'st2installer':
@@ -645,7 +648,7 @@ class profile::st2server {
       'virtualenv'   => "${_st2installer_root}/.venv",
       'chmod-socket' => '644',
     },
-    before         => Service['st2installer'],
+    notify           => Service['st2installer'],
   }
 
   nginx::resource::location { 'st2installer':
@@ -673,6 +676,7 @@ class profile::st2server {
     owner  => $_nginx_daemon_user,
     group  => $_nginx_daemon_user,
     mode   => $_installer_workroom_mode,
+    before => Service['st2installer'],
   }
 
   ### st2installer needs access to run a few commands post-install.
@@ -713,11 +717,6 @@ class profile::st2server {
 
   # Dependencies
   # Here lies odd dependencies that need to be put in this file. Please document them.
-
-  ## Because authentication is now being passed via Nginx, we need to make sure that
-  ## the service for nginx is up and running before responding to any CLI requests
-  Service['nginx'] -> Exec['restart st2'] -> Exec<| tag == 'st2::kv' |>
-  Service['nginx'] -> Exec['restart st2'] -> Exec<| tag == 'st2::pack' |>
 
   ## First Run
   # Here lies a few things that need to be done only on the first run. Make sure at some point
