@@ -31,7 +31,7 @@ class profile::st2server {
   # Users and their corresponding SSH keys only need to be created during the
   # installer process. Any other management of these values may end up in
   # unnecessary overwriting of passwords/keys/etc.
-  $_installer_running = hiera('st2::installer_run', false)
+  $_installer_running = $::installer_running
   $_installer_run = $::st2_installer_run
 
   if $_installer_running {
@@ -123,7 +123,7 @@ class profile::st2server {
   ## Note: Service restart is setup this way to prevent puppet runs from
   ##       triggering a restart. Instead, nginx restart must be executed
   ##       manually by the user
-  $_nginx_configtest = $::installer_running ? {
+  $_nginx_configtest = $_installer_running ? {
     undef   => undef,
     default => true,
   }
