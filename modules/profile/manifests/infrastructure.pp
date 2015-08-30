@@ -1,6 +1,6 @@
 class profile::infrastructure {
-  $_hostname = hiera('system::hostname', $::hostname)
-  $_host_ip = hiera('system::ipaddress', $::ipaddress)
+  $_fqdn = hiera('system::hostname', $::fqdn)
+  $_host_ip = hiera('system::ipaddress', $::ipaddress_eth0)
   $_packages = hiera('system::packages', [])
   include ::ntp
   include ::profile::rsyslog
@@ -15,7 +15,7 @@ class profile::infrastructure {
   ## and then let the user come around and configure it with st2installer
   file { '/etc/hostname':
     ensure => file,
-    content => "${_hostname}\n",
+    content => "${_fqdn}\n",
     notify  => Exec['apply hostname'],
   }
   exec { "apply hostname":
@@ -36,8 +36,8 @@ class profile::infrastructure {
   }
   host { 'default hostname v4':
     ensure       => present,
-    name         => $_hostname,
+    name         => $_fqdn,
     ip           => $_host_ip,
-    host_aliases => $::fqdn,
+    host_aliases => $::hostname,
   }
 }
