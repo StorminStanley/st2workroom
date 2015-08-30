@@ -6,7 +6,6 @@ class profile::st2server {
   ### where applicable.
   $_ssl_cert = '/etc/ssl/st2.crt'
   $_ssl_key = '/etc/ssl/st2.key'
-  $_installed = hiera('st2::installer_run', false)
   $_user_ssl_cert = hiera('st2::ssl_public_key', undef)
   $_user_ssl_key = hiera('st2::ssl_private_key', undef)
   $_hostname = hiera('system::hostname', $::hostname)
@@ -27,6 +26,23 @@ class profile::st2server {
   $_root_cli_password = fqdn_rand_string(32)
   $_root_cli_uid = 2000
   $_root_cli_gid = 2000
+
+  # Need to determine the state of the Installer for purposes of User management.
+  # Users and their corresponding SSH keys only need to be created during the
+  # installer process. Any other management of these values may end up in
+  # unnecessary overwriting of passwords/keys/etc.
+  $_installer_running = hiera('st2::installer_run', false)
+  $_installer_run = $::st2_installer_run
+
+  if $_installer_running {
+    file { '/etc/facter/facts.d/st2_installer_run.txt':
+      ensure  => file,
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0444',
+      content => 'st2_installer_run=true',
+    }
+  }
 
   # In the event that we are packaging an image to be used 100% offline
   # this flag exists to wrap any resource that may automatically update
@@ -168,12 +184,14 @@ class profile::st2server {
   # meta gross, but it's the cleanest way without knowing what environment
   # this installer will pop up in.
 
-  users { $_root_cli_username:
-    uid        => $_root_cli_uid,
-    gid        => $_root_cli_gid,
-    shell      => '/bin/false',
-    password   => $_root_cli_password,
-    managehome => false,
+  if ! $_installer_run {
+    users { $_root_cli_username:
+      uid        => $_root_cli_uid,
+      gid        => $_root_cli_gid,
+      shell      => '/bin/false',
+      password   => $_root_cli_password,
+      managehome => false,
+    }
   }
 
   anchor { 'st2::pre_reqs': }
@@ -196,6 +214,19 @@ class profile::st2server {
     api_url  => "https://:${_st2api_port}",
     auth_url => "https://:${_st2auth_port}",
   }
+
+  # Only manage the ::st2::stanley admin account
+  # when the installer has either not run (managed in workroom.yaml)
+  # or when the installer is or has ran (managed in answers.yaml)
+  #
+  # Answers.yaml is deleted by the st2installer after run to prevent
+  # credential leakage. To that end, if this class still is being managed
+  # and no hiera data exists, SSH keys and the admint account will be
+  # overwritten with default values, and this is undesirable.
+  if ! $_installer_run {
+    include ::st2::stanley
+  }
+
   include ::st2::logging::rsyslog
 
   # $_python_pack needs to be loaded here due to load-order
