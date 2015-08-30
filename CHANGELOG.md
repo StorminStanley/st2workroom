@@ -1,9 +1,12 @@
 # Changelog
 
 ## In Development
+
+## v0.2.2 / Aug 30, 2015
 * Fix mongodb/rabbitmq OS packages from reinstalling/restarting in a loop (*bugfix*)
 * Fix connection errors when host machine does not have FQDN defined (*bugfix*)
 * Fix StackStorm service authentication failure on host rename (*bugfix*)
+* Fix `update-system` removing system user information (*bugfix*)
 
 ## v0.2.1 / Aug 29, 2015
 * Remove unnecessary `fail` on deprecation convergence logic. (*bugfix*)
