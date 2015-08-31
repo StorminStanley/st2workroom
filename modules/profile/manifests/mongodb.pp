@@ -1,6 +1,4 @@
 class profile::mongodb {
-  include ::deprecate::os_mongodb_0001
-
   include ::docker
   $_version = hiera('mongodb::version', '2.4.14')
 

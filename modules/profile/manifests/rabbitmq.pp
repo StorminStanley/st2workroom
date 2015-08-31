@@ -1,7 +1,5 @@
 class profile::rabbitmq {
   $_version = hiera('rabbitmq::version', '3.5.4')
-  include ::deprecate::os_rabbitmq_0001
-
   include ::docker
 
   docker::image { 'rabbitmq':
