@@ -24,7 +24,6 @@ class profile::mongodb {
     ],
     require => [
       Docker::Image['mongo'],
-      Class['::deprecate::os_mongodb_0001'],
     ],
   }
 }

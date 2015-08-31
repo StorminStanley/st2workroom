@@ -18,7 +18,6 @@ class profile::rabbitmq {
     ],
     require  => [
       Docker::Image['rabbitmq'],
-      Class['::deprecate::os_rabbitmq_0001'],
     ],
   }
 }
