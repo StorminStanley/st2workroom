@@ -561,10 +561,14 @@ class profile::st2server {
     ssl_ciphers          => $_cipher_list,
     server_name          => $_server_names,
     uwsgi                => "unix://${_st2auth_socket}",
+    add_header           => [
+      'Access-Control-Allow-Origin *',
+    ],
     proxy_set_header     => [
       'Host $host',
       'X-Real-IP $remote_addr',
       'X-Forwarded-For $proxy_add_x_forwarded_for',
+      'Access-Control-Allow-Origin $http_origin',
     ],
     location_raw_append => [
       'proxy_pass_header Authorization;',
