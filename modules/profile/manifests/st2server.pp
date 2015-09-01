@@ -561,9 +561,9 @@ class profile::st2server {
     ssl_ciphers          => $_cipher_list,
     server_name          => $_server_names,
     uwsgi                => "unix://${_st2auth_socket}",
-    add_header           => [
-      'Access-Control-Allow-Origin *',
-    ],
+    add_header           => {
+      'Access-Control-Allow-Origin' => '*',
+    },
     proxy_set_header     => [
       'Host $host',
       'X-Real-IP $remote_addr',
