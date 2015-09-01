@@ -616,9 +616,6 @@ class profile::st2server {
       $_cors_custom_post,
       $_cors_custom_get,
     ],
-    add_header           => {
-      'Access-Control-Allow-Origin' => '*',
-    },
     proxy_set_header     => [
       'Host $host',
       'X-Real-IP $remote_addr',
