@@ -1,6 +1,7 @@
 # Changelog
 
 ## In Development
+* Fix: st2auth service not starting on correct IP address (*bugfix*)
 
 ## v0.2.2 / Aug 30, 2015
 * Fix mongodb/rabbitmq OS packages from reinstalling/restarting in a loop (*bugfix*)

@@ -602,6 +602,7 @@ class profile::st2server {
 
   nginx::resource::vhost { 'st2auth':
     ensure               => present,
+    listen_ip            => $_host_ip,
     listen_port          => $_st2auth_port,
     ssl                  => true,
     ssl_port             => $_st2auth_port,
