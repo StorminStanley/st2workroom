@@ -108,54 +108,32 @@ class profile::st2server {
   ## to Nginx. The options for st2api are slightly different from a generic CORS directive.
   ## To that end, each `if` logic block in nginx has been broken up into separate variables to be mix
   ## and matched using `location_raw_prepend` options on the vhost configurations
-  $_st2api_custom_options = "
+  $_allowed_headers = join([
+    'x-auth-token',
+    'DNT',
+    'X-Mx-ReqToken',
+    'Authorization',
+    'X-CustomHeader',
+    'Keep-Alive',
+    'User-Agent',
+    'X-Requested-With',
+    'If-Modified-Since',
+    'Cache-Control',
+    'Content-Type',
+  ], ",")
+
+  $_cors_custom_options= "
     if (\$request_method = 'OPTIONS') {
 			add_header 'Access-Control-Allow-Origin' '*';
+      add_header 'Access-Control-Allow-Credentials' 'true';
 			add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS';
-	 		add_header 'Access-Control-Allow-Headers' 'x-auth-token,DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+      add_header 'Access-Control-Allow-Headers' ${_allowed_headers};
 			add_header 'Access-Control-Max-Age' 1728000;
 			add_header 'Content-Type' 'text/plain charset=UTF-8';
 			add_header 'Content-Length' 0;
 
 			return 204;
 		 }"
-
-  $_cors_custom_options = "
-     if (\$request_method = 'OPTIONS') {
-        add_header 'Access-Control-Allow-Origin' '*';
-        #
-        # Om nom nom cookies
-        #
-        add_header 'Access-Control-Allow-Credentials' 'true';
-        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
-        #
-        # Custom headers and headers various browsers *should* be OK with but aren't
-        #
-        add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
-        #
-        # Tell client that this pre-flight info is valid for 20 days
-        #
-        add_header 'Access-Control-Max-Age' 1728000;
-        add_header 'Content-Type' 'text/plain charset=UTF-8';
-        add_header 'Content-Length' 0;
-        return 204;
-     }"
-
-  $_cors_custom_post = "
-    if (\$request_method = 'POST') {
-        add_header 'Access-Control-Allow-Origin' '*';
-        add_header 'Access-Control-Allow-Credentials' 'true';
-        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
-        add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
-     }"
-
-  $_cors_custom_get = "
-     if (\$request_method = 'GET') {
-        add_header 'Access-Control-Allow-Origin' '*';
-        add_header 'Access-Control-Allow-Credentials' 'true';
-        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
-        add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
-     }"
 
   #########################################################
   ########## BEGIN RESOURCE DEFINITIONS ###################
@@ -508,11 +486,6 @@ class profile::st2server {
     add_header           => $_headers,
     www_root             => '/opt/stackstorm/static/webui/',
     subscribe            => File[$_ssl_cert],
-    location_raw_prepend => [
-      $_cors_custom_options,
-      $_cors_custom_post,
-      $_cors_custom_get,
-    ],
   }
 
   # Flag set in st2ctl to prevent the SimpleHTTPServer from starting. This
@@ -521,7 +494,6 @@ class profile::st2server {
     path => '/etc/environment',
     line => 'ST2_DISABLE_HTTPSERVER=true',
   }
-
 
   nginx::resource::vhost { 'st2api':
     ensure               => present,
@@ -536,9 +508,7 @@ class profile::st2server {
     server_name          => $_server_names,
     proxy                => 'http://st2api',
     location_raw_prepend => [
-      $_st2api_custom_options,
-      $_cors_custom_post,
-      $_cors_custom_get,
+      $_cors_custom_options,
     ],
     location_raw_append => [
       "proxy_set_header Connection '';",
@@ -612,16 +582,10 @@ class profile::st2server {
     ssl_ciphers          => $_cipher_list,
     server_name          => $_server_names,
     uwsgi                => "unix://${_st2auth_socket}",
-    location_raw_prepend => [
-      $_cors_custom_options,
-      $_cors_custom_post,
-      $_cors_custom_get,
-    ],
     proxy_set_header     => [
       'Host $host',
       'X-Real-IP $remote_addr',
       'X-Forwarded-For $proxy_add_x_forwarded_for',
-      'Access-Control-Allow-Origin $http_origin',
     ],
     location_raw_append => [
       'proxy_pass_header Authorization;',
