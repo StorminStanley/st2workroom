@@ -92,14 +92,16 @@ class profile::st2server {
   # Disable HSTS if the user provides a self-signed cert
   $_headers = $_self_signed_cert ? {
     true => {
-      'Front-End-Https'           => 'on',
-      'X-Content-Type-Options'    => 'nosniff',
+      'Front-End-Https'             => 'on',
+      'X-Content-Type-Options'      => 'nosniff',
+      'Access-Control-Allow-Origin' => '*',
     },
     default => {
       'Front-End-Https'           => 'on',
       'X-Content-Type-Options'    => 'nosniff',
       'Strict-Transport-Security' =>
         '"max-age=63072000; includeSubdomains; preload"',
+      'Access-Control-Allow-Origin' => '*',
     }
   }
 
