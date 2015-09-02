@@ -178,7 +178,7 @@ class profile::st2server {
 
   # De-dup code compression without future-parser
   $_st2_classes = [
-    '::st2::profile::python',
+    '::profile::python',
     '::profile::rabbitmq',
     '::profile::mongodb',
   ]
