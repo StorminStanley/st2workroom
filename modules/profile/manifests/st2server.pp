@@ -280,8 +280,8 @@ class profile::st2server {
   }
 
   python::pip { 'uwsgi':
-    ensure  => present,
-    before  => Class['::uwsgi'],
+    ensure => present,
+    before => Class['::uwsgi'],
   }
 
   # ### Application Configuration
