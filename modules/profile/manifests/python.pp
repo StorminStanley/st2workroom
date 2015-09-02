@@ -4,4 +4,6 @@ class profile::python {
     ensure   => 'latest',
     provider => 'pip',
   }
+
+  Package['pip'] -> Python::Pip<||>
 }
