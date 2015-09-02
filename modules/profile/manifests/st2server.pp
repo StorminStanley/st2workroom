@@ -6,8 +6,12 @@ class profile::st2server {
   ### where applicable.
   $_ssl_cert = '/etc/ssl/st2.crt'
   $_ssl_key = '/etc/ssl/st2.key'
+  $_ssl_csr = '/etc/ssl/st2.csr'
+  $_ca_cert = '/etc/ssl/st2_ca.crt'
+  $_ca_key = '/etc/ssl/st2_ca.key'
   $_user_ssl_cert = hiera('st2::ssl_public_key', undef)
   $_user_ssl_key = hiera('st2::ssl_private_key', undef)
+  $_user_ca_cert = hiera('st2::ssl_ca_cert', undef)
   $_hostname = hiera('system::hostname', $::hostname)
   $_fqdn = hiera('system::fqdn', $::fqdn)
   $_host_ip = hiera('system::ipaddress', $::ipaddress_eth0)
@@ -303,6 +307,11 @@ class profile::st2server {
   if ! $_self_signed_cert {
     $_ssl_cert_content = $_user_ssl_cert
     $_ssl_key_content = $_user_ssl_key
+    $_ca_key_content = undef
+    $_ca_cert_content = $_user_ca_cert ? {
+      undef   => undef,
+      default => $_user_ca_cert,
+    }
   } else {
     # TODO: Make this configurable with installer.
     # These map directly to the values populated in the below template
@@ -311,7 +320,13 @@ class profile::st2server {
     ### using camptocamp/openssl module.
     $_ssl_cert_content = undef
     $_ssl_key_content = undef
-    $_ssl_template = '/etc/ssl/st2.cnf'
+    $_ca_cert_content = undef
+    $_ca_key_content = undef
+    $_ca_expiration = '3650'
+    $_ssl_expiration = '3650'
+    $_openssl_config = '/etc/ssl/st2.cnf'
+
+    # Variables for OpenSSL Template
     $country = 'US'
     $state = 'California'
     $locality = 'Palo Alto'
@@ -321,19 +336,20 @@ class profile::st2server {
     $email = 'support@stackstorm.com'
     $altnames = $_server_names
 
-    file { $_ssl_template:
+    file { $_openssl_config:
       ensure  => file,
       owner   => $_nginx_daemon_user,
       mode    => '0444',
-      content => template('openssl/cert.cnf.erb'),
+      content => template('profile/st2server/openssl.cnf.erb'),
       notify  => Exec['remove old self-signed certs'],
+      before  => Exec['create root CA'],
     }
 
     # In the event that the configuration is refreshed, clean
     # up the old certificates to prevent cert mismatches and
     # CORS errors
     exec { 'remove old self-signed certs':
-      command => "rm -rf ${_ssl_key} ${_ssl_cert}",
+      command => "rm -rf ${_ssl_key} ${_ssl_cert} ${_ssl_csr} ${_ca_cert} ${_ca_key}",
       path    => [
         '/usr/bin',
         '/usr/sbin',
@@ -341,29 +357,78 @@ class profile::st2server {
         '/sbin',
       ],
       refreshonly => true,
-      before      => [
-        Ssl_pkey[$_ssl_key],
-        X509_cert[$_ssl_cert],
-      ],
+      before      => Exec['create root CA'],
     }
 
-    ssl_pkey { $_ssl_key:
-      ensure => present,
-      before => File[$_ssl_key],
+    $_create_ca_command = join([
+      'openssl',
+      'req',
+      '-new',
+      '-x509',
+      '-days',
+      $_ca_expiration,
+      '-extensions',
+      'v3_ca',
+      '-keyout',
+      $_ca_key,
+      '-out',
+      $_ca_cert,
+      '-config',
+      $_openssl_config,
+    ], ' ')
+
+    exec { 'create root CA':
+      command => $_create_ca_command,
+      creates => $_ca_key,
+      path    => '/usr/sbin:/usr/bin:/sbin:/bin',
+      before  => Exec['create client cert req'],
     }
 
-    x509_cert { $_ssl_cert:
-      ensure      => present,
-      private_key => $_ssl_key,
-      template    => $_ssl_template,
-      days        => 3650,
-      force       => false,
-      require     => [
-        Ssl_pkey[$_ssl_key],
-        File[$_ssl_template],
-      ],
-      before      => File[$_ssl_cert],
+    $_create_client_req_command = join([
+      'openssl',
+      'req',
+      '-new',
+      '-newkey'
+      'rsa:2048'
+      '-nodes',
+      '-keyout',
+      $_ssl_key,
+      '-out',
+      $_ssl_csr,
+      '-config',
+      $_openssl_config,
+    ], ' ')
+
+    exec { 'create client cert req':
+      command => $_create_client_req_command,
+      creates => $_ssl_csr,
+      path    => '/usr/sbin:/usr/bin:/sbin:/bin',
+      before  => Exec['sign client cert req'],
     }
+
+    $_sign_client_req_command = join([
+      'openssl',
+      'x509',
+      '-req',
+      $_ssl_expiration,
+      '-CA',
+      $_ca_cert,
+      '-CAkey',
+      $_ca_key,
+      '-CAcreateserial',
+      '-in',
+      $_ssl_csr,
+      '-out',
+      $_ssl_key,
+    ], ' '
+
+    exec { 'sign client cert req':
+      command => $_create_client_req_command,
+      creates => $_ssl_csr,
+      path    => '/usr/sbin:/usr/bin:/sbin:/bin',
+      notify  => Service['nginx'],
+    }
+    ## CA Certificate END ##
   }
 
   # Ensure the SSL Certificates are owned by the proper
@@ -371,6 +436,20 @@ class profile::st2server {
   # This relies on the NGINX daemon user belonging to the shadow
   # group, given that this is also necessary for PAM access, gives
   # a tidy way to keep permissions limited.
+  file { $_ca_cert:
+    ensure  => file,
+    owner   => 'root',
+    mode    => '0444',
+    content => $_ca_cert_content,
+    notify  => Class['::nginx::service'],
+  }
+  file { $_ca_key:
+    ensure  => file,
+    owner   => 'root',
+    mode    => '0440',
+    content => $_ca_key_content,
+    notify  => Class['::nginx::service'],
+  }
   file { $_ssl_cert:
     ensure  => file,
     owner   => 'root',
@@ -386,26 +465,28 @@ class profile::st2server {
     notify  => Class['::nginx::service'],
   }
 
-  ## Add the certificate to the trusted root store to get rid
-  ## of annoying issues related to self-signed or trusted
-  file { '/usr/local/share/ca-certificates/st2':
-    ensure => directory,
-    owner  => 'root',
-    group  => 'root',
-    mode   => '0755',
-  }
-  file { '/usr/local/share/ca-certificates/st2/st2_trusted_cert.crt':
-    ensure  => file,
-    owner   => 'root',
-    mode    => '0444',
-    source  => $_ssl_cert,
-    require => File[$_ssl_cert],
-    notify  => Exec['update-ca-certificates'],
-  }
-  exec { 'update-ca-certificates':
-    command     => 'update-ca-certificates',
-    path        => '/usr/bin:/usr/sbin:/bin:/sbin',
-    refreshonly => true,
+  if $_ca_cert {
+    ## Add the certificate to the trusted root store to get rid
+    ## of annoying issues related to self-signed or trusted
+    file { '/usr/local/share/ca-certificates/st2':
+      ensure => directory,
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0755',
+    }
+    file { '/usr/local/share/ca-certificates/st2/st2_trusted_cert.crt':
+      ensure  => file,
+      owner   => 'root',
+      mode    => '0444',
+      source  => $_ca_cert,
+      require => File[$_ca_cert],
+      notify  => Exec['update-ca-certificates'],
+    }
+    exec { 'update-ca-certificates':
+      command     => 'update-ca-certificates',
+      path        => '/usr/bin:/usr/sbin:/bin:/sbin',
+      refreshonly => true,
+    }
   }
 
   ## Mistral uWSGI
