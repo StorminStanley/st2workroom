@@ -1,9 +1,12 @@
 class profile::python {
   include ::st2::profile::python
-  package { 'pip':
-    ensure   => 'latest',
-    provider => 'pip',
+
+  exec { 'update-python':
+    command     => 'pip install -U pip',
+    path        => '/usr/sbin:/usr/bin:/sbin:/bin',
+    refreshonly => true,
   }
 
-  Package['pip'] -> Python::Pip<||>
+  Exec['update-pip'] -> Python::Pip<||>
+
 }
