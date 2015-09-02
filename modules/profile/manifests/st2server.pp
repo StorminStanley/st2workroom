@@ -282,7 +282,6 @@ class profile::st2server {
   python::pip { 'uwsgi':
     ensure  => present,
     before  => Class['::uwsgi'],
-    require => Class['::profile::python'],
   }
 
   # ### Application Configuration
