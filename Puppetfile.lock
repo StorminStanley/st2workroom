@@ -67,8 +67,8 @@ FORGE
 
 GIT
   remote: https://github.com/StackStorm/puppet-st2
-  ref: 091e0d541d91ba8e738b078c4d8eee48f87ac120
-  sha: 091e0d541d91ba8e738b078c4d8eee48f87ac120
+  ref: 8734b64
+  sha: 8734b646bdd43d01d831ee8f98f5411f0c00e6c7
   specs:
     stackstorm-st2 (0.7.10)
       jamtur01-httpauth (>= 0.0.3)
