@@ -61,6 +61,15 @@ FORGE
     saz-rsyslog (3.5.1)
     saz-sudo (3.0.9)
       puppetlabs-stdlib (>= 2.3.0)
+    stahnma-epel (1.1.0)
+    stankevich-python (1.7.15)
+      puppetlabs-stdlib (>= 4.0.0)
+
+GIT
+  remote: https://github.com/StackStorm/puppet-st2
+  ref: 091e0d541d91ba8e738b078c4d8eee48f87ac120
+  sha: 091e0d541d91ba8e738b078c4d8eee48f87ac120
+  specs:
     stackstorm-st2 (0.7.10)
       jamtur01-httpauth (>= 0.0.3)
       jfryman-tiller (>= 0.1.0)
@@ -77,9 +86,6 @@ FORGE
       puppetlabs-vcsrepo (>= 1.2.0)
       saz-sudo (>= 3.0.9)
       stankevich-python (>= 1.7.15)
-    stahnma-epel (1.1.0)
-    stankevich-python (1.7.15)
-      puppetlabs-stdlib (>= 4.0.0)
 
 GIT
   remote: https://github.com/jfryman/evenup-hubot
@@ -137,6 +143,6 @@ DEPENDENCIES
   puppetlabs-vcsrepo (= 1.2.0)
   saz-rsyslog (= 3.5.1)
   saz-sudo (= 3.0.9)
-  stackstorm-st2 (= 0.7.10)
+  stackstorm-st2 (>= 0)
   stankevich-python (= 1.7.15)
 

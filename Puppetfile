@@ -17,7 +17,6 @@ mod 'puppetlabs-ruby',               '0.4.0'
 mod 'puppetlabs-vcsrepo',            '1.2.0'
 mod 'puppetlabs-postgresql',         '4.5.0'
 mod 'dhoppe-screen',                 '1.0.3'
-mod 'stackstorm-st2',                '0.7.10'
 mod 'garethr-docker',                '4.1.1'
 mod 'counsyl-packer',                '0.9.14'
 mod 'counsyl-sys',                   '0.9.17'
@@ -43,3 +42,8 @@ mod 'jfryman-uwsgi',
 mod 'maestrodev-wget',
   :git => 'https://github.com/maestrodev/puppet-wget',
   :ref => 'master'
+
+# mod 'stackstorm-st2',                '0.7.10'
+mod 'stackstorm-st2',
+  :git => 'https://github.com/StackStorm/puppet-st2',
+  :ref => '091e0d541d91ba8e738b078c4d8eee48f87ac120'
