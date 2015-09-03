@@ -291,8 +291,8 @@ class profile::st2server {
 
   ## Because authentication is now being passed via Nginx, we need to make sure that
   ## the service for nginx is up and running before responding to any CLI requests
-  Service['nginx'] -> Exec['restart st2'] -> Exec<| tag == 'st2::kv' |>
-  Service['nginx'] -> Exec['restart st2'] -> Exec<| tag == 'st2::pack' |>
+  Service['nginx'] -> Exec<| tag == 'st2::kv' |>
+  Service['nginx'] -> Exec<| tag == 'st2::pack' |>
 
   ## SSL Certificate
   # Generate a Self-signed cert if the user does not provide cert details
@@ -779,16 +779,5 @@ class profile::st2server {
     unless  => 'st2 action list | grep packs.install',
     path    => '/usr/bin:/usr/sbin:/bin:/sbin',
     require => Service['nginx'],
-    notify  => Exec['restart st2'],
-  }
-  exec { 'restart st2':
-    command     => 'st2ctl restart',
-    path        => '/usr/sbin:/usr/bin:/sbin:/bin',
-    refreshonly => true,
-  }
-
-  # Reloads also need to happen anytime the hostname changes
-  Host<| name == $_hostname |> {
-    notify => Exec['restart st2'],
   }
 }
