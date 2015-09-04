@@ -227,24 +227,30 @@ class profile::st2server {
   }
 
   anchor { 'st2::pre_reqs': }
-  -> class { '::st2::profile::client':
+  class { '::st2::profile::client':
     username    => $_root_cli_username,
     password    => $_root_cli_password,
     api_url     => $_api_url,
     auth_url    => $_auth_url,
     cache_token => false,
+    require     => Anchor['st2::pre_reqs'],
   }
-  -> class { '::st2::profile::server':
+
+  class { '::st2::profile::server':
     auth                   => true,
     st2api_listen_ip       => '127.0.0.1',
     manage_st2auth_service => false,
     manage_st2web_service  => false,
     syslog                 => true,
+    before                 => Anchor['st2::pre_reqs'],
   }
-  -> class { '::st2::auth::proxy': }
-  -> class { '::st2::profile::web':
+  class { '::st2::auth::proxy':
+    require => Class['::st2::profile::server'],
+  }
+  class { '::st2::profile::web':
     api_url  => "https://:${_st2api_port}",
     auth_url => "https://:${_st2auth_port}",
+    require  => Class['::st2::profile::server'],
   }
 
   # Only manage the ::st2::stanley admin account
