@@ -1,6 +1,7 @@
 # Changelog
 
 ## In Development
+* Fix: st2ctl causing issues with Startup status after install (*bugfix*)
 * Flag to disable Hubot installation via installer (*improvement*)
 * Fix: st2auth service not starting on correct IP address (*bugfix*)
 * update pip to latest on installation (*improvement*)
