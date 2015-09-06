@@ -41,9 +41,10 @@ $PROJECT_ROOT/script/preflight-os
 ##
 ## `puppet_environment` is set in Class[puppet::masterless]
 CURRENT_ENV=`$BUNDLE_PATH exec facter puppet_environment`
+PUPPET_ENV=""
 
 if [ -z "$ENV" ]; then
-    if [ -n "$CURRENT_ENV"]; then
+    if [ -n "$CURRENT_ENV" ]; then
         PUPPET_ENV=$CURRENT_ENV
     else
         PUPPET_ENV='production'
@@ -51,7 +52,6 @@ if [ -z "$ENV" ]; then
 else
     PUPPET_ENV=$ENV
 fi
-
 ## Attempt to detect if the environment even exists... if not,
 ## roll back to the production environment.
 ### Make sure our environment conforms to Puppet environment naming
