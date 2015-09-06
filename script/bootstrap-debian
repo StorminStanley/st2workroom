@@ -1,0 +1,30 @@
+#!/usr/bin/env sh
+set -e
+
+DIR=$( dirname "$(readlink -f "$0")" )
+. $DIR/shared-functions
+
+export DEBIAN_FRONTEND=noninteractive
+PACKAGES="unzip wget ruby ruby-dev git unzip wget gnupg2"
+RUBY_PACKAGES="ruby ruby-dev"
+
+if [ "$CODENAME" = "wheezy" ]; then
+    PACKAGES="bundler $PACKAGES"
+elif [ "$CODENAME" = "precise" ]; then
+    BUILD_RUBY=true
+    GEM_BUNDLER=true
+    unset RUBY_PACKAGES
+else
+    PACKAGES="ruby-bundler $PACKAGES"
+fi
+
+apt-get update
+apt-get -y install $PACKAGES $RUBY_PACKAGES
+
+if [ -n $BUILD_RUBY ]; then
+    install_rvm
+fi
+
+if [ -n $GEM_BUNDLER ]; then
+    gem install --no-ri --no-rdoc bundler
+fi

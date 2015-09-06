@@ -1,0 +1,48 @@
+#!/usr/bin/env sh
+set -e
+
+DIR=$( dirname "$(readlink -f "$0")" )
+. $DIR/shared-functions
+
+# Install necessary gems. Ignore if CACHE_LIBRARIES is set
+BUNDLER_ARGS="--deployment --binstubs --without development"
+if [ -n "$CACHE_LIBRARIES" ]; then
+
+    # Seed files on first-run
+    if [ ! -f .bundler ]; then
+        echo "New!!!" > .bundler
+    fi
+    if [ ! -f .puppetfile ]; then
+        echo "New!!!" > .puppetfile
+    fi
+
+    BUNDLER_OLD_SHA=$(cat .bundler)
+    BUNDLER_CURRENT_SHA=$(git hash-object Gemfile)
+    if [ "$BUNDLER_OLD_SHA" != "$BUNDLER_CURRENT_SHA" ]; then
+        echo "Need to update bundled gems..."
+        $BUNDLE_PATH install --path vendor/bundle $BUNDLER_ARGS
+
+        echo $BUNDLER_CURRENT_SHA > .bundler
+    fi
+
+    PUPPET_OLD_SHA=$(cat .puppetfile)
+    PUPPET_CURRENT_SHA=$(git hash-object Puppetfile)
+    if [ "$PUPPET_OLD_SHA" != "$PUPPET_CURRENT_SHA" ]; then
+        $BUNDLE_PATH exec librarian-puppet install --path shared \
+               $LIBRARIAN_DEBUG_ARGS
+
+        echo $PUPPET_CURRENT_SHA > .puppetfile
+    fi
+else
+    $BUNDLE_PATH install --path vendor/bundle $BUNDLER_ARGS
+    $BUNDLE_PATH exec librarian-puppet install --path shared \
+           $LIBRARIAN_DEBUG_ARGS
+fi
+
+
+# Preflight Setup. Entry point to OS/Distro specific scripts
+if [ "$OS" = "Linux" ]; then
+    if [ "$DIST" = "Debian" ]; then
+        $DIR/preflight-debian
+    fi
+fi

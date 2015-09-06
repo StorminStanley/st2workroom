@@ -1,24 +1,20 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
-PROJECT_ROOT=/opt/puppet
-export PATH=${PROJECT_ROOT}/bin:/usr/local/bin:$PATH
-cd $PROJECT_ROOT
+DIR=$( dirname "$(readlink -f "$0")" )
+. $DIR/shared-functions
 
-ST2_PATH=$(which st2)
-ST2_IP=$(bundle exec facter st2_ip)
-ST2_FQDN=$(bundle exec facter fqdn)
-ST2_DATACENTER=$(bundle exec facter datacenter)
-
-case $ST2_DATACENTER in
-  vagrant)
-    KICK_COMMAND="vagrant provision st2express"
-    ;;
-  *)
-    KICK_COMMAND="update-system"
-    ;;
-esac
+ST2_PATH=`which st2 > /dev/null 2&>1`
 
 if [ -x "${ST2_PATH}" ]; then
+  ST2_IP=`bundle exec facter st2_ip`
+  ST2_FQDN=`bundle exec facter fqdn`
+  ST2_DATACENTER=`bundle exec facter datacenter`
+  if [ "$ST2_DATACENTER" = "vagrant" ]; then
+      KICK_COMMAND="vagrant provision st2express"
+  else
+      KICK_COMMAND="update-system"
+  fi
+
   sudo st2 run core.local date &> /dev/null
   ACTIONEXIT=$?
   if [ ! "${ACTIONEXIT}" == 0 ]; then
