@@ -83,12 +83,9 @@ namespace :environments do
   task :symlink, :environments_dir do |_, args|
     environments_dir = args[:environments_dir]
 
-    unless Dir.exists?("#{environments_dir}/production") do
       log "Creating production symlinks"
       Dir.chdir(environments_dir) do
         ln_nfs 'master', 'production'
       end
-    end
-    end
     end
 end
