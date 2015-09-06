@@ -21,10 +21,10 @@ fi
 apt-get update
 apt-get -y install $PACKAGES $RUBY_PACKAGES
 
-if [ -n $BUILD_RUBY ]; then
+if [ -n "$BUILD_RUBY" ]; then
     install_rvm
 fi
 
-if [ -n $GEM_BUNDLER ]; then
+if [ -n "$GEM_BUNDLER" ]; then
     gem install --no-ri --no-rdoc bundler
 fi
