@@ -40,7 +40,7 @@ $PROJECT_ROOT/script/preflight-os
 ## to production if the branch has been deleted.
 ##
 ## `puppet_environment` is set in Class[puppet::masterless]
-CURRENT_ENV=`$BUNDLE_PATH exec facter puppet_environment`
+CURRENT_ENV=`$PROJECT_ROOT/bin/facter puppet_environment`
 PUPPET_ENV=""
 
 if [ -z "$ENV" ]; then
