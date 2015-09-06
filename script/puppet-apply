@@ -1,135 +1,82 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
+set -e
 
-if [ "$EUID" -ne 0 ]; then
-  echo "Please run as root"
-  exit
-fi
-
-PROJECT_ROOT=/opt/puppet
-APT_UPDATE_FREQ=30
-NODE=$(hostname -s);
-BUNDLER_ARGS=""
-
-export PATH=${PROJECT_ROOT}/bin:/usr/local/bin:$PATH
+DIR=$( dirname "$(readlink -f "$0")" )
+. $DIR/shared-functions
 
 cd $PROJECT_ROOT
-
 echo "Configuring system..."
 
-### Setup the puppet directory
-if [ "$update_from_upstream" != "0" ]; then
-  git pull origin -q
+if [ -n "$DEBUG" ]; then
+    echo "Enabling Debug..."
+
+    PUPPET_GRAPH_ARGS="--graph --graphdir $PROJECT_ROOT/graphs/$NODE"
+    PUPPET_DEBUG_ARGS="--debug --verbose $PUPPET_GRAPH_ARGS"
+    LIBRARIAN_DEBUG_AGRS="--verbose"
+    GIT_DEBUG_ARGS="--verbose"
+    RSYNC_DEBUG_ARGS="-v"
+
+    ## Make graph directory for output and debug
+    if [ ! -d $PROJECT_ROOT/graphs/${NODE} ]; then
+        mkdir -p $PROJECT_ROOT/graphs/${NODE}
+    fi
 fi
 
-if [ "$debug" = "1" ]; then
-  PUPPET_DEBUG_ARGS="--debug"
-  R10K_DEBUG_ARGS="-v"
-  RSYNC_DEBUG_ARGS="-v"
+# Disable color output from different tools
+if [ -n "$NO_COLOR" ]; then
+    PUPPET_COLOR_ARGS="--color=false"
 fi
 
-if [ "$nocolor" = "1" ]; then
-  PUPPET_COLOR_ARGS="--color=false"
+# Do not attempt to upload from upstream git
+if [ -z "$DISABLE_GIT" ]; then
+    git pull origin -q $GIT_DEBUG_ARGS
 fi
 
-# Install necessary gems
-if [ "$cache_libraries" = "1" ]; then
-  if [ "$development" != "1" ]; then
-    BUNDLER_ARGS="--deployment --binstubs --without development"
-  fi
+## Run any pre-flight commands
+$PROJECT_ROOT/script/preflight-os
 
-  # Check locally to see if the Puppetfile has been
-  # updated, and then update if so.
-  if [ ! -f .bundler ]; then
-    echo "New!!!" > .bundler
-  fi
+# Set the environment. This should be done *after* librarian-puppet
+## has done its thing to determine if it is needed to switch back
+## to production if the branch has been deleted.
+##
+## `puppet_environment` is set in Class[puppet::masterless]
+CURRENT_ENV=`$BUNDLE_PATH exec facter puppet_environment`
 
-  OLD_SHA=$(cat .bundler)
-  CURRENT_SHA=$(git hash-object Gemfile)
-  if [ "$OLD_SHA" != "$CURRENT_SHA" ]; then
-    echo "Need to update bundled gems..."
-    bundle install --path vendor/bundle $BUNDLER_ARGS
-    echo $CURRENT_SHA > .bundler
-  fi
+if [ -z "$ENV" ]; then
+    if [ -n "$CURRENT_ENV"]; then
+        PUPPET_ENV=$CURRENT_ENV
+    else
+        PUPPET_ENV='production'
+    fi
 else
-  bundle install --path vendor/bundle $BUNDLER_ARGS
-fi
-
-# Deploy Environments from upstream
-if [ "$generate_all_environments" != "0" ]; then
-  bundle exec rake environments:update
-fi
-
-# Bootstrap Modules for current_working_directory
-## `cache_libraries` only updates if Puppetfile is updated
-if [ "$cache_libraries" = "1" ]; then
-  # Check locally to see if the Puppetfile has been
-  # updated, and then update if so.
-  if [ ! -f .puppetfile ]; then
-    echo "New!!!" > .puppetfile
-  fi
-
-  OLD_SHA=$(cat .puppetfile)
-  CURRENT_SHA=$(git hash-object Puppetfile)
-  if [ "$OLD_SHA" != "$CURRENT_SHA" ]; then
-    bundle exec librarian-puppet install --path shared
-    echo $CURRENT_SHA > .puppetfile
-  fi
-else
-  bundle exec librarian-puppet install --path shared
-fi
-
-# Make sure the current working directory is an environment too!
-# This is sort of a hack to support environments while developing
-# on the currently active branch in Vagrant or other environments
-echo "Setting up 'current_working_directory'..."
-rsync $RSYNC_DEBUG_ARGS -arh --delete --exclude "environments" --exclude "vendor" \
-  --exclude "artifacts" --exclude "graphs" --exclude "packer" --exclude "script" \
-  --exclude ".git" $PROJECT_ROOT/ $PROJECT_ROOT/environments/current_working_directory/
-
-# Set the environment. This should be done *after* R10K has done its thing
-# to determine if it is needed to switch back to production if the branch
-# has been deleted.
-if [ -z "$environment" ]; then
-  if [ -f $PROJECT_ROOT/current_environment ]; then
-    requested_environment=$(cat $PROJECT_ROOT/current_environment)
-  else
-    requested_environment='production'
-  fi
-else
-  requested_environment=$environment
+    PUPPET_ENV=$ENV
 fi
 
 ## Attempt to detect if the environment even exists... if not,
 ## roll back to the production environment.
+### Make sure our environment conforms to Puppet environment naming
+PUPPET_ENV=$(echo $PUPPET_ENV | sed 's/[-\/]/_/g')
+if [ ! -d $PROJECT_ROOT/environments/$PUPPET_ENV ]; then
+    echo "The environment $PUPPET_ENV does not exist... falling back to production"
+    PUPPET_ENV='production'
+fi
 
-## Make sure our environment conforms to Puppet environment naming
-requested_environment=$(echo $requested_environment | sed 's/[-\/]/_/g')
-if [ -d $PROJECT_ROOT/environments/${requested_environment} ]; then
-  environment=$requested_environment
+# Setup Puppet environments
+if [ "$PUPPET_ENV" = "current_working_directory" ]; then
+    # Make sure the current working directory is an environment too!
+    # This is sort of a hack to support environments while developing
+    # on the currently active branch in Vagrant or other environments
+    echo "Setting up 'current_working_directory'..."
+    rsync $RSYNC_DEBUG_ARGS -arh --delete --exclude "environments" \
+          --exclude "vendor" --exclude "artifacts" --exclude "graphs" \
+          --exclude "packer" --exclude "script" --exclude ".git" \
+          $PROJECT_ROOT/ $PROJECT_ROOT/environments/current_working_directory/
 else
-  echo "The environment ${requested_environment} does not exist... falling back to production"
-  environment='production'
+    $BUNDLE_PATH exec rake environments:update
 fi
 
 
-## Make graph directory for output and debug
-if [ ! -d $PROJECT_ROOT/graphs/${NODE} ]; then
-  mkdir -p $PROJECT_ROOT/graphs/${NODE}
-fi
-
-## Make sure apt is up-to-date if a Debian box
-if [ -e /usr/bin/apt-get ]; then
-  ## Only run if we haven't run APT in awhile. Speed up feedback loop
-  if [ -f /var/lib/apt/periodic/update-success-stamp ]; then
-    if [ `find /var/lib/apt/periodic/update-success-stamp -mmin +${APT_UPDATE_FREQ} | grep apt` ]; then
-      apt-get update
-    fi
-  else
-    apt-get update
-  fi
-fi
-
-bundle exec puppet apply $PUPPET_DEBUG_ARGS --verbose --environment $environment \
-  --config $PROJECT_ROOT/puppet.conf $PUPPET_COLOR_ARGS \
-  --graph --graphdir $PROJECT_ROOT/graphs/${NODE} \
-  $PROJECT_ROOT/environments/${environment}/manifests $@
+## Run Puppet
+$BUNDLE_PATH exec puppet apply $PUPPET_DEBUG_ARGS --environment $PUPPET_ENV \
+    --config $PROJECT_ROOT/puppet.conf $PUPPET_COLOR_ARGS \
+    $PROJECT_ROOT/environments/$PUPPET_ENV/manifests $@

@@ -1,6 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source $DIR/shared-functions
 
 echo 'LANG="en_US.UTF-8"' > /etc/default/local

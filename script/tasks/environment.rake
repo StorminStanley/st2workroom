@@ -8,8 +8,8 @@ namespace :environments do
     log "Pruning origin"
     git(:remote, :prune, :origin)
 
-    envs_dir  = ENV['PUPPET_ENV_DIR'] || '/opt/puppet/environments'
-    repo_dir  = ENV['PUPPET_SOURCE_REPO'] || '/opt/puppet'
+    repo_dir  = ENV['ROOT_DIR'] || '/opt/puppet'
+    envs_dir  = ENV['PUPPET_ENV_DIR'] || "#{ROOT_DIR}/environments"
 
     log "Loading list of branches"
 
@@ -83,9 +83,11 @@ namespace :environments do
   task :symlink, :environments_dir do |_, args|
     environments_dir = args[:environments_dir]
 
-    log "Creating production symlinks"
-    Dir.chdir(environments_dir) do
-      ln_nfs 'master', 'production'
+    unless Dir.exists?("#{environments_dir}/production") do
+      log "Creating production symlinks"
+      Dir.chdir(environments_dir) do
+        ln_nfs 'master', 'production'
+      end
     end
   end
 end

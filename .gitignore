@@ -58,4 +58,3 @@ modules/vcsrepo
 modules/wget
 modules/rsyslog
 packer/output*
-

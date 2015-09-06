@@ -9,8 +9,29 @@ class puppet::masterless(
     include $_load_role
   }
 
+  class { '::facter':
+    manage_package => false,
+    path_to_facter => "${::settings::confdir}/bin/facter",
+  }
+
+  file { '/etc/facter/facts.d/facts.txt':
+    ensure => file,
+    owner  => 'root',
+    group  => 'root',
+    mode   => '0644',
+  }
+
+  facter::fact { 'puppet_role':
+    value => $::role,
+  }
+  facter::fact { 'puppet_environment':
+    value => $::environment,
+  }
+
+  File<| tag == 'puppet::masterless' |> -> Facter::Fact<||>
+
   if $cron {
-    cron { 'puppet-apply':
+    cron { 'puppet-periodic':
       ensure  => present,
       user    => 'root',
       minute  => $offset,
@@ -19,7 +40,7 @@ class puppet::masterless(
   }
 
   if $run_at_boot {
-    cron { 'puppet-apply':
+    cron { 'puppet-boot':
       ensure  => present,
       user    => 'root',
       special => 'reboot',
@@ -28,27 +49,7 @@ class puppet::masterless(
   }
 
   file { ['/usr/bin/puprun', '/usr/bin/update-system']:
-    ensure => file,
-    owner  => 'root',
-    group  => 'root',
-    mode   => '0755',
-    source => "${::settings::confdir}/script/puppet-apply",
-  }
-
-  file { "${::settings::confdir}/current_environment":
-    ensure  => file,
-    content => "${::environment}\n",
-  }
-
-  file { ['/etc/facter', '/etc/facter/facts.d']:
-    ensure => directory,
-    owner  => 'root',
-    group  => 'root',
-    mode   => '0755',
-  }
-
-  file { "/etc/facter/facts.d/role.txt":
-    ensure  => file,
-    content => "role=${::role}\n",
+    ensure => link,
+    target => "${::settings::confdir}/script/puppet-apply",
   }
 }
