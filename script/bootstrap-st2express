@@ -35,7 +35,7 @@ fi
 echo "role=st2express" > /etc/facter/facts.d/role.txt
 
 # Start up the st2express bootstrap
-${PROJECT_ROOT}/script/bootstrap-linux
+${PROJECT_ROOT}/script/bootstrap-os
 
 # Converge the system
 ${PROJECT_ROOT}/script/puppet-apply
