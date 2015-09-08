@@ -72,11 +72,11 @@ if [ "$PUPPET_ENV" = "current_working_directory" ]; then
           --exclude "packer" --exclude "script" --exclude ".git" \
           $PROJECT_ROOT/ $PROJECT_ROOT/environments/current_working_directory/
 else
-    $BUNDLE_PATH exec rake environments:update
+    rake environments:update
 fi
 
 
 ## Run Puppet
-$BUNDLE_PATH exec puppet apply $PUPPET_DEBUG_ARGS --environment $PUPPET_ENV \
+puppet apply $PUPPET_DEBUG_ARGS --environment $PUPPET_ENV \
     --config $PROJECT_ROOT/puppet.conf $PUPPET_COLOR_ARGS \
     $PROJECT_ROOT/environments/$PUPPET_ENV/manifests $@

@@ -233,6 +233,7 @@ class profile::st2server {
     api_url     => $_api_url,
     auth_url    => $_auth_url,
     cache_token => false,
+    global_env  => true,
     require     => Anchor['st2::pre_reqs'],
   }
 
