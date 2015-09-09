@@ -5,7 +5,10 @@
 ## vagrant plugin install vagrant-dotenv
 REQUIRED_PLUGINS = %w(dotenv deep_merge)
 REQUIRED_PLUGINS.each do |plugin|
-    exec "vagrant plugin install #{plugin};vagrant #{ARGV.join(" ")}" unless Vagrant.has_plugin? plugin || ARGV[0] == 'plugin'
+  unless Vagrant.has_plugin?(plugin) || ARGV[0] == 'plugin' then
+    system "vagrant plugin install #{plugin}"
+    exec "vagrant #{ARGV.join(" ")}"
+  end
 end
 
 begin
