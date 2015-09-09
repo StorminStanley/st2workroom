@@ -240,6 +240,7 @@ class profile::st2server {
   class { '::st2::profile::server':
     auth                   => true,
     st2api_listen_ip       => '127.0.0.1',
+    manage_st2api_service  => false,
     manage_st2auth_service => false,
     manage_st2web_service  => false,
     syslog                 => true,
@@ -502,6 +503,24 @@ class profile::st2server {
     line => 'ST2_DISABLE_HTTPSERVER=true',
   }
 
+  adapter::st2_uwsgi_init { 'st2api': }
+
+  uwsgi::app { 'st2api':
+    ensure              => present,
+    uid                 => $_nginx_daemon_user,
+    gid                 => $_nginx_daemon_user,
+    application_options => {
+      'socket'       => $_st2api_socket,
+      'processes'    => $_st2api_uwsgi_processes,
+      'threads'      => $_st2api_uwsgi_threads,
+      'wsgi-file'    => "${_python_pack}/st2api/wsgi.py",
+      'vacuum'       => true,
+      'logto'        => '/var/log/st2/st2api.log',
+      'chmod-socket' => '644',
+    },
+    notify             => Service['st2api'],
+  }
+
   nginx::resource::vhost { 'st2api':
     ensure               => present,
     listen_ip            => $_host_ip,
@@ -513,7 +532,7 @@ class profile::st2server {
     ssl_protocols        => $_ssl_protocols,
     ssl_ciphers          => $_cipher_list,
     server_name          => $_server_names,
-    proxy                => 'http://st2api',
+    uwsgi                => "unix://${_st2api_socket}",
     location_raw_prepend => [
       $_cors_custom_options,
     ],
@@ -525,10 +544,6 @@ class profile::st2server {
       'proxy_cache off;',
       'proxy_set_header Host $host;',
     ],
-  }
-
-  nginx::resource::upstream { 'st2api':
-    members => ["127.0.0.1:${_st2api_port}"],
   }
 
   # ## Authentication
