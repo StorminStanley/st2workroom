@@ -523,7 +523,6 @@ class profile::st2server {
 
   nginx::resource::vhost { 'st2api':
     ensure               => present,
-    listen_ip            => $_host_ip,
     listen_port          => $_st2api_port,
     ssl                  => true,
     ssl_port             => $_st2api_port,
