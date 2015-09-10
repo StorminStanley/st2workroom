@@ -38,7 +38,7 @@ st2express is used to spin up a test StackStorm instance. To start, simply type 
 ```
 
 This will automatically provision a new StackStorm server. If you have Bonjour/Zeroconf enabled on your
-machine, the WebUI will be available at http://st2express.local:8080/
+machine, the WebUI will be available at https://st2express.local/
 
 To SSH into the machine, simply type the following command:
 
