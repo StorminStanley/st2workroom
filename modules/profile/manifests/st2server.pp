@@ -515,7 +515,7 @@ class profile::st2server {
       'threads'      => $_st2api_uwsgi_threads,
       'wsgi-file'    => "${_python_pack}/st2api/wsgi.py",
       'vacuum'       => true,
-      'logto'        => '/var/log/st2/st2api.log',
+      'logto'        => '/var/log/st2/st2api.uwsgi.log',
       'chmod-socket' => '644',
     },
     notify             => Service['st2api'],
@@ -585,7 +585,7 @@ class profile::st2server {
       'threads'      => $_st2auth_uwsgi_threads,
       'wsgi-file'    => "${_python_pack}/st2auth/wsgi.py",
       'vacuum'       => true,
-      'logto'        => '/var/log/st2/st2auth.log',
+      'logto'        => '/var/log/st2/st2auth.uwsgi.log',
       'chmod-socket' => '644',
     },
     notify             => Service['st2auth'],
@@ -593,7 +593,6 @@ class profile::st2server {
 
   nginx::resource::vhost { 'st2auth':
     ensure               => present,
-    listen_ip            => $_host_ip,
     listen_port          => $_st2auth_port,
     ssl                  => true,
     ssl_port             => $_st2auth_port,
@@ -619,15 +618,20 @@ class profile::st2server {
   file { [
     '/var/log/st2/st2api.log',
     '/var/log/st2/st2api.audit.log',
+    '/var/log/st2/st2api.uwsgi.log',
     '/var/log/st2/st2auth.log',
     '/var/log/st2/st2auth.audit.log',
+    '/var/log/st2/st2auth.uwsgi.log',
   ]:
     ensure  => present,
     owner   => $_nginx_daemon_user,
     group   => $_nginx_daemon_user,
     mode    => '0664',
     require => Class['::st2::profile::server'],
-    before  => Adapter::St2_uwsgi_init['st2auth'],
+    before  => [
+      Adapter::St2_uwsgi_init['st2auth'],
+      Adapter::St2_uwsgi_init['st2api'],
+    ],
   }
 
   # Ensure that the st2auth service is started up and serving before
