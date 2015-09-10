@@ -47,4 +47,4 @@ mod 'maestrodev-wget',
 # mod 'stackstorm-st2',                '0.7.10'
 mod 'stackstorm-st2',
   :git => 'https://github.com/StackStorm/puppet-st2',
-  :ref => '8734b64'
+  :ref => 'a14e2b67927815ab9882a53317979c5a27295323'
