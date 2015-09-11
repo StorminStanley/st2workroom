@@ -231,24 +231,32 @@ class profile::st2server {
   }
 
   anchor { 'st2::pre_reqs': }
-  -> class { '::st2::profile::client':
+  class { '::st2::profile::client':
     username    => $_root_cli_username,
     password    => $_root_cli_password,
     api_url     => $_api_url,
     auth_url    => $_auth_url,
     cache_token => false,
+    global_env  => true,
+    require     => Anchor['st2::pre_reqs'],
   }
-  -> class { '::st2::profile::server':
+
+  class { '::st2::profile::server':
     auth                   => true,
     st2api_listen_ip       => '127.0.0.1',
+    manage_st2api_service  => false,
     manage_st2auth_service => false,
     manage_st2web_service  => false,
     syslog                 => true,
+    before                 => Anchor['st2::pre_reqs'],
   }
-  -> class { '::st2::auth::proxy': }
-  -> class { '::st2::profile::web':
+  class { '::st2::auth::proxy':
+    require => Class['::st2::profile::server'],
+  }
+  class { '::st2::profile::web':
     api_url  => "https://:${_st2api_port}",
     auth_url => "https://:${_st2auth_port}",
+    require  => Class['::st2::profile::server'],
   }
 
   # Only manage the ::st2::stanley admin account
@@ -295,8 +303,8 @@ class profile::st2server {
 
   ## Because authentication is now being passed via Nginx, we need to make sure that
   ## the service for nginx is up and running before responding to any CLI requests
-  Service['nginx'] -> Exec['restart st2'] -> Exec<| tag == 'st2::kv' |>
-  Service['nginx'] -> Exec['restart st2'] -> Exec<| tag == 'st2::pack' |>
+  Service['nginx'] -> Exec<| tag == 'st2::kv' |>
+  Service['nginx'] -> Exec<| tag == 'st2::pack' |>
 
   ## SSL Certificate
   # Generate a Self-signed cert if the user does not provide cert details
@@ -576,9 +584,26 @@ class profile::st2server {
     line => 'ST2_DISABLE_HTTPSERVER=true',
   }
 
+  adapter::st2_uwsgi_init { 'st2api': }
+
+  uwsgi::app { 'st2api':
+    ensure              => present,
+    uid                 => $_nginx_daemon_user,
+    gid                 => $_nginx_daemon_user,
+    application_options => {
+      'socket'       => $_st2api_socket,
+      'processes'    => $_st2api_uwsgi_processes,
+      'threads'      => $_st2api_uwsgi_threads,
+      'wsgi-file'    => "${_python_pack}/st2api/wsgi.py",
+      'vacuum'       => true,
+      'logto'        => '/var/log/st2/st2api.uwsgi.log',
+      'chmod-socket' => '644',
+    },
+    notify             => Service['st2api'],
+  }
+
   nginx::resource::vhost { 'st2api':
     ensure               => present,
-    listen_ip            => $_host_ip,
     listen_port          => $_st2api_port,
     ssl                  => true,
     ssl_port             => $_st2api_port,
@@ -587,7 +612,7 @@ class profile::st2server {
     ssl_protocols        => $_ssl_protocols,
     ssl_ciphers          => $_cipher_list,
     server_name          => $_server_names,
-    proxy                => 'http://st2api',
+    uwsgi                => "unix://${_st2api_socket}",
     location_raw_prepend => [
       $_cors_custom_options,
     ],
@@ -599,10 +624,6 @@ class profile::st2server {
       'proxy_cache off;',
       'proxy_set_header Host $host;',
     ],
-  }
-
-  nginx::resource::upstream { 'st2api':
-    members => ["127.0.0.1:${_st2api_port}"],
   }
 
   # ## Authentication
@@ -645,7 +666,7 @@ class profile::st2server {
       'threads'      => $_st2auth_uwsgi_threads,
       'wsgi-file'    => "${_python_pack}/st2auth/wsgi.py",
       'vacuum'       => true,
-      'logto'        => '/var/log/st2/st2auth.log',
+      'logto'        => '/var/log/st2/st2auth.uwsgi.log',
       'chmod-socket' => '644',
     },
     notify             => Service['st2auth'],
@@ -653,7 +674,6 @@ class profile::st2server {
 
   nginx::resource::vhost { 'st2auth':
     ensure               => present,
-    listen_ip            => $_host_ip,
     listen_port          => $_st2auth_port,
     ssl                  => true,
     ssl_port             => $_st2auth_port,
@@ -679,15 +699,20 @@ class profile::st2server {
   file { [
     '/var/log/st2/st2api.log',
     '/var/log/st2/st2api.audit.log',
+    '/var/log/st2/st2api.uwsgi.log',
     '/var/log/st2/st2auth.log',
     '/var/log/st2/st2auth.audit.log',
+    '/var/log/st2/st2auth.uwsgi.log',
   ]:
     ensure  => present,
     owner   => $_nginx_daemon_user,
     group   => $_nginx_daemon_user,
     mode    => '0664',
     require => Class['::st2::profile::server'],
-    before  => Adapter::St2_uwsgi_init['st2auth'],
+    before  => [
+      Adapter::St2_uwsgi_init['st2auth'],
+      Adapter::St2_uwsgi_init['st2api'],
+    ],
   }
 
   # Ensure that the st2auth service is started up and serving before
@@ -860,16 +885,5 @@ class profile::st2server {
     unless  => 'st2 action list | grep packs.install',
     path    => '/usr/bin:/usr/sbin:/bin:/sbin',
     require => Service['nginx'],
-    notify  => Exec['restart st2'],
-  }
-  exec { 'restart st2':
-    command     => 'st2ctl restart',
-    path        => '/usr/sbin:/usr/bin:/sbin:/bin',
-    refreshonly => true,
-  }
-
-  # Reloads also need to happen anytime the hostname changes
-  Host<| name == $_hostname |> {
-    notify => Exec['restart st2'],
   }
 }

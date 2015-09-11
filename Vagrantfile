@@ -5,7 +5,10 @@
 ## vagrant plugin install vagrant-dotenv
 REQUIRED_PLUGINS = %w(dotenv deep_merge)
 REQUIRED_PLUGINS.each do |plugin|
-    exec "vagrant plugin install #{plugin};vagrant #{ARGV.join(" ")}" unless Vagrant.has_plugin? plugin || ARGV[0] == 'plugin'
+  unless Vagrant.has_plugin?(plugin) || ARGV[0] == 'plugin' then
+    system "vagrant plugin install #{plugin}"
+    exec "vagrant #{ARGV.join(" ")}"
+  end
 end
 
 begin
@@ -195,22 +198,22 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
       case PROVISIONER
       when 'puppet-apply' then
         n.vm.synced_folder '.', '/opt/puppet', type: config['sync_type']
-        n.vm.provision 'shell', inline: '/opt/puppet/script/bootstrap-linux'
+        n.vm.provision 'shell', inline: '/opt/puppet/script/bootstrap-os'
         n.vm.provision 'shell', inline: <<-EOF
           # Skips the `git pull` step, since you're working out of it directly
-          export update_from_upstream=0
+          export DISABLE_GIT=true
 
           # Use the current branch by default as the envirnment. Override with environment=XXX
-          export environment=#{VM_ENV}
+          export ENV=current_working_directory
 
           # Do not update Gems/Puppetfile/Environments each run
-          export generate_all_environments=0
+          export CACHE_LIBRARIES=true
 
           # Notify this is a development workspace
-          export development=1
+          export WS_ENV=development
 
           # Pass through Debug Commands
-          export debug=#{ENV['debug']}
+          export DEBUG=#{ENV['DEBUG']}
 
           # Collect facts for reference within puppet
           #{config['puppet']['facts'].collect { |k,v| "export FACTER_#{k}=#{v}"}.join("\n")}
@@ -222,16 +225,16 @@ EOF
         n.vm.provision 'shell', inline: '/vagrant/script/bootstrap-ansible'
         n.vm.provision 'shell', inline: <<-EOF
           # Use the current branch by default as the envirnment. Override with environment=XXX
-          export environment=#{VM_ENV}
+          export ENV=#{VM_ENV}
 
           # Do not update Gems/Puppetfile/Environments each run
-          export generate_all_environments=0
+          export CACHE_LIBRARIES=true
 
           # Notify this is a development workspace
-          export development=1
+          export WS_ENV=development
 
           # Pass through Debug Commands
-          export debug=#{ENV['debug']}
+          export DEBUG=#{ENV['DEBUG']}
 
           # (Re)initialize the repo
           git init /opt/ansible

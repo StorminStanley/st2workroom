@@ -17,7 +17,6 @@ mod 'puppetlabs-ruby',               '0.4.0'
 mod 'puppetlabs-vcsrepo',            '1.2.0'
 mod 'puppetlabs-postgresql',         '4.5.0'
 mod 'dhoppe-screen',                 '1.0.3'
-mod 'stackstorm-st2',                '0.7.10'
 mod 'garethr-docker',                '4.1.1'
 mod 'counsyl-packer',                '0.9.14'
 mod 'counsyl-sys',                   '0.9.17'
@@ -30,6 +29,7 @@ mod 'puppetlabs-ntp',                '4.0.0'
 mod 'ghoneycutt-pam',                '2.19.0'
 mod 'ghoneycutt-nsswitch',           '1.2.1'
 mod 'ghoneycutt-common',             '1.3.0'
+mod 'ghoneycutt-facter',             '2.1.0'
 mod 'saz-rsyslog',                   '3.5.1'
 
 mod 'jfryman-hubot',
@@ -43,3 +43,5 @@ mod 'jfryman-uwsgi',
 mod 'maestrodev-wget',
   :git => 'https://github.com/maestrodev/puppet-wget',
   :ref => 'master'
+
+mod 'stackstorm-st2',                '0.8.0'
