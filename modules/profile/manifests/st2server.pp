@@ -456,15 +456,17 @@ class profile::st2server {
   # This relies on the NGINX daemon user belonging to the shadow
   # group, given that this is also necessary for PAM access, gives
   # a tidy way to keep permissions limited.
-  file { [
-    $_openssl_root,
-    "${_openssl_root}/certs",
-    "${_openssl_root}/private",
-  ]:
+  file { $_openssl_root:
     ensure => directory,
     owner  => $_nginx_daemon_user,
     group  => $_nginx_daemon_user,
     mode   => '0755',
+  }
+  file { "${_openssl_root}/.rnd":
+    ensure => file,
+    owner  => 'root',
+    group  => 'root',
+    mode   => '0640',
   }
   file { $_ca_cert:
     ensure  => file,
