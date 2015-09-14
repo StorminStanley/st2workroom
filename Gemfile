@@ -6,7 +6,8 @@ gem 'facter',           '~> 2.4.4'
 gem 'net-ssh',          '~> 2.9.1'
 gem 'librarian-puppet', '~> 2.2.1'
 gem 'puppet',           '~> 4.2.0'
-gem 'rake',         '~> 10.3.2'
+gem 'rake',             '~> 10.3.2'
+gem 'ipaddress',        '~> 0.8.0'
 
 group :development do
   gem 'guard'

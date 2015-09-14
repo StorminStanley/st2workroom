@@ -4,11 +4,11 @@ class profile::st2server {
   ### to configure this class for different environments.
   ### These values are also meant to capture data from st2installer
   ### where applicable.
-  $_ssl_cert = '/etc/ssl/st2.crt'
-  $_ssl_key = '/etc/ssl/st2.key'
-  $_ssl_csr = '/etc/ssl/st2.csr'
-  $_ca_cert = '/etc/ssl/st2_ca.crt'
-  $_ca_key = '/etc/ssl/st2_ca.key'
+  $_ssl_cert = '/etc/ssl/st2/st2.crt'
+  $_ssl_key = '/etc/ssl/st2/st2.key'
+  $_ssl_csr = '/etc/ssl/st2/st2.csr'
+  $_ca_cert = '/etc/ssl/st2/st2_ca.crt'
+  $_ca_key = '/etc/ssl/st2/st2_ca.key'
   $_user_ssl_cert = hiera('st2::ssl_public_key', undef)
   $_user_ssl_key = hiera('st2::ssl_private_key', undef)
   $_user_ca_cert = hiera('st2::ssl_ca_cert', undef)
@@ -332,7 +332,9 @@ class profile::st2server {
     $_ca_key_content = undef
     $_ca_expiration = '3650'
     $_ssl_expiration = '3650'
-    $_openssl_config = '/etc/ssl/st2.cnf'
+    $_openssl_root = '/etc/ssl/st2'
+    $_openssl_ca_config = "${_openssl_root}/ca.cnf"
+    $_openssl_cert_config = "${_openssl_root}/cert.cnf"
 
     # Variables for OpenSSL Template
     $country = 'US'
@@ -344,11 +346,19 @@ class profile::st2server {
     $email = 'support@stackstorm.com'
     $altnames = $_server_names
 
-    file { $_openssl_config:
+    file { $_openssl_ca_config:
       ensure  => file,
       owner   => $_nginx_daemon_user,
       mode    => '0444',
-      content => template('profile/st2server/openssl.cnf.erb'),
+      content => template('profile/st2server/openssl.ca.cnf.erb'),
+      notify  => Exec['remove old self-signed certs'],
+      before  => Exec['create root CA'],
+    }
+    file { $_openssl_cert_config:
+      ensure  => file,
+      owner   => $_nginx_daemon_user,
+      mode    => '0444',
+      content => template('profile/st2server/openssl.cert.cnf.erb'),
       notify  => Exec['remove old self-signed certs'],
       before  => Exec['create root CA'],
     }
@@ -373,16 +383,17 @@ class profile::st2server {
       'req',
       '-new',
       '-x509',
+      '-nodes',
+      'rsa:2048',
       '-days',
-      $_ca_expiration,
-      '-extensions',
-      'v3_ca',
       '-keyout',
       $_ca_key,
       '-out',
       $_ca_cert,
       '-config',
-      $_openssl_config,
+      $_openssl_ca_config,
+      '-subj',
+      "/C=${country}/ST=${state}/L=${locality}/O=${organization}/OU=${unit}/CN=StackStorm CA",
     ], ' ')
 
     exec { 'create root CA':
@@ -396,15 +407,17 @@ class profile::st2server {
       'openssl',
       'req',
       '-new',
-      '-newkey'
-      'rsa:2048'
       '-nodes',
+      '-newkey',
+      'rsa:2048',
       '-keyout',
       $_ssl_key,
       '-out',
       $_ssl_csr,
       '-config',
-      $_openssl_config,
+      $_openssl_cert_config,
+      '-subj',
+      "/C=${country}/ST=${state}/L=${locality}/O=${organization}/OU=${unit}/CN=${commonname}",
     ], ' ')
 
     exec { 'create client cert req':
@@ -418,7 +431,6 @@ class profile::st2server {
       'openssl',
       'x509',
       '-req',
-      $_ssl_expiration,
       '-CA',
       $_ca_cert,
       '-CAkey',
@@ -428,7 +440,7 @@ class profile::st2server {
       $_ssl_csr,
       '-out',
       $_ssl_key,
-    ], ' '
+    ], ' ')
 
     exec { 'sign client cert req':
       command => $_create_client_req_command,
@@ -444,6 +456,16 @@ class profile::st2server {
   # This relies on the NGINX daemon user belonging to the shadow
   # group, given that this is also necessary for PAM access, gives
   # a tidy way to keep permissions limited.
+  file { [
+    $_openssl_root,
+    "${_openssl_root}/certs",
+    "${_openssl_root}/private",
+  ]:
+    ensure => directory,
+    owner  => $_nginx_daemon_user,
+    group  => $_nginx_daemon_user,
+    mode   => '0755',
+  }
   file { $_ca_cert:
     ensure  => file,
     owner   => 'root',
