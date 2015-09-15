@@ -1,0 +1,25 @@
+# StackStorm <%= @_subsystem %> gunicorn script.
+#
+# Anchors to <%= @_subsystem %> parent init script
+# to maintain compatability with st2ctl
+#
+# This file is managed by Puppet
+
+description     "StackStorm <%= @_subsystem %> gunicorn Daemon"
+author          "StackStorm Engineering <opsadmin@stackstorm.com>"
+
+start on runlevel [2345]
+stop on runlevel [016]
+
+respawn
+respawn limit 2 5
+
+umask 007
+kill timeout 60
+
+script
+    export PYTHONPATH=<%= @_python_pack %>/<%= @_subsystem %>/<%= @_subsystem %>
+    gunicorn_pecan <%= @_python_pack %>/<%= @_subsystem %>/gunicorn_config.py \
+      -k eventlet -b unix:<%= @socket %> --threads <%= @threads %> \
+      --workers <%= @workers %> -u <%= @user %> -g <%= @group %>
+end script
