@@ -911,6 +911,11 @@ class profile::st2server {
   }
 
   ### st2installer needs access to run a few commands post-install.
+  ### Installer needs to make sure it can access the Answer file
+  sudo::conf { "installer set answer file mode":
+    priority => '5',
+    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /bin/chmod",
+  }
   ### Installer also needs the ability to kick off a Puppet run to converge the system
   sudo::conf { "env_puppet":
     priority => '5',
@@ -936,7 +941,7 @@ class profile::st2server {
     priority => '5',
     content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/sbin/service nginx restart",
   }
-  ### Installer also to be able to restart nginx
+  ### Installer and clean up after itself
   sudo::conf { "delete-answer-file":
     priority => '5',
     content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /bin/rm ${::settings::confdir}/hieradata/answers.yaml",
