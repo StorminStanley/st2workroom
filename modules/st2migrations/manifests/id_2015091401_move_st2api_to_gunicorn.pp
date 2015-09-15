@@ -21,7 +21,7 @@ class st2migrations::id_2015091401_move_st2api_to_gunicorn {
       group   => 'root',
       mode    => '0755',
       content => $_shell_script,
-      notify  => Exec['terminate pecan st2api application'],
+      notify  => Exec['terminate st2api application'],
     }
     exec { 'terminate st2api application':
       command => "${_rundir}/kill_st2api_standalone",
