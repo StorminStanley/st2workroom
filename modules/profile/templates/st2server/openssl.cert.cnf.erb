@@ -1,0 +1,71 @@
+<%- require "ipaddress" -%>
+BASEDIR=<%= @_openssl_root %>
+
+[ ca ]
+default_ca = stackstorm_ca
+
+[ req ]
+default_req = stackstorm_req
+req_extensions = cert_ext
+distinguished_name = cert_dn
+
+[ stackstorm_ca ]
+certificate      = <%= @_ca_cert %>
+database         = $BASEDIR/index.txt
+new_certs_dir    = $BASEDIR/certs
+private_key      = <%= @_ca_key %>
+serial           = $BASEDIR/serial
+RANDFILE         = $BASEDIR/.rnd
+default_crl_days = 30
+default_days     = <%= @_ca_expiration %>
+default_md       = sha256
+policy           = policy
+x509_extensions  = extensions
+
+[ stackstorm_req ]
+default_bits    = 2048
+default_keyfile = <%= @_ca_key %>
+default_md      = sha256
+default_days    = <%= @_ssl_expiration %>
+prompt          = no
+policy          = cert_policy
+string_mask     = utf8only
+
+[ cert_policy ]
+commonName              = optional
+stateOrProvinceName     = optional
+countryName             = optional
+emailAddress            = optional
+organizationName        = optional
+organizationalUnitName  = optional
+
+[ cert_dn ]
+commonName                     = fqdn.hostname.com
+commonName_default             = <%= @_fqdn %>
+stateOrProvinceName            = California
+stateOrProvinceName_default    = <%= @state %>
+countryName                    = US
+countryName_default            = <%= @country %>
+emailAddress                   = me@myawesomecompany.com
+emailAddress_default           = <%= @email %>
+organizationName               = MyAwesomeCompany
+organizationName_default       = StackStorm
+organizationalUnitName         = Information Technology
+organizationalUnitName_default = IT
+
+[ cert_ext ]
+basicConstraints = CA:FALSE
+keyUsage = digitalSignature, keyEncipherment
+subjectAltName = @alt_names
+
+[ alt_names ]
+<%- dns = 0 -%>
+<%- ip = 0 -%>
+<%- @_server_names.sort.each do |name| -%>
+  <%- next if name == @_fqdn -%>
+  <%- if IPAddress.valid?(name) then -%>
+IP.<%= ip =+ 1 %> = <%= name %>
+  <%- else -%>
+DNS.<%= dns += 1 %> = <%= name %>
+  <%- end -%>
+<%- end -%>

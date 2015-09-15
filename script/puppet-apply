@@ -52,14 +52,6 @@ if [ -z "$ENV" ]; then
 else
     PUPPET_ENV=$ENV
 fi
-## Attempt to detect if the environment even exists... if not,
-## roll back to the production environment.
-### Make sure our environment conforms to Puppet environment naming
-PUPPET_ENV=$(echo $PUPPET_ENV | sed 's/[-\/]/_/g')
-if [ ! -d $PROJECT_ROOT/environments/$PUPPET_ENV ]; then
-    echo "The environment $PUPPET_ENV does not exist... falling back to production"
-    PUPPET_ENV='production'
-fi
 
 # Setup Puppet environments
 if [ "$PUPPET_ENV" = "current_working_directory" ]; then
@@ -75,6 +67,14 @@ else
     rake environments:update
 fi
 
+## Attempt to detect if the environment even exists... if not,
+## roll back to the production environment.
+### Make sure our environment conforms to Puppet environment naming
+PUPPET_ENV=$(echo $PUPPET_ENV | sed 's/[-\/]/_/g')
+if [ ! -d $PROJECT_ROOT/environments/$PUPPET_ENV ]; then
+    echo "The environment $PUPPET_ENV does not exist... falling back to production"
+    PUPPET_ENV='production'
+fi
 
 ## Run Puppet
 puppet apply $PUPPET_DEBUG_ARGS --environment $PUPPET_ENV \

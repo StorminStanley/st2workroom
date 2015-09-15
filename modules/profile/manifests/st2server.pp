@@ -4,10 +4,14 @@ class profile::st2server {
   ### to configure this class for different environments.
   ### These values are also meant to capture data from st2installer
   ### where applicable.
-  $_ssl_cert = '/etc/ssl/st2.crt'
-  $_ssl_key = '/etc/ssl/st2.key'
+  $_ssl_cert = '/etc/ssl/st2/st2.crt'
+  $_ssl_key = '/etc/ssl/st2/st2.key'
+  $_ssl_csr = '/etc/ssl/st2/st2.csr'
+  $_ca_cert = '/etc/ssl/st2/st2_ca.crt'
+  $_ca_key = '/etc/ssl/st2/st2_ca.key'
   $_user_ssl_cert = hiera('st2::ssl_public_key', undef)
   $_user_ssl_key = hiera('st2::ssl_private_key', undef)
+  $_user_ca_cert = hiera('st2::ssl_ca_cert', undef)
   $_hostname = hiera('system::hostname', $::hostname)
   $_fqdn = hiera('system::fqdn', $::fqdn)
   $_host_ip = hiera('system::ipaddress', $::ipaddress_eth0)
@@ -311,6 +315,11 @@ class profile::st2server {
   if ! $_self_signed_cert {
     $_ssl_cert_content = $_user_ssl_cert
     $_ssl_key_content = $_user_ssl_key
+    $_ca_key_content = undef
+    $_ca_cert_content = $_user_ca_cert ? {
+      undef   => undef,
+      default => $_user_ca_cert,
+    }
   } else {
     # TODO: Make this configurable with installer.
     # These map directly to the values populated in the below template
@@ -319,7 +328,15 @@ class profile::st2server {
     ### using camptocamp/openssl module.
     $_ssl_cert_content = undef
     $_ssl_key_content = undef
-    $_ssl_template = '/etc/ssl/st2.cnf'
+    $_ca_cert_content = undef
+    $_ca_key_content = undef
+    $_ca_expiration = '1825'
+    $_ssl_expiration = '730'
+    $_openssl_root = '/etc/ssl/st2'
+    $_openssl_ca_config = "${_openssl_root}/ca.cnf"
+    $_openssl_cert_config = "${_openssl_root}/cert.cnf"
+
+    # Variables for OpenSSL Template
     $country = 'US'
     $state = 'California'
     $locality = 'Palo Alto'
@@ -329,19 +346,28 @@ class profile::st2server {
     $email = 'support@stackstorm.com'
     $altnames = $_server_names
 
-    file { $_ssl_template:
+    file { $_openssl_ca_config:
       ensure  => file,
       owner   => $_nginx_daemon_user,
       mode    => '0444',
-      content => template('openssl/cert.cnf.erb'),
+      content => template('profile/st2server/openssl.ca.cnf.erb'),
       notify  => Exec['remove old self-signed certs'],
+      before  => Exec['create root CA'],
+    }
+    file { $_openssl_cert_config:
+      ensure  => file,
+      owner   => $_nginx_daemon_user,
+      mode    => '0444',
+      content => template('profile/st2server/openssl.cert.cnf.erb'),
+      notify  => Exec['remove old self-signed certs'],
+      before  => Exec['create root CA'],
     }
 
     # In the event that the configuration is refreshed, clean
     # up the old certificates to prevent cert mismatches and
     # CORS errors
     exec { 'remove old self-signed certs':
-      command => "rm -rf ${_ssl_key} ${_ssl_cert}",
+      command => "rm -rf ${_ssl_key} ${_ssl_cert} ${_ssl_csr} ${_ca_cert} ${_ca_key}",
       path    => [
         '/usr/bin',
         '/usr/sbin',
@@ -349,28 +375,129 @@ class profile::st2server {
         '/sbin',
       ],
       refreshonly => true,
-      before      => [
-        Ssl_pkey[$_ssl_key],
-        X509_cert[$_ssl_cert],
-      ],
+      before      => Exec['create root CA'],
     }
 
-    ssl_pkey { $_ssl_key:
-      ensure => present,
-      before => File[$_ssl_key],
+    $_create_ca_command = join([
+      'openssl',
+      'req',
+      '-new',
+      '-x509',
+      '-nodes',
+      '-newkey',
+      'rsa:2048',
+      '-keyout',
+      $_ca_key,
+      '-out',
+      $_ca_cert,
+      '-config',
+      $_openssl_ca_config,
+      '-subj',
+      "\"/C=${country}/ST=${state}/L=${locality}/O=${organization}/OU=${unit}/CN=StackStorm CA\"",
+    ], ' ')
+
+    exec { 'create root CA':
+      command   => $_create_ca_command,
+      creates   => $_ca_key,
+      path      => '/usr/sbin:/usr/bin:/sbin:/bin',
+      logoutput => true,
+      before    => Exec['create client cert req'],
     }
 
-    x509_cert { $_ssl_cert:
-      ensure      => present,
-      private_key => $_ssl_key,
-      template    => $_ssl_template,
-      days        => 3650,
-      force       => false,
-      require     => [
-        Ssl_pkey[$_ssl_key],
-        File[$_ssl_template],
-      ],
-      before      => File[$_ssl_cert],
+    $_create_client_req_command = join([
+      'openssl',
+      'req',
+      '-new',
+      '-nodes',
+      '-newkey',
+      'rsa:2048',
+      '-keyout',
+      $_ssl_key,
+      '-out',
+      $_ssl_csr,
+      '-config',
+      $_openssl_cert_config,
+      '-subj',
+      "\"/C=${country}/ST=${state}/L=${locality}/O=${organization}/OU=${unit}/CN=${commonname}\"",
+    ], ' ')
+
+    exec { 'create client cert req':
+      command   => $_create_client_req_command,
+      creates   => $_ssl_csr,
+      path      => '/usr/sbin:/usr/bin:/sbin:/bin',
+      logoutput => true,
+      before    => Exec['sign client cert req'],
+    }
+
+    $_sign_client_req_command = join([
+      'openssl',
+      'x509',
+      '-req',
+      '-in',
+      $_ssl_csr,
+      '-CA',
+      $_ca_cert,
+      '-CAkey',
+      $_ca_key,
+      '-CAcreateserial',
+      '-out',
+      $_ssl_cert,
+    ], ' ')
+
+    # Tie to .rnd file is due to command needing RW permissions
+    # on the file to generate state.
+    exec { 'sign client cert req':
+      command   => $_sign_client_req_command,
+      creates   => $_ssl_cert,
+      path      => '/usr/sbin:/usr/bin:/sbin:/bin',
+      logoutput => true,
+      require   => File["${_openssl_root}/.rnd"],
+      notify    => Service['nginx'],
+    }
+    ## CA Certificate END ##
+
+    # We also must provide an endpoint for the user to go to in order
+    # to download the new root CA and install it on their computer.
+    # Let's setup a clean-root for this.
+    #
+    # Assumes the ::st2::profile::web is in play for the
+    # /opt/stackstorm/static directory to exist
+    #
+    # Sets up an additional endpoint at $_ssl_web_location
+    # attached to the installer nginx setup
+    #
+    # The gross hack to add this to the webui directory is special
+    # thanks to nginx not being cooperative
+    $_ssl_web_root     = '/opt/stackstorm/static/webui/ssl'
+    $_ssl_web_location = '/ssl/'
+    file { $_ssl_web_root:
+      ensure  => directory,
+      owner   => $_nginx_daemon_user,
+      group   => $_nginx_daemon_user,
+      mode    => '0755',
+      require => Class['::st2::profile::web'],
+    }
+    file { "${_ssl_web_root}/st2_root_ca.cer":
+      ensure  => file,
+      owner   => $_nginx_daemon_user,
+      group   => $_nginx_daemon_user,
+      mode    => '0444',
+      source  => $_ca_cert,
+      require => File[$_ca_cert],
+    }
+    file { "${_ssl_web_root}/index.html":
+      ensure  => file,
+      owner   => $_nginx_daemon_user,
+      group   => $_nginx_daemon_user,
+      mode    => '0444',
+      source  => 'puppet:///modules/profile/st2server/ssl_index.html',
+    }
+    file { "${_ssl_web_root}/StackStorm-logo.png":
+      ensure  => file,
+      owner   => $_nginx_daemon_user,
+      group   => $_nginx_daemon_user,
+      mode    => '0444',
+      source  => 'puppet:///modules/profile/st2server/StackStorm-logo.png',
     }
   }
 
@@ -379,6 +506,32 @@ class profile::st2server {
   # This relies on the NGINX daemon user belonging to the shadow
   # group, given that this is also necessary for PAM access, gives
   # a tidy way to keep permissions limited.
+  file { $_openssl_root:
+    ensure => directory,
+    owner  => $_nginx_daemon_user,
+    group  => $_nginx_daemon_user,
+    mode   => '0755',
+  }
+  file { "${_openssl_root}/.rnd":
+    ensure => file,
+    owner  => 'root',
+    group  => 'root',
+    mode   => '0640',
+  }
+  file { $_ca_cert:
+    ensure  => file,
+    owner   => 'root',
+    mode    => '0444',
+    content => $_ca_cert_content,
+    notify  => Class['::nginx::service'],
+  }
+  file { $_ca_key:
+    ensure  => file,
+    owner   => 'root',
+    mode    => '0440',
+    content => $_ca_key_content,
+    notify  => Class['::nginx::service'],
+  }
   file { $_ssl_cert:
     ensure  => file,
     owner   => 'root',
@@ -394,26 +547,28 @@ class profile::st2server {
     notify  => Class['::nginx::service'],
   }
 
-  ## Add the certificate to the trusted root store to get rid
-  ## of annoying issues related to self-signed or trusted
-  file { '/usr/local/share/ca-certificates/st2':
-    ensure => directory,
-    owner  => 'root',
-    group  => 'root',
-    mode   => '0755',
-  }
-  file { '/usr/local/share/ca-certificates/st2/st2_trusted_cert.crt':
-    ensure  => file,
-    owner   => 'root',
-    mode    => '0444',
-    source  => $_ssl_cert,
-    require => File[$_ssl_cert],
-    notify  => Exec['update-ca-certificates'],
-  }
-  exec { 'update-ca-certificates':
-    command     => 'update-ca-certificates',
-    path        => '/usr/bin:/usr/sbin:/bin:/sbin',
-    refreshonly => true,
+  if $_ca_cert {
+    ## Add the certificate to the trusted root store to get rid
+    ## of annoying issues related to self-signed or trusted
+    file { '/usr/local/share/ca-certificates/st2':
+      ensure => directory,
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0755',
+    }
+    file { '/usr/local/share/ca-certificates/st2/st2_trusted_cert.crt':
+      ensure  => file,
+      owner   => 'root',
+      mode    => '0444',
+      source  => $_ca_cert,
+      require => File[$_ca_cert],
+      notify  => Exec['update-ca-certificates'],
+    }
+    exec { 'update-ca-certificates':
+      command     => 'update-ca-certificates',
+      path        => '/usr/bin:/usr/sbin:/bin:/sbin',
+      refreshonly => true,
+    }
   }
 
   ## Mistral uWSGI
