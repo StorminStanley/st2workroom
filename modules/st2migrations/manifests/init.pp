@@ -9,5 +9,5 @@ class st2migrations (
   }
 
   # Register all migrations to activate here
-  include ::st2migrations::id_2015091401_move_pecan_server_to_uwsgi
+  include ::st2migrations::id_2015091401_move_st2api_to_gunicorn
 }
