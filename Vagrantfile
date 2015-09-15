@@ -197,7 +197,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
       ## Bootstrap using different provisioners.
       case PROVISIONER
       when 'puppet-apply' then
-        n.vm.synced_folder '.', '/opt/puppet', type: config['sync_type']
+        n.vm.synced_folder '.', '/opt/puppet', type: config['sync_type'],
+          rsync__exclude: ['.bundle/', 'vendor/bundle', 'artifacts', 'graphs',
+                           'packer', '.tmp/', '.librarian/', 'src/', '.bundler',
+                           '.puppetfile', 'bin', 'environments']
         n.vm.provision 'shell', inline: '/opt/puppet/script/bootstrap-os'
         n.vm.provision 'shell', inline: <<-EOF
           # Skips the `git pull` step, since you're working out of it directly

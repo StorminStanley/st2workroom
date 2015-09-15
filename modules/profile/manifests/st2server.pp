@@ -330,8 +330,8 @@ class profile::st2server {
     $_ssl_key_content = undef
     $_ca_cert_content = undef
     $_ca_key_content = undef
-    $_ca_expiration = '3650'
-    $_ssl_expiration = '3650'
+    $_ca_expiration = '1825'
+    $_ssl_expiration = '730'
     $_openssl_root = '/etc/ssl/st2'
     $_openssl_ca_config = "${_openssl_root}/ca.cnf"
     $_openssl_cert_config = "${_openssl_root}/cert.cnf"
@@ -384,8 +384,8 @@ class profile::st2server {
       '-new',
       '-x509',
       '-nodes',
+      '-newkey',
       'rsa:2048',
-      '-days',
       '-keyout',
       $_ca_key,
       '-out',
@@ -393,14 +393,15 @@ class profile::st2server {
       '-config',
       $_openssl_ca_config,
       '-subj',
-      "/C=${country}/ST=${state}/L=${locality}/O=${organization}/OU=${unit}/CN=StackStorm CA",
+      "\"/C=${country}/ST=${state}/L=${locality}/O=${organization}/OU=${unit}/CN=StackStorm CA\"",
     ], ' ')
 
     exec { 'create root CA':
-      command => $_create_ca_command,
-      creates => $_ca_key,
-      path    => '/usr/sbin:/usr/bin:/sbin:/bin',
-      before  => Exec['create client cert req'],
+      command   => $_create_ca_command,
+      creates   => $_ca_key,
+      path      => '/usr/sbin:/usr/bin:/sbin:/bin',
+      logoutput => true,
+      before    => Exec['create client cert req'],
     }
 
     $_create_client_req_command = join([
@@ -417,38 +418,87 @@ class profile::st2server {
       '-config',
       $_openssl_cert_config,
       '-subj',
-      "/C=${country}/ST=${state}/L=${locality}/O=${organization}/OU=${unit}/CN=${commonname}",
+      "\"/C=${country}/ST=${state}/L=${locality}/O=${organization}/OU=${unit}/CN=${commonname}\"",
     ], ' ')
 
     exec { 'create client cert req':
-      command => $_create_client_req_command,
-      creates => $_ssl_csr,
-      path    => '/usr/sbin:/usr/bin:/sbin:/bin',
-      before  => Exec['sign client cert req'],
+      command   => $_create_client_req_command,
+      creates   => $_ssl_csr,
+      path      => '/usr/sbin:/usr/bin:/sbin:/bin',
+      logoutput => true,
+      before    => Exec['sign client cert req'],
     }
 
     $_sign_client_req_command = join([
       'openssl',
       'x509',
       '-req',
+      '-in',
+      $_ssl_csr,
       '-CA',
       $_ca_cert,
       '-CAkey',
       $_ca_key,
       '-CAcreateserial',
-      '-in',
-      $_ssl_csr,
       '-out',
-      $_ssl_key,
+      $_ssl_cert,
     ], ' ')
 
+    # Tie to .rnd file is due to command needing RW permissions
+    # on the file to generate state.
     exec { 'sign client cert req':
-      command => $_create_client_req_command,
-      creates => $_ssl_csr,
-      path    => '/usr/sbin:/usr/bin:/sbin:/bin',
-      notify  => Service['nginx'],
+      command   => $_sign_client_req_command,
+      creates   => $_ssl_cert,
+      path      => '/usr/sbin:/usr/bin:/sbin:/bin',
+      logoutput => true,
+      require   => File["${_openssl_root}/.rnd"],
+      notify    => Service['nginx'],
     }
     ## CA Certificate END ##
+
+    # We also must provide an endpoint for the user to go to in order
+    # to download the new root CA and install it on their computer.
+    # Let's setup a clean-root for this.
+    #
+    # Assumes the ::st2::profile::web is in play for the
+    # /opt/stackstorm/static directory to exist
+    #
+    # Sets up an additional endpoint at $_ssl_web_location
+    # attached to the installer nginx setup
+    #
+    # The gross hack to add this to the webui directory is special
+    # thanks to nginx not being cooperative
+    $_ssl_web_root     = '/opt/stackstorm/static/webui/ssl'
+    $_ssl_web_location = '/ssl/'
+    file { $_ssl_web_root:
+      ensure  => directory,
+      owner   => $_nginx_daemon_user,
+      group   => $_nginx_daemon_user,
+      mode    => '0755',
+      require => Class['::st2::profile::web'],
+    }
+    file { "${_ssl_web_root}/st2_root_ca.cer":
+      ensure  => file,
+      owner   => $_nginx_daemon_user,
+      group   => $_nginx_daemon_user,
+      mode    => '0444',
+      source  => $_ca_cert,
+      require => File[$_ca_cert],
+    }
+    file { "${_ssl_web_root}/index.html":
+      ensure  => file,
+      owner   => $_nginx_daemon_user,
+      group   => $_nginx_daemon_user,
+      mode    => '0444',
+      source  => 'puppet:///modules/profile/st2server/ssl_index.html',
+    }
+    file { "${_ssl_web_root}/StackStorm-logo.png":
+      ensure  => file,
+      owner   => $_nginx_daemon_user,
+      group   => $_nginx_daemon_user,
+      mode    => '0444',
+      source  => 'puppet:///modules/profile/st2server/StackStorm-logo.png',
+    }
   }
 
   # Ensure the SSL Certificates are owned by the proper
