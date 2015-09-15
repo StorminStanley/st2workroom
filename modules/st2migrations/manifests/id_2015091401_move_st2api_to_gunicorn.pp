@@ -41,6 +41,6 @@ class st2migrations::id_2015091401_move_st2api_to_gunicorn {
     }
 
     File<| tag == 'adapter::st2_gunicorn_init' |>
-    -> Exec['terminate pecan st2api application']
+    -> Exec['terminate st2api application']
   }
 }
