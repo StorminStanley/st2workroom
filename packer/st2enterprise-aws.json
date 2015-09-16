@@ -4,7 +4,7 @@
     "ami": "ami-d05e75b8",
     "security_group": "sg-d589fcb8",
     "vpc_id": "vpc-754e9d10",
-    "subnet_id": "vpc-754e9d10",
+    "subnet_id": "subnet-4e73bc39",
     "instance_type": "m3.medium",
     "ssh_username": "ubuntu",
     "aws_access_key": "",
