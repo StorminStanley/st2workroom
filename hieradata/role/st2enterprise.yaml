@@ -4,3 +4,24 @@ classes:
 
 npm::proxy: false
 puppet::masterless::cron: disable
+st2::packs:
+  puppet:
+    ensure: present
+  github:
+    ensure: present
+  victorops:
+    ensure: present
+  sensu:
+    ensure: present
+  slack:
+    ensure: present
+  libcloud:
+    ensure: present
+  jira:
+    ensure: present
+  openstack:
+    ensure: present
+  aws:
+    ensure: present
+  twitter:
+    ensure: present
