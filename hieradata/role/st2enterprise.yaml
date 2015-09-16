@@ -23,3 +23,5 @@ st2::packs:
     ensure: present
   aws:
     ensure: present
+  twitter:
+    ensure: present
