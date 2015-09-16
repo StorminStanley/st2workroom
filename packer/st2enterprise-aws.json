@@ -16,7 +16,7 @@
       "source_ami": "{{user `ami`}}",
       "instance_type": "{{user `instance_type`}}",
       "ssh_username": "{{user `ssh_username`}}",
-      "ami_name": "st2express {{user `release_version`}} {{timestamp}}",
+      "ami_name": "st2enterprise {{user `release_version`}} {{timestamp}}",
       "access_key": "{{user `aws_access_key`}}",
       "secret_key": "{{user `aws_secret_access_key`}}",
       "security_group_ids": [
