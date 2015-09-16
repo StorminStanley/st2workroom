@@ -23,9 +23,7 @@
       "secret_key": "{{user `aws_secret_access_key`}}",
       "security_group_ids": [
         "{{user `security_group`}}"
-      ],
-      "vpc_id": "{{user `vpc_id`}}",
-      "subnet_id": "{{user `subnet_id`}}"
+      ]
     }
   ],
   "provisioners": [
