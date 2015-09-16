@@ -19,7 +19,7 @@ if [ ! -f ${PROJECT_ROOT}/.git ]; then
   if [ -d ${PROJECT_ROOT} ]; then
     mv ${PROJECT_ROOT} ${PROJECT_ROOT}.old
   fi
-  git clone https://${GH_TOKEN}/github.com/StackStorm/st2enterprise ${PROJECT_ROOT}
+  git clone https://${GH_TOKEN}@github.com/StackStorm/st2enterprise ${PROJECT_ROOT}
 fi
 
 # Create Facter sink
