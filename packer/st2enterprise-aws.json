@@ -34,6 +34,7 @@
         "script/ubuntu/base.sh",
         "script/ubuntu/ec2/base.sh",
         "script/bootstrap-puppet.sh",
+        "script/st2bootstrap.sh",
         "script/st2credentials.sh",
         "script/puppet-aws.sh",
         "script/ubuntu/cleanup.sh",
