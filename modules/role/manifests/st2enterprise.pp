@@ -4,6 +4,7 @@ class role::st2enterprise {
   include ::profile::infrastructure
   include ::profile::st2server
   include ::profile::st2flow
+  include ::profile::st2rbac
   include ::profile::users
 
   if $_enable_hubot {
