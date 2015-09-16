@@ -1,0 +1,37 @@
+---
+# Defaults can be defined and reused with YAML anchors
+defaults: &defaults
+  domain: stackstorm.net
+  memory: 2048
+  cpus: 1
+  box: puppetlabs/ubuntu-14.04-64-puppet
+  puppet:
+    facts:
+      datacenter: vagrant
+st2dev:
+  <<: *defaults
+  hostname: st2dev
+  # Any number of facts available to the server can be set here
+  puppet:
+    facts:
+      role: st2dev
+  private_networks:
+    - 172.168.60.10
+  sync_type: nfs
+st2enterprise:
+  <<: *defaults
+  hostname: st2enterprise
+  box: stackstorm/st2express
+  puppet:
+    facts:
+      role: st2enterprise
+  private_networks:
+    - 172.168.50.11
+st2factory:
+  <<: *defaults
+  hostname: st2factory
+  puppet:
+    facts:
+      role: st2factory
+  private_networks:
+    - 172.168.50.12

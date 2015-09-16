@@ -3,7 +3,6 @@
 
 PROJECT_ROOT=/opt/puppet
 
-
 # Install Pre-req for git
 if [ -f /usr/bin/apt-get ]; then
   apt-get install -y git
@@ -18,7 +17,7 @@ if [ ! -d ${PROJECT_ROOT}/.git ]; then
   if [ -d ${PROJECT_ROOT} ]; then
     mv ${PROJECT_ROOT} ${PROJECT_ROOT}.old
   fi
-  git clone https://github.com/StackStorm/st2workroom ${PROJECT_ROOT}
+  git clone https://github.com/StackStorm/st2enterprise ${PROJECT_ROOT}
 fi
 
 # Ability to disable hubot, drop to long-term setting for installer.
@@ -32,9 +31,9 @@ if [ ! -d /etc/facter/facts.d ]; then
   mkdir -p /etc/facter/facts.d
 fi
 
-echo "role=st2express" > /etc/facter/facts.d/role.txt
+echo "role=st2enterprise" > /etc/facter/facts.d/role.txt
 
-# Start up the st2express bootstrap
+# Start up the st2enterprise bootstrap
 ${PROJECT_ROOT}/script/bootstrap-os
 
 # Converge the system
