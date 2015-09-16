@@ -34,7 +34,7 @@ class profile::st2flow(
     default => str2bool($::st2flow_bootstrapped),
   }
 
-  if ! $_bootstrapped {
+  if ! $::st2flow_bootstrapped {
 
     wget::fetch { 'Download Flow':
       source      => "http://dl-staging201/releases/st2/${version}/flow/flow-${version}.tar.gz",
