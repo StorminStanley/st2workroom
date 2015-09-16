@@ -17,7 +17,6 @@
 #
 #  include ::profile::st2flow
 #
-
 class profile::st2flow(
   $version = $::st2::version
 ) inherits st2 {
@@ -35,12 +34,31 @@ class profile::st2flow(
   }
 
   if ! $::st2flow_bootstrapped {
+    $_access_key = hiera('aws::access_key', undef)
+    $_secret_key = hiera('aws::secret_access_key', undef)
 
-    wget::fetch { 'Download Flow':
-      source      => "http://dl-staging201/releases/st2/${version}/flow/flow-${version}.tar.gz",
-      cache_dir   => '/var/cache/wget',
-      destination => '/tmp/flow.tar.gz',
-      before      => Exec['extract flow']
+    if $_access_key and $_secret_key {
+      class {'s3cmd':
+        aws_access_key => $_access_key,
+        aws_secret_key => $_secret_key,
+        gpg_passphrase => fqdn_rand_string(32),
+        owner          => 'root',
+      }
+      s3cmd::commands::get { '/tmp/flow.tar.gz':
+        s3_object => "s3://st2flow/flow-${st2::version}.tar.gz",
+        cwd       => '/tmp',
+        owner     => 'root',
+        before    => [
+          Exec['self-destruct s3 creds'],
+          Exec['extract flow'],
+        ],
+      }
+      exec { 'self-destruct s3 creds':
+        command => 'rm -rf /root/.s3cfg',
+        path    => '/usr/sbin:/usr/bin:/sbin:/bin',
+      }
+    } else {
+      notify { 'Skipping flow download. Missing AWS keys': }
     }
   }
 

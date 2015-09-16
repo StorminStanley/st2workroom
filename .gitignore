@@ -58,3 +58,5 @@ modules/vcsrepo
 modules/wget
 modules/rsyslog
 packer/output*
+modules/facter
+modules/s3cmd
