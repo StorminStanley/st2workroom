@@ -45,3 +45,5 @@ mod 'maestrodev-wget',
   :ref => 'master'
 
 mod 'stackstorm-st2',                '0.8.0'
+
+mod 'ilanco-s3cmd', '0.2.1'
