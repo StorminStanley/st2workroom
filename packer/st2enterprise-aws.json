@@ -3,6 +3,8 @@
     "region": "us-east-1",
     "ami": "ami-d05e75b8",
     "security_group": "sg-d589fcb8",
+    "vpc_id": "vpc-754e9d10",
+    "subnet_id": "vpc-754e9d10",
     "instance_type": "m3.medium",
     "ssh_username": "ubuntu",
     "aws_access_key": "",
@@ -21,7 +23,9 @@
       "secret_key": "{{user `aws_secret_access_key`}}",
       "security_group_ids": [
         "{{user `security_group`}}"
-      ]
+      ],
+      "vpc_id": "{{user `vpc_id`}}",
+      "subnet_id": "{{user `subnet_id`}}"
     }
   ],
   "provisioners": [
