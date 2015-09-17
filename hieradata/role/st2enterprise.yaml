@@ -2,6 +2,10 @@
 classes:
   - 'role::st2enterprise'
 
+st2::version: 0.14dev
+st2::release: 88
+st2::autoupdate: false
+
 npm::proxy: false
 puppet::masterless::cron: disable
 st2::packs:
