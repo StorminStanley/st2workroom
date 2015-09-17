@@ -30,12 +30,13 @@ class profile::st2flow(
 
   $_bootstrapped = $::st2flow_bootstrapped ? {
     undef   => false,
-    default => str2bool($::st2flow_bootstrapped),
+    default => true
   }
 
-  if ! $::st2flow_bootstrapped {
-    $_access_key = hiera('aws::access_key', undef)
-    $_secret_key = hiera('aws::secret_access_key', undef)
+  $_access_key = hiera('aws::access_key', undef)
+  $_secret_key = hiera('aws::secret_access_key', undef)
+
+  if $_bootstrapped == false {
 
     if $_access_key and $_secret_key {
       class {'s3cmd':
@@ -48,6 +49,7 @@ class profile::st2flow(
         s3_object => "s3://st2flow/flow-${st2::version}.tar.gz",
         cwd       => '/tmp',
         owner     => 'root',
+        require   => Class['s3cmd'],
         before    => [
           Exec['self-destruct s3 creds'],
           Exec['extract flow'],
@@ -57,17 +59,17 @@ class profile::st2flow(
         command => 'rm -rf /root/.s3cfg',
         path    => '/usr/sbin:/usr/bin:/sbin:/bin',
       }
-    } else {
-      notify { 'Skipping flow download. Missing AWS keys': }
-    }
-  }
 
-  exec { 'extract flow':
-    command => 'tar -xzvf /tmp/flow.tar.gz -C /opt/stackstorm/static/webui/flow --strip-components=1 --owner root --group root --no-same-owner',
-    creates => '/opt/stackstorm/static/webui/flow/index.html',
-    path    => '/usr/bin:/usr/sbin:/bin:/sbin',
-    require => File['/opt/stackstorm/static/webui/flow'],
-    before  => File['/etc/facter/facts.d/st2flow_bootstrapped.txt'],
+      exec { 'extract flow':
+        command => 'tar -xzvf /tmp/flow.tar.gz -C /opt/stackstorm/static/webui/flow --strip-components=1 --owner root --group root --no-same-owner',
+        creates => '/opt/stackstorm/static/webui/flow/index.html',
+        path    => '/usr/bin:/usr/sbin:/bin:/sbin',
+        require => File['/opt/stackstorm/static/webui/flow'],
+        before  => File['/etc/facter/facts.d/st2flow_bootstrapped.txt'],
+      }
+    }
+  } else {
+    notify{'st2flow bootstrap lock exists.': }
   }
 
   file { '/etc/facter/facts.d/st2flow_bootstrapped.txt':
