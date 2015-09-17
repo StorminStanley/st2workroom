@@ -8,5 +8,5 @@ echo "datacenter=${FACTER_datacenter}" > /etc/facter/facts.d/datacenter.txt
 echo "role=${FACTER_role}" > /etc/facter/facts.d/role.txt
 
 cd /opt/puppet
-script/bootstrap-linux
+script/bootstrap-os
 script/puppet-apply
