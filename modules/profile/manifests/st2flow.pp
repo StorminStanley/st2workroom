@@ -30,13 +30,13 @@ class profile::st2flow(
 
   $_bootstrapped = $::st2flow_bootstrapped ? {
     undef   => false,
-    default => true
+    default => str2bool($::st2flow_bootstrapped),
   }
 
   $_access_key = hiera('aws::access_key', undef)
   $_secret_key = hiera('aws::secret_access_key', undef)
 
-  if $_bootstrapped == false {
+  if ! $_bootstrapped {
 
     if $_access_key and $_secret_key {
       class {'s3cmd':
@@ -77,6 +77,7 @@ class profile::st2flow(
     owner   => 'root',
     group   => 'root',
     mode    => '0444',
+    require => Exec['extract flow'],
     content => 'st2flow_bootstrapped=true',
   }
 
