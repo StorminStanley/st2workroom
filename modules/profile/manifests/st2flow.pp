@@ -30,13 +30,13 @@ class profile::st2flow(
 
   $_bootstrapped = $::st2flow_bootstrapped ? {
     undef   => false,
-    default => true
+    default => str2bool($::st2flow_bootstrapped),
   }
 
   $_access_key = hiera('aws::access_key', undef)
   $_secret_key = hiera('aws::secret_access_key', undef)
 
-  if $_bootstrapped == false {
+  if ! $_bootstrapped {
 
     if $_access_key and $_secret_key {
       class {'s3cmd':
@@ -59,17 +59,14 @@ class profile::st2flow(
         command => 'rm -rf /root/.s3cfg',
         path    => '/usr/sbin:/usr/bin:/sbin:/bin',
       }
-
-      exec { 'extract flow':
-        command => 'tar -xzvf /tmp/flow.tar.gz -C /opt/stackstorm/static/webui/flow --strip-components=1 --owner root --group root --no-same-owner',
-        creates => '/opt/stackstorm/static/webui/flow/index.html',
-        path    => '/usr/bin:/usr/sbin:/bin:/sbin',
-        require => File['/opt/stackstorm/static/webui/flow'],
-        before  => File['/etc/facter/facts.d/st2flow_bootstrapped.txt'],
-      }
     }
-  } else {
-    notify{'st2flow bootstrap lock exists.': }
+  }
+  
+  exec { 'extract flow':
+    command => 'tar -xzvf /tmp/flow.tar.gz -C /opt/stackstorm/static/webui/flow --strip-components=1 --owner root --group root --no-same-owner',
+    creates => '/opt/stackstorm/static/webui/flow/index.html',
+    path    => '/usr/bin:/usr/sbin:/bin:/sbin',
+    require => File['/opt/stackstorm/static/webui/flow']
   }
 
   file { '/etc/facter/facts.d/st2flow_bootstrapped.txt':
@@ -77,6 +74,7 @@ class profile::st2flow(
     owner   => 'root',
     group   => 'root',
     mode    => '0444',
+    require => Exec['extract flow'],
     content => 'st2flow_bootstrapped=true',
   }
 
