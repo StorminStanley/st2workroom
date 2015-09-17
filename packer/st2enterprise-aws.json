@@ -7,6 +7,8 @@
     "subnet_id": "subnet-4e73bc39",
     "instance_type": "m3.medium",
     "ssh_username": "ubuntu",
+    "aws_access_key": "",
+    "aws_secret_access_key": "",
     "release_version": ""
   },
   "builders": [

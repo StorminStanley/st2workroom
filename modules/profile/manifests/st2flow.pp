@@ -48,9 +48,6 @@ class profile::st2flow(
       cwd       => '/tmp',
       owner     => 'root',
       require   => Class['s3cmd'],
-      before    => [
-        Exec['extract flow'],
-      ],
     }
   }
   
@@ -58,7 +55,10 @@ class profile::st2flow(
     command => 'tar -xzvf /tmp/flow.tar.gz -C /opt/stackstorm/static/webui/flow --strip-components=1 --owner root --group root --no-same-owner',
     creates => '/opt/stackstorm/static/webui/flow/index.html',
     path    => '/usr/bin:/usr/sbin:/bin:/sbin',
-    require => File['/opt/stackstorm/static/webui/flow']
+    require => [
+      File['/opt/stackstorm/static/webui/flow'],
+      S3cmd::Commands::Get['/tmp/flow.tar.gz']
+    ],
   }
 
   file { '/etc/facter/facts.d/st2flow_bootstrapped.txt':
