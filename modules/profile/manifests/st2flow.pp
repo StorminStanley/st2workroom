@@ -36,29 +36,18 @@ class profile::st2flow(
   $_access_key = hiera('aws::access_key', undef)
   $_secret_key = hiera('aws::secret_access_key', undef)
 
-  if ! $_bootstrapped {
-
-    if $_access_key and $_secret_key {
-      class {'s3cmd':
-        aws_access_key => $_access_key,
-        aws_secret_key => $_secret_key,
-        gpg_passphrase => fqdn_rand_string(32),
-        owner          => 'root',
-      }
-      s3cmd::commands::get { '/tmp/flow.tar.gz':
-        s3_object => "s3://st2flow/flow-${st2::version}.tar.gz",
-        cwd       => '/tmp',
-        owner     => 'root',
-        require   => Class['s3cmd'],
-        before    => [
-          Exec['self-destruct s3 creds'],
-          Exec['extract flow'],
-        ],
-      }
-      exec { 'self-destruct s3 creds':
-        command => 'rm -rf /root/.s3cfg',
-        path    => '/usr/sbin:/usr/bin:/sbin:/bin',
-      }
+  if $_access_key and $_secret_key {
+    class {'s3cmd':
+      aws_access_key => $_access_key,
+      aws_secret_key => $_secret_key,
+      gpg_passphrase => fqdn_rand_string(32),
+      owner          => 'root',
+    }
+    s3cmd::commands::get { '/tmp/flow.tar.gz':
+      s3_object => "s3://st2flow/flow-${st2::version}.tar.gz",
+      cwd       => '/tmp',
+      owner     => 'root',
+      require   => Class['s3cmd'],
     }
   }
   
@@ -66,7 +55,10 @@ class profile::st2flow(
     command => 'tar -xzvf /tmp/flow.tar.gz -C /opt/stackstorm/static/webui/flow --strip-components=1 --owner root --group root --no-same-owner',
     creates => '/opt/stackstorm/static/webui/flow/index.html',
     path    => '/usr/bin:/usr/sbin:/bin:/sbin',
-    require => File['/opt/stackstorm/static/webui/flow']
+    require => [
+      File['/opt/stackstorm/static/webui/flow'],
+      S3cmd::Commands::Get['/tmp/flow.tar.gz']
+    ],
   }
 
   file { '/etc/facter/facts.d/st2flow_bootstrapped.txt':

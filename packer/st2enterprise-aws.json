@@ -39,14 +39,6 @@
     },
     {
       "type": "shell",
-      "script": "script/st2credentials.sh",
-      "environment_vars": [
-        "AWS_ACCESS_KEY={{user `aws_access_key`}}",
-        "AWS_SECRET_ACCESS_KEY={{user `aws_secret_access_key`}}"
-      ]
-    },
-    {
-      "type": "shell",
       "execute_command": "echo '{{user `ssh_username`}}'|sudo -S bash '{{.Path}}'",
       "scripts": [
         "script/puppet-aws.sh",
