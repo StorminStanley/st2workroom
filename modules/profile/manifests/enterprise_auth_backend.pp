@@ -19,7 +19,8 @@
 #  include ::profile::enterprise_auth_backend
 #
 class profile::enterprise_auth_backend(
-  $version = $::st2::version
+  $version = $::st2::version,
+  $backend = undef
 ) inherits st2 {
 
   $_access_key = hiera('aws::access_key', undef)
