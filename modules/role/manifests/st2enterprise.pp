@@ -7,6 +7,7 @@ class role::st2enterprise {
   include ::profile::st2rbac
   include ::profile::enterprise_auth_backend
   include ::profile::users
+  include ::st2migrations
 
   if $_enable_hubot {
     if $::osfamily == 'RedHat' and $::operatingsystemmajrelease == '6' {
