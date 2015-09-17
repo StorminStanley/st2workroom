@@ -256,6 +256,7 @@ class profile::st2server {
   class { '::st2::profile::web':
     api_url  => "https://:${_st2api_port}",
     auth_url => "https://:${_st2auth_port}",
+    flow_url => '/flow',
     require  => Class['::st2::profile::server'],
   }
 
