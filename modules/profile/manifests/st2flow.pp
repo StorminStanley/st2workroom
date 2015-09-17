@@ -59,17 +59,14 @@ class profile::st2flow(
         command => 'rm -rf /root/.s3cfg',
         path    => '/usr/sbin:/usr/bin:/sbin:/bin',
       }
-
-      exec { 'extract flow':
-        command => 'tar -xzvf /tmp/flow.tar.gz -C /opt/stackstorm/static/webui/flow --strip-components=1 --owner root --group root --no-same-owner',
-        creates => '/opt/stackstorm/static/webui/flow/index.html',
-        path    => '/usr/bin:/usr/sbin:/bin:/sbin',
-        require => File['/opt/stackstorm/static/webui/flow'],
-        before  => File['/etc/facter/facts.d/st2flow_bootstrapped.txt'],
-      }
     }
-  } else {
-    notify{'st2flow bootstrap lock exists.': }
+  }
+  
+  exec { 'extract flow':
+    command => 'tar -xzvf /tmp/flow.tar.gz -C /opt/stackstorm/static/webui/flow --strip-components=1 --owner root --group root --no-same-owner',
+    creates => '/opt/stackstorm/static/webui/flow/index.html',
+    path    => '/usr/bin:/usr/sbin:/bin:/sbin',
+    require => File['/opt/stackstorm/static/webui/flow']
   }
 
   file { '/etc/facter/facts.d/st2flow_bootstrapped.txt':
