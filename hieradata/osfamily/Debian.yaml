@@ -2,3 +2,7 @@
 system::packages:
   - "bc"
   - "whois"
+  - "libldap2-dev"
+  - "libsasl2-dev"
+  - "libssl-dev"
+  - "ldap-utils"
