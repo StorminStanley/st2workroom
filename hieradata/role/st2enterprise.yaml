@@ -6,7 +6,7 @@ st2::version: 0.14dev
 st2::revision: 88
 st2::autoupdate: false
 
-st2::profile::enterprise_auth_backend::version: 0.1.0
+profile::enterprise_auth_backend::version: 0.1.0
 
 npm::proxy: false
 puppet::masterless::cron: disable
