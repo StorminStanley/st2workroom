@@ -5,7 +5,7 @@ class role::st2enterprise {
   include ::profile::st2server
   include ::profile::st2flow
   include ::profile::st2rbac
-  include ::profile::enterprise_auth_backend
+  include ::profile::enterprise_auth_backend_ldap
   include ::profile::users
 
   if $_enable_hubot {
