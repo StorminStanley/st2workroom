@@ -46,7 +46,7 @@ class profile::enterprise_auth_backend(
   exec { 'install auth backend':
     command => 'easy_install /tmp/st2_enterprise_auth_backend_${backend}-${version}-py2.7.egg',
     path    => '/usr/bin:/usr/sbin:/bin:/sbin',
-    require => S3cmd::Commands::Get['/tmp/st2_enterprise_auth_backend_${backend}-${version}-py2.7.egg']
+    require => S3cmd::Commands::Get["/tmp/st2_enterprise_auth_backend_${backend}-${version}-py2.7.egg"]
   }
 
 }
