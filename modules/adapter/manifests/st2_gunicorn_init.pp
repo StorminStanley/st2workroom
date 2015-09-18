@@ -47,6 +47,9 @@ define adapter::st2_gunicorn_init (
     enable     => true,
     hasstatus  => true,
     hasrestart => true,
-    require    => Python::Pip['gunicorn'],
+    require    => [
+      Python::Pip['gunicorn'],
+      Class['st2::profile::server'],
+    ],
   }
 }

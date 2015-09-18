@@ -45,6 +45,7 @@ define adapter::st2_uwsgi_init (
     enable     => true,
     hasstatus  => true,
     hasrestart => true,
+    require    => Class['st2::profile::server'],
   }
 
   # Subscribe to Uwsgi Apps of the same name.
