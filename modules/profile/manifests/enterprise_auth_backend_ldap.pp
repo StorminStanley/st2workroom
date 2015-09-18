@@ -18,7 +18,7 @@
 #  include ::profile::enterprise_auth_backend
 #
 class profile::enterprise_auth_backend_ldap(
-  $version = $::st2::version,
+  $version = '0.1.0',
 ) inherits st2 {
 
   $_access_key = hiera('aws::access_key', undef)
