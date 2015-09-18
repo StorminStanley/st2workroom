@@ -913,7 +913,7 @@ class profile::st2server {
   ### Installer also needs the ability to kick off a Puppet run to converge the system
   sudo::conf { "env_puppet":
     priority => '5',
-    content  => 'Defaults!/usr/bin/puprun env_keep += "nocolor environment debug FACTER_installer_running"',
+    content  => 'Defaults!/usr/bin/puprun env_keep += "NOCOLOR ENV DEBUG FACTER_installer_running"',
   }
   ### Installer also needs to try and send anonymous installation data via StackStorm
   sudo::conf { "st2-call-home":

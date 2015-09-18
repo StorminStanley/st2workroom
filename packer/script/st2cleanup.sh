@@ -37,4 +37,4 @@ rm -rf /root/.cache
 rm -rf /opt/puppet/.tmp
 rm -rf /opt/puppet/vendor/bundle
 rm -rf /opt/puppet/environments/*
-rm -rf /opt/puppet/hieradata/credentials.*
+rm -rf /var/log/puppet.log
