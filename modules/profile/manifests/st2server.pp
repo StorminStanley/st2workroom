@@ -831,6 +831,7 @@ class profile::st2server {
     source   => 'https://github.com/stackstorm/st2installer',
     revision => $_st2installer_branch,
     before   => $_st2installer_before,
+    notify   => Service['st2installer'],
   }
 
   python::virtualenv { $_st2installer_root:
