@@ -1,4 +1,4 @@
-# == Class: st2::profile::enterprise_auth_backend
+# == Class: st2::profile::enterprise_auth_backend_ldap
 #
 #  Profile to install StackStorm Enterprise Auth Backends. This feature is
 #  currently under active development, and limited to early access users.
@@ -8,7 +8,6 @@
 # === Parameters
 #
 #  [*version*]      - Version of StackStorm Auth Backend to install
-#  [*backend*]      - Which auth backend to install
 #
 # === Variables
 #
