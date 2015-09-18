@@ -50,7 +50,7 @@ class profile::st2flow(
       cwd       => '/tmp',
       owner     => 'root',
       require   => Class['s3cmd'],
-      before    => S3cmd::Commands::Get['/tmp/flow.tar.gz'],
+      before    => Exec['extract flow'],
     }
   }
   
