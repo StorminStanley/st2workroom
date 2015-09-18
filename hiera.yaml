@@ -3,6 +3,7 @@
 :yaml:
   :datadir: /opt/puppet/environments/%{::environment}/hieradata
 :hierarchy:
+  - answers
   - "node/%{::fqdn}"
   - "role/%{::role}"
   - "stack/node/%{::fqdn}"
@@ -12,6 +13,5 @@
   - "osfamily/%{::osfamily}"
   - "datacenter/%{::datacenter}"
   - common
-  - answers
   - workroom
   - credentials
