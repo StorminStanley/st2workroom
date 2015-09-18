@@ -18,9 +18,8 @@
 #
 #  include ::profile::enterprise_auth_backend
 #
-class profile::enterprise_auth_backend(
+class profile::enterprise_auth_backend_ldap(
   $version = $::st2::version,
-  $backend = undef
 ) inherits st2 {
 
   $_access_key = hiera('aws::access_key', undef)
@@ -35,8 +34,8 @@ class profile::enterprise_auth_backend(
         owner          => 'root',
       }
     }
-    s3cmd::commands::get { "/tmp/st2_enterprise_auth_backend_${backend}-${version}-py2.7.egg":
-      s3_object => "s3://st2enterprise/st2_enterprise_auth_backend_${backend}-${version}-py2.7.egg",
+    s3cmd::commands::get { "/tmp/st2_enterprise_auth_backend_ldap-${version}-py2.7.egg":
+      s3_object => "s3://st2enterprise/st2_enterprise_auth_backend_ldap-${version}-py2.7.egg",
       cwd       => '/tmp',
       owner     => 'root',
       require   => Class['s3cmd'],
@@ -44,9 +43,9 @@ class profile::enterprise_auth_backend(
   }
   
   exec { 'install auth backend':
-    command => 'easy_install /tmp/st2_enterprise_auth_backend_${backend}-${version}-py2.7.egg',
+    command => 'easy_install /tmp/st2_enterprise_auth_backend_ldap-${version}-py2.7.egg',
     path    => '/usr/bin:/usr/sbin:/bin:/sbin',
-    require => S3cmd::Commands::Get["/tmp/st2_enterprise_auth_backend_${backend}-${version}-py2.7.egg"]
+    require => S3cmd::Commands::Get["/tmp/st2_enterprise_auth_backend_ldap-${version}-py2.7.egg"]
   }
 
 }
