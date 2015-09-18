@@ -165,9 +165,9 @@ class profile::st2server {
   }
 
   class { '::nginx':
+    package_name      => 'nginx-full',
     service_restart   => '/etc/init.d/nginx configtest',
     configtest_enable => $_nginx_configtest,
-    manage_repo       => true,
   }
 
   # We need to grab the group nginx belongs to in order to provide
