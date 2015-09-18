@@ -80,4 +80,5 @@ fi
 ## Run Puppet
 puppet apply $PUPPET_DEBUG_ARGS --environment $PUPPET_ENV \
     --config $PROJECT_ROOT/puppet.conf $PUPPET_COLOR_ARGS \
+    --logdest $LOG_FILE \
     $PROJECT_ROOT/environments/$PUPPET_ENV/manifests $@
