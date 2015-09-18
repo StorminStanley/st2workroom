@@ -21,7 +21,6 @@ st2dev:
 st2enterprise:
   <<: *defaults
   hostname: st2enterprise
-  box: stackstorm/st2express
   puppet:
     facts:
       role: st2enterprise
