@@ -9,6 +9,7 @@ class profile::examples {
   exec {'examples':
     path     => '/bin:/usr/bin',
     command  => "bash ${examples_script}",
-    creates  => '/opt/stackstorm/packs/examples'
+    creates  => '/opt/stackstorm/packs/examples',
+    requires => Service['st2api']
   }
 }
