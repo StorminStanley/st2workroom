@@ -7,6 +7,7 @@ class role::st2enterprise {
   include ::profile::st2rbac
   include ::profile::enterprise_auth_backend_ldap
   include ::profile::users
+  include ::profile::examples
   include ::st2migrations
 
   if $_enable_hubot {
