@@ -945,7 +945,10 @@ class profile::st2server {
     priority => '10',
     content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/bin/puprun",
   }
-
+  sudo::conf { "st2stop":
+    priority => '10',
+    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/bin/st2ctl stop",
+  }
   # Dependencies
   # Here lies odd dependencies that need to be put in this file. Please document them.
 
