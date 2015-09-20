@@ -6,8 +6,8 @@ class profile::examples {
   }
   
   exec {'examples':
-    path     => '/bin:/usr/bin"
-    command  => "python2.7 ${examples_script}"
+    path     => '/bin:/usr/bin',
+    command  => "python2.7 ${examples_script}",
     creates  => '/opt/stackstorm/packs/examples'
   }
 }
