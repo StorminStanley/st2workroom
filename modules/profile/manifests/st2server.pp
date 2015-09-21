@@ -555,13 +555,7 @@ class profile::st2server {
   if $_ca_cert {
     ## Add the certificate to the trusted root store to get rid
     ## of annoying issues related to self-signed or trusted
-    file { '/usr/local/share/ca-certificates/st2':
-      ensure => directory,
-      owner  => 'root',
-      group  => 'root',
-      mode   => '0755',
-    }
-    file { '/usr/local/share/ca-certificates/st2/st2_trusted_cert.crt':
+    file { '/usr/local/share/ca-certificates/st2_ca.crt':
       ensure  => file,
       owner   => 'root',
       mode    => '0444',
