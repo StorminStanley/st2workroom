@@ -2,6 +2,8 @@
 classes:
   - 'puppet::masterless'
 
+rsyslog::server::server_dir: /srv/log/
+
 sudo::purge: false
 st2::ng_init: true
 st2::packs:
