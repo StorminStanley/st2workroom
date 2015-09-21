@@ -972,4 +972,12 @@ class profile::st2server {
     setting => 'api_url',
     value   => $_api_url,
   }
+
+  ## Perms fix for /var/log/st2.  Needs to be added to mainline puppet module
+  file {'/var/log/st2':
+    ensure => 'directory',
+    mode   => '0775',
+    owner  => 'root',
+    group  => 'syslog'
+  }
 }
