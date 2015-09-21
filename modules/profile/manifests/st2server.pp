@@ -968,8 +968,8 @@ class profile::st2server {
   ini_setting { 'api_use_ssl':
     ensure => present,
     path   => '/etc/st2/st2.conf',
-    section => 'api',
-    setting => 'use_ssl',
-    value   => true,
+    section => 'auth',
+    setting => 'api_url',
+    value   => $_api_url,
   }
 }
