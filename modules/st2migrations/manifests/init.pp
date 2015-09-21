@@ -9,4 +9,6 @@ class st2migrations (
   }
   # Register all migrations to activate here
   include ::st2migrations::id_2015091401_move_st2api_to_gunicorn
+
+  include ::st2migrations::id_2015092102_disable_st2services_for_upgrade
 }
