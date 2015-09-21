@@ -71,7 +71,7 @@ fi
 ## Attempt to detect if the environment even exists... if not,
 ## roll back to the production environment.
 ### Make sure our environment conforms to Puppet environment naming
-PUPPET_ENV=$(echo $PUPPET_ENV | sed 's/[-\/]/_/g')
+PUPPET_ENV=$(echo $PUPPET_ENV | sed 's/[-\/.]/_/g')
 if [ ! -d $PROJECT_ROOT/environments/$PUPPET_ENV ]; then
     echo "The environment $PUPPET_ENV does not exist... falling back to production"
     PUPPET_ENV='production'

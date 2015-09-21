@@ -6,7 +6,7 @@ def git(command, *args)
 end
 
 def remote_branch_name(full_branch_name)
-  full_branch_name[%r{remotes/origin/([\w\-\/]*)$}, 1]
+  full_branch_name[%r{remotes/origin/([\w\-.\/]*)$}, 1]
 end
 
 

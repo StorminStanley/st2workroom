@@ -964,12 +964,12 @@ class profile::st2server {
     require => Service['nginx'],
   }
 
-  # Specify that API is using SSL. Mistral runner pass this value to Mistral for callbacks.
-  ini_setting { 'api_use_ssl':
+  # Configure public url to the API endpoint.
+  ini_setting { 'configure_api_public_url':
     ensure => present,
     path   => '/etc/st2/st2.conf',
-    section => 'api',
-    setting => 'use_ssl',
-    value   => true,
+    section => 'auth',
+    setting => 'api_url',
+    value   => $_api_url,
   }
 }
