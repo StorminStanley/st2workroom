@@ -2,7 +2,6 @@
 classes:
   - 'puppet::masterless'
 
-rsyslog::server::server_dir: /srv/log/
 rsyslog::client::log_local: true
 
 sudo::purge: false
