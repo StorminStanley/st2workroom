@@ -7,7 +7,7 @@ class st2migrations::id_2015092101_refresh_mistral_venv {
   $_rundir = $::st2migrations::exec_dir
   $_mistral_root = $::st2::profile::mistral::_mistral_root
 
-  if $::st2migration_2015092101_refresh_mistral_venv != 'completed_2x' {
+  if $::st2migration_2015092101_refresh_mistral_venv != 'completed_3x' {
     $_shell_script = "#!/usr/bin/env sh
     service mistral stop
     if [ -d /opt/openstack/mistral/.venv ]; then
@@ -41,11 +41,11 @@ class st2migrations::id_2015092101_refresh_mistral_venv {
     python::pip { 'psycopg2':
       ensure     => present,
       virtualenv => "${_mistral_root}/.venv",
-      require    => Class['::st2::profile::mistral'],
+      require    => Python::Virtualenv[$_mistral_root],
       before     => Service['mistral'],
     }
     facter::fact { 'st2migration_2015092101_refresh_mistral_venv':
-      value => 'completed_2x',
+      value => 'completed_3x',
     }
   }
 }
