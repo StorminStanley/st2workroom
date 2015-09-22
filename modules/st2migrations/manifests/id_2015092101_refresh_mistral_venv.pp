@@ -7,7 +7,7 @@ class st2migrations::id_2015092101_refresh_mistral_venv {
   $_rundir = $::st2migrations::exec_dir
   $_mistral_root = $::st2::profile::mistral::_mistral_root
 
-  if $::st2migration_2015092101_refresh_mistral_venv != 'completed' {
+  if $::st2migration_2015092101_refresh_mistral_venv != 'completed-v2' {
     $_shell_script = "#!/usr/bin/env sh
     service mistral stop
 
@@ -25,6 +25,9 @@ class st2migrations::id_2015092101_refresh_mistral_venv {
     if [ -f /etc/mistral/database_setup.lock ]; then
       rm -rf /etc/mistral/database_setup.lock
     fi
+
+    sudo -u postgres psql -c \"DROP DATABASE IF EXISTS mistral;\"
+    sudo -u postgres psql -c \"DROP USER IF EXISTS mistral;\"
     "
 
     file { "${_rundir}/refresh_mistral_venv":
@@ -60,7 +63,7 @@ class st2migrations::id_2015092101_refresh_mistral_venv {
       before     => Service['mistral'],
     }
     facter::fact { 'st2migration_2015092101_refresh_mistral_venv':
-      value => 'completed',
+      value => 'completed-v2',
     }
   }
 }
