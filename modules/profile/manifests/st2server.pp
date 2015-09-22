@@ -18,8 +18,8 @@ class profile::st2server {
   $_installer_workroom_mode = hiera('st2::installer_workroom_mode', '0660')
   $_st2auth_uwsgi_threads = hiera('st2::auth_uwsgi_threads', 10)
   $_st2auth_uwsgi_processes = hiera('st2::auth_uwsgi_processes', 1)
-  $_st2api_uwsgi_threads = hiera('st2::api_uwsgi_threads', 10)
-  $_st2api_uwsgi_processes = hiera('st2::api_uwsgi_processes', 1)
+  $_st2api_threads = hiera('st2::api_uwsgi_threads', 10)
+  $_st2api_processes = hiera('st2::api_uwsgi_processes', 1)
   $_st2installer_branch = hiera('st2::installer_branch', 'stable')
   $_mistral_uwsgi_threads = hiera('st2::mistral_uwsgi_threads', 25)
   $_mistral_uwsgi_processes = hiera('st2::mistral_uwsgi_processes', 1)
@@ -248,6 +248,8 @@ class profile::st2server {
     manage_st2auth_service => false,
     manage_st2web_service  => false,
     syslog                 => true,
+    version                => hiera('st2::version', undef),
+    revision               => hiera('st2::revision', undef),
     before                 => Anchor['st2::pre_reqs'],
   }
   class { '::st2::auth::proxy':
@@ -294,6 +296,10 @@ class profile::st2server {
   python::pip { 'uwsgi':
     ensure => present,
     before => Class['::uwsgi'],
+  }
+
+  python::pip { 'gunicorn':
+    ensure => present,
   }
 
   # ### Application Configuration
@@ -658,22 +664,12 @@ class profile::st2server {
     line => 'ST2_DISABLE_HTTPSERVER=true',
   }
 
-  adapter::st2_uwsgi_init { 'st2api': }
-
-  uwsgi::app { 'st2api':
-    ensure              => present,
-    uid                 => $_nginx_daemon_user,
-    gid                 => $_nginx_daemon_user,
-    application_options => {
-      'socket'       => $_st2api_socket,
-      'processes'    => $_st2api_uwsgi_processes,
-      'threads'      => $_st2api_uwsgi_threads,
-      'wsgi-file'    => "${_python_pack}/st2api/wsgi.py",
-      'vacuum'       => true,
-      'logto'        => '/var/log/st2/st2api.uwsgi.log',
-      'chmod-socket' => '644',
-    },
-    notify             => Service['st2api'],
+  adapter::st2_gunicorn_init { 'st2api':
+    socket  => $_st2api_socket,
+    workers => $_st2api_workers,
+    threads => $_st2api_threads,
+    user    => $_nginx_daemon_user,
+    group   => $_nginx_daemon_user,
   }
 
   nginx::resource::vhost { 'st2api':
@@ -686,7 +682,7 @@ class profile::st2server {
     ssl_protocols        => $_ssl_protocols,
     ssl_ciphers          => $_cipher_list,
     server_name          => $_server_names,
-    uwsgi                => "unix://${_st2api_socket}",
+    proxy                => "http://unix:${_st2api_socket}",
     location_raw_prepend => [
       $_cors_custom_options,
     ],
@@ -785,7 +781,6 @@ class profile::st2server {
     require => Class['::st2::profile::server'],
     before  => [
       Adapter::St2_uwsgi_init['st2auth'],
-      Adapter::St2_uwsgi_init['st2api'],
     ],
   }
 
