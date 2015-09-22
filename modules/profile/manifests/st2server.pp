@@ -274,6 +274,37 @@ class profile::st2server {
 
   include ::st2::logging::rsyslog
 
+  # Hubot Hack
+  # Because we get the environment variables via st2installer
+  # and st2installer destroys the answer file as soon as it's
+  # done with it. To that end, we need to do two things
+  #
+  # 1) Ensure that the environment file is only populated
+  #    with the values we want via the installer
+  # 2) Ensure that nothing is overwritten on subsequent
+  #    runs of Puppet
+  #
+  # What this does is set the `replace` bit on the
+  # Hubot environment file. This ensures that Puppet
+  # DOES NOT update the contents of the file if they change
+  #
+  # So, we fake out the system a little bit. If the installer
+  # is running, we can assume that what we have is credentials
+  # if they were passed through. So, delete the empty file,
+  # write the new config, and ensure it's not overwritten.
+  $_hubot_env_file = "/opt/hubot/hubot/hubot.env"
+  if $_installer_running {
+    exec { 'remove empty hubot env settings':
+      command => "rm -rf ${_hubot_env}"
+      path    => '/usr/sbin:/usr/bin:/sbin:/bin',
+    }
+    Exec['remove empty hubot env settings'] -> File<| title == $_hubot_env_file |>
+  }
+  File<| title == $_hubot_env |> {
+    replace => false,
+  }
+  ### END Hubot Hack ###
+
   # $_python_pack needs to be loaded here due to load-order
   $_python_pack = $::st2::profile::server::_python_pack
 
