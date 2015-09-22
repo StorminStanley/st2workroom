@@ -9,7 +9,7 @@
 class st2migrations::id_2015092102_disable_st2services_for_upgrade {
   $_rundir = $::st2migrations::exec_dir
 
-  if ! $::st2migration_2015092102_disable_st2services_for_upgrade != 'completed_2x' {
+  if $::st2migration_2015092102_disable_st2services_for_upgrade != 'completed_2x' {
     $_shell_script = "#!/usr/bin/env sh
       service st2actionrunner stop
       service st2api stop
