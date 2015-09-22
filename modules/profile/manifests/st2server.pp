@@ -912,7 +912,7 @@ class profile::st2server {
   }
 
   ### Installer needs access to a few specific files
-  file { "${::settings::confdir}/hieradata/answers.yaml":
+  file { "${::settings::confdir}/hieradata/answers.json":
     ensure => file,
     owner  => $_nginx_daemon_user,
     group  => $_nginx_daemon_user,
