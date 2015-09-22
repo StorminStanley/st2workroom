@@ -295,7 +295,7 @@ class profile::st2server {
   $_hubot_env_file = "/opt/hubot/hubot/hubot.env"
   if $_installer_running {
     exec { 'remove empty hubot env settings':
-      command => "rm -rf ${_hubot_env}"
+      command => "rm -rf ${_hubot_env}",
       path    => '/usr/sbin:/usr/bin:/sbin:/bin',
     }
     Exec['remove empty hubot env settings'] -> File<| title == $_hubot_env_file |>
