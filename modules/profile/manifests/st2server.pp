@@ -196,7 +196,6 @@ class profile::st2server {
     manage_postgresql => true,
     api_url           => $_mistral_url,
     api_port          => $_mistral_port,
-    disable_api       => true,
     before            => $_st2_profile_mistral_before,
   }
   # $_mistral_root needs to be loaded here due to load-order
@@ -629,21 +628,6 @@ class profile::st2server {
       'chmod-socket' => '644',
     },
     notify              => Service['mistral-api'],
-  }
-
-  nginx::resource::vhost { 'mistral-api':
-    ensure               => present,
-    listen_port          => $_mistral_port,
-    # Disabling SSL temporarily while changes ported in
-    # JDF - 20150804
-    # ssl                  => true,
-    # ssl_port             => $_mistral_port,
-    # ssl_cert             => $_ssl_cert,
-    # ssl_key              => $_ssl_key,
-    # ssl_protocols        => $_ssl_protocols,
-    # ssl_ciphers          => $_cipher_list,
-    server_name          => $_server_names,
-    uwsgi                => "unix://${_mistral_socket}",
   }
 
   # Cheating here a little bit. Because the st2web is now being
