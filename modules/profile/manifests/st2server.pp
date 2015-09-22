@@ -231,6 +231,17 @@ class profile::st2server {
   }
 
   anchor { 'st2::pre_reqs': }
+
+  # Set cacert if we generate a certificate
+  # or the user provides a CA certificate.
+  #
+  # Otherwise, do nothing.
+  if $_self_signed_cert or $_user_ca_cert {
+    $_st2client_cacert = $_ca_cert
+  } else {
+    $_st2client_cacert = undef
+  }
+
   class { '::st2::profile::client':
     username    => $_root_cli_username,
     password    => $_root_cli_password,
@@ -238,6 +249,7 @@ class profile::st2server {
     auth_url    => $_auth_url,
     cache_token => false,
     global_env  => true,
+    cacert      => $_st2client_cacert,
     require     => Anchor['st2::pre_reqs'],
   }
 
