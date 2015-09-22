@@ -81,6 +81,8 @@ class profile::st2server {
   $_st2installer_port = '9102'
   $_api_url = "https://${_hostname}:${_st2api_port}"
   $_auth_url = "https://${_hostname}:${_st2auth_port}"
+  $_public_api_url = "https://${_host_ip}:${_st2api_port}"
+  $_public_auth_url = "https://${_host_ip}:${_st2auth_port}"
   $_mistral_url = $_hostname
 
   $_st2installer_root = '/etc/st2installer'
@@ -991,7 +993,7 @@ class profile::st2server {
     path   => '/etc/st2/st2.conf',
     section => 'auth',
     setting => 'api_url',
-    value   => $_api_url,
+    value   => $_public_api_url,
   }
 
   ## Perms fix for /var/log/st2.  Needs to be added to mainline puppet module
