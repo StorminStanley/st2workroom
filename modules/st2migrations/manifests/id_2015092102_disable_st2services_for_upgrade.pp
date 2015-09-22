@@ -30,7 +30,7 @@ class st2migrations::id_2015092102_disable_st2services_for_upgrade {
       notify  => Exec['stop st2services for upgrade'],
     }
     exec { 'stop st2services for upgrade':
-      command => "${_rundir}/st2_st2services_for_upgrade",
+      command => "${_rundir}/stop_st2services_for_upgrade",
       path    => [
         '/usr/bin',
         '/usr/sbin',
