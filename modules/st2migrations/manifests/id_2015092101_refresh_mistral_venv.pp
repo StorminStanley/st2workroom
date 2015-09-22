@@ -16,6 +16,11 @@ class st2migrations::id_2015092101_refresh_mistral_venv {
       rm -rf /opt/openstack/mistral/.venv
     fi
 
+    # https://github.com/StackStorm/puppet-st2/blob/master/manifests/profile/mistral.pp#L124
+    if [ -d /etc/mistral/actions/st2mistral ]; then
+      rm -rf /etc/mistral/actions/st2mistral
+    fi
+
     # https://github.com/StackStorm/puppet-st2/blob/master/manifests/profile/mistral.pp#L275
     if [ -f /etc/mistral/database_setup.lock ]; then
       rm -rf /etc/mistral/database_setup.lock
@@ -28,7 +33,10 @@ class st2migrations::id_2015092101_refresh_mistral_venv {
       group   => 'root',
       mode    => '0755',
       content => $_shell_script,
-      notify  => Exec['run mistral venv migration'],
+      notify  => [
+        Exec['run mistral venv migration'],
+        Vcsrepo['/etc/mistral/actions/st2mistral'],
+      ],
     }
     exec { 'run mistral venv migration':
       command => "${_rundir}/refresh_mistral_venv",
