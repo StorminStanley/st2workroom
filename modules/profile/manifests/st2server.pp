@@ -760,11 +760,7 @@ class profile::st2server {
 
   # Needed for uWSGI server to write to logs
   file { [
-    '/var/log/st2/st2api.log',
-    '/var/log/st2/st2api.audit.log',
     '/var/log/st2/st2api.uwsgi.log',
-    '/var/log/st2/st2auth.log',
-    '/var/log/st2/st2auth.audit.log',
     '/var/log/st2/st2auth.uwsgi.log',
   ]:
     ensure  => present,
@@ -968,10 +964,11 @@ class profile::st2server {
   }
 
   ## Perms fix for /var/log/st2.  Needs to be added to mainline puppet module
-  file {'/var/log/st2':
-    ensure => 'directory',
-    mode   => '0775',
-    owner  => 'root',
-    group  => 'syslog'
+  file { '/var/log/st2':
+    ensure  => 'directory',
+    mode    => '0775',
+    owner   => 'root',
+    group   => 'syslog',
+    recurse => true,
   }
 }
