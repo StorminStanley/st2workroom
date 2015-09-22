@@ -148,6 +148,6 @@ DEPENDENCIES
   puppetlabs-vcsrepo (= 1.2.0)
   saz-rsyslog (= 3.5.1)
   saz-sudo (= 3.0.9)
-  stackstorm-st2 (= 0.9.4)
+  stackstorm-st2 (= 0.9.6)
   stankevich-python (= 1.7.15)
 
