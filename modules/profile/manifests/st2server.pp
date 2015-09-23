@@ -634,10 +634,6 @@ class profile::st2server {
     notify              => Service['mistral-api'],
   }
 
-  nginx::resource::vhost { 'mistral-api':
-    ensure => absent,
-  }
-
   # Cheating here a little bit. Because the st2web is now being
   # served via nginx/HTTPS, the SimpleHTTPServer is no longer needed
   # Only problem is, if there is not a service named `st2web`, `st2ctl`
