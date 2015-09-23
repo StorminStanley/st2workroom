@@ -35,7 +35,7 @@ class st2migrations::id_2015092201_disable_mistral_nginx {
         Facter::Fact['st2migration_2015092201_disable_mistral_nginx'],
         Class['::st2::profile::mistral'],
       ],
-      notify => Service['::nginx'],
+      notify => Service['nginx'],
     }
     facter::fact { 'st2migration_2015092201_disable_mistral_nginx':
       value => 'completed-2x',
