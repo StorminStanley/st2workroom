@@ -235,13 +235,14 @@ class profile::st2server {
 
   anchor { 'st2::pre_reqs': }
   class { '::st2::profile::client':
-    username    => $_root_cli_username,
-    password    => $_root_cli_password,
-    api_url     => $_api_url,
-    auth_url    => $_auth_url,
-    cache_token => false,
-    global_env  => true,
-    require     => Anchor['st2::pre_reqs'],
+    username             => $_root_cli_username,
+    password             => $_root_cli_password,
+    api_url              => $_api_url,
+    auth_url             => $_auth_url,
+    cache_token          => false,
+    silence_ssl_warnings => true,
+    global_env           => true,
+    require              => Anchor['st2::pre_reqs'],
   }
 
   class { '::st2::profile::server':
@@ -899,7 +900,7 @@ class profile::st2server {
   }
 
   ### Installer needs access to a few specific files
-  file { "${::settings::confdir}/hieradata/answers.yaml":
+  file { "${::settings::confdir}/hieradata/answers.json":
     ensure => file,
     owner  => $_nginx_daemon_user,
     group  => $_nginx_daemon_user,
