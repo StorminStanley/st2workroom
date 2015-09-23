@@ -472,6 +472,7 @@ class profile::st2server {
     }
 
     $_timestamp = generate('/bin/date', '+%s%N')
+    $_random_seed = "ssl-cert-serial-$_timestamp"
     $_sign_client_req_command = join([
       'openssl',
       'x509',
@@ -483,7 +484,7 @@ class profile::st2server {
       '-CAkey',
       $_ca_key,
       '-set_serial',
-      fqdn_rand(30000, 'ssl cert serial' + $_timestamp),
+      fqdn_rand(30000, $_random_seed),
       '-out',
       $_ssl_cert,
     ], ' ')
