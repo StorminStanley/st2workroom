@@ -14,6 +14,7 @@ if [ -f /usr/local/rvm/scripts/rvm ]; then
 fi
 
 PROJECT_ROOT=/opt/puppet
+LOG_FILE=/var/log/puppet.log
 NODE=$(hostname -s);
 PATH=${PROJECT_ROOT}/bin:/usr/local/bin:$PATH
 

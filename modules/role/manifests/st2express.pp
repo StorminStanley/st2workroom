@@ -4,6 +4,7 @@ class role::st2express {
   include ::profile::infrastructure
   include ::profile::st2server
   include ::profile::users
+  include ::st2migrations
 
   if $_enable_hubot {
     if $::osfamily == 'RedHat' and $::operatingsystemmajrelease == '6' {

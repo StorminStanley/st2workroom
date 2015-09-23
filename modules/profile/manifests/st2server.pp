@@ -18,8 +18,8 @@ class profile::st2server {
   $_installer_workroom_mode = hiera('st2::installer_workroom_mode', '0660')
   $_st2auth_uwsgi_threads = hiera('st2::auth_uwsgi_threads', 10)
   $_st2auth_uwsgi_processes = hiera('st2::auth_uwsgi_processes', 1)
-  $_st2api_uwsgi_threads = hiera('st2::api_uwsgi_threads', 10)
-  $_st2api_uwsgi_processes = hiera('st2::api_uwsgi_processes', 1)
+  $_st2api_threads = hiera('st2::api_uwsgi_threads', 10)
+  $_st2api_processes = hiera('st2::api_uwsgi_processes', 1)
   $_st2installer_branch = hiera('st2::installer_branch', 'stable')
   $_mistral_uwsgi_threads = hiera('st2::mistral_uwsgi_threads', 25)
   $_mistral_uwsgi_processes = hiera('st2::mistral_uwsgi_processes', 1)
@@ -81,7 +81,9 @@ class profile::st2server {
   $_st2installer_port = '9102'
   $_api_url = "https://${_hostname}:${_st2api_port}"
   $_auth_url = "https://${_hostname}:${_st2auth_port}"
-  $_mistral_url = $_hostname
+  $_public_api_url = "https://${_host_ip}:${_st2api_port}"
+  $_public_auth_url = "https://${_host_ip}:${_st2auth_port}"
+  $_mistral_url = '0.0.0.0'
 
   $_st2installer_root = '/etc/st2installer'
   $_st2installer_logfile = '/var/log/st2/st2installer.log'
@@ -196,9 +198,12 @@ class profile::st2server {
     manage_postgresql => true,
     api_url           => $_mistral_url,
     api_port          => $_mistral_port,
-    disable_api       => true,
     before            => $_st2_profile_mistral_before,
   }
+
+  # Ensures Mistral is processed before Nginx
+  Class['::st2::profile::mistral'] -> Class['::nginx']
+
   # $_mistral_root needs to be loaded here due to load-order
   $_mistral_root = $::st2::profile::mistral::_mistral_root
 
@@ -232,13 +237,14 @@ class profile::st2server {
 
   anchor { 'st2::pre_reqs': }
   class { '::st2::profile::client':
-    username    => $_root_cli_username,
-    password    => $_root_cli_password,
-    api_url     => $_api_url,
-    auth_url    => $_auth_url,
-    cache_token => false,
-    global_env  => true,
-    require     => Anchor['st2::pre_reqs'],
+    username             => $_root_cli_username,
+    password             => $_root_cli_password,
+    api_url              => $_api_url,
+    auth_url             => $_auth_url,
+    cache_token          => false,
+    silence_ssl_warnings => true,
+    global_env           => true,
+    require              => Anchor['st2::pre_reqs'],
   }
 
   class { '::st2::profile::server':
@@ -273,6 +279,37 @@ class profile::st2server {
 
   include ::st2::logging::rsyslog
 
+  # Hubot Hack
+  # Because we get the environment variables via st2installer
+  # and st2installer destroys the answer file as soon as it's
+  # done with it. To that end, we need to do two things
+  #
+  # 1) Ensure that the environment file is only populated
+  #    with the values we want via the installer
+  # 2) Ensure that nothing is overwritten on subsequent
+  #    runs of Puppet
+  #
+  # What this does is set the `replace` bit on the
+  # Hubot environment file. This ensures that Puppet
+  # DOES NOT update the contents of the file if they change
+  #
+  # So, we fake out the system a little bit. If the installer
+  # is running, we can assume that what we have is credentials
+  # if they were passed through. So, delete the empty file,
+  # write the new config, and ensure it's not overwritten.
+  $_hubot_env_file = "/opt/hubot/hubot/hubot.env"
+  if $_installer_running {
+    exec { 'remove empty hubot env settings':
+      command => "rm -rf ${_hubot_env_file}",
+      path    => '/usr/sbin:/usr/bin:/sbin:/bin',
+    }
+    Exec['remove empty hubot env settings'] -> File<| title == $_hubot_env_file |>
+  }
+  File<| title == $_hubot_env_file |> {
+    replace => false,
+  }
+  ### END Hubot Hack ###
+
   # $_python_pack needs to be loaded here due to load-order
   $_python_pack = $::st2::profile::server::_python_pack
 
@@ -294,6 +331,10 @@ class profile::st2server {
   python::pip { 'uwsgi':
     ensure => present,
     before => Class['::uwsgi'],
+  }
+
+  python::pip { 'gunicorn':
+    ensure => present,
   }
 
   # ### Application Configuration
@@ -429,6 +470,8 @@ class profile::st2server {
       before    => Exec['sign client cert req'],
     }
 
+    $_timestamp = generate('/bin/date', '+%s%N')
+    $_random_seed = "ssl-cert-serial-$_timestamp"
     $_sign_client_req_command = join([
       'openssl',
       'x509',
@@ -439,7 +482,8 @@ class profile::st2server {
       $_ca_cert,
       '-CAkey',
       $_ca_key,
-      '-CAcreateserial',
+      '-set_serial',
+      fqdn_rand(100000, $_random_seed),
       '-out',
       $_ssl_cert,
     ], ' ')
@@ -512,6 +556,10 @@ class profile::st2server {
     group  => $_nginx_daemon_user,
     mode   => '0755',
   }
+
+  # Note: This is BAD BAD BAD
+  # We use the same empty random seed file which will result in the same
+  # certificate serial numbers.
   file { "${_openssl_root}/.rnd":
     ensure => file,
     owner  => 'root',
@@ -550,13 +598,7 @@ class profile::st2server {
   if $_ca_cert {
     ## Add the certificate to the trusted root store to get rid
     ## of annoying issues related to self-signed or trusted
-    file { '/usr/local/share/ca-certificates/st2':
-      ensure => directory,
-      owner  => 'root',
-      group  => 'root',
-      mode   => '0755',
-    }
-    file { '/usr/local/share/ca-certificates/st2/st2_trusted_cert.crt':
+    file { '/usr/local/share/ca-certificates/st2_ca.crt':
       ensure  => file,
       owner   => 'root',
       mode    => '0444',
@@ -601,21 +643,6 @@ class profile::st2server {
     notify              => Service['mistral-api'],
   }
 
-  nginx::resource::vhost { 'mistral-api':
-    ensure               => present,
-    listen_port          => $_mistral_port,
-    # Disabling SSL temporarily while changes ported in
-    # JDF - 20150804
-    # ssl                  => true,
-    # ssl_port             => $_mistral_port,
-    # ssl_cert             => $_ssl_cert,
-    # ssl_key              => $_ssl_key,
-    # ssl_protocols        => $_ssl_protocols,
-    # ssl_ciphers          => $_cipher_list,
-    server_name          => $_server_names,
-    uwsgi                => "unix://${_mistral_socket}",
-  }
-
   # Cheating here a little bit. Because the st2web is now being
   # served via nginx/HTTPS, the SimpleHTTPServer is no longer needed
   # Only problem is, if there is not a service named `st2web`, `st2ctl`
@@ -658,22 +685,12 @@ class profile::st2server {
     line => 'ST2_DISABLE_HTTPSERVER=true',
   }
 
-  adapter::st2_uwsgi_init { 'st2api': }
-
-  uwsgi::app { 'st2api':
-    ensure              => present,
-    uid                 => $_nginx_daemon_user,
-    gid                 => $_nginx_daemon_user,
-    application_options => {
-      'socket'       => $_st2api_socket,
-      'processes'    => $_st2api_uwsgi_processes,
-      'threads'      => $_st2api_uwsgi_threads,
-      'wsgi-file'    => "${_python_pack}/st2api/wsgi.py",
-      'vacuum'       => true,
-      'logto'        => '/var/log/st2/st2api.uwsgi.log',
-      'chmod-socket' => '644',
-    },
-    notify             => Service['st2api'],
+  adapter::st2_gunicorn_init { 'st2api':
+    socket  => $_st2api_socket,
+    workers => $_st2api_workers,
+    threads => $_st2api_threads,
+    user    => $_nginx_daemon_user,
+    group   => $_nginx_daemon_user,
   }
 
   nginx::resource::vhost { 'st2api':
@@ -686,7 +703,7 @@ class profile::st2server {
     ssl_protocols        => $_ssl_protocols,
     ssl_ciphers          => $_cipher_list,
     server_name          => $_server_names,
-    uwsgi                => "unix://${_st2api_socket}",
+    proxy                => "http://unix:${_st2api_socket}",
     location_raw_prepend => [
       $_cors_custom_options,
     ],
@@ -771,11 +788,7 @@ class profile::st2server {
 
   # Needed for uWSGI server to write to logs
   file { [
-    '/var/log/st2/st2api.log',
-    '/var/log/st2/st2api.audit.log',
     '/var/log/st2/st2api.uwsgi.log',
-    '/var/log/st2/st2auth.log',
-    '/var/log/st2/st2auth.audit.log',
     '/var/log/st2/st2auth.uwsgi.log',
   ]:
     ensure  => present,
@@ -785,7 +798,6 @@ class profile::st2server {
     require => Class['::st2::profile::server'],
     before  => [
       Adapter::St2_uwsgi_init['st2auth'],
-      Adapter::St2_uwsgi_init['st2api'],
     ],
   }
 
@@ -837,6 +849,7 @@ class profile::st2server {
     source   => 'https://github.com/stackstorm/st2installer',
     revision => $_st2installer_branch,
     before   => $_st2installer_before,
+    notify   => Service['st2installer'],
   }
 
   python::virtualenv { $_st2installer_root:
@@ -895,11 +908,13 @@ class profile::st2server {
   }
 
   ### Installer needs access to a few specific files
-  file { "${::settings::confdir}/hieradata/answers.yaml":
-    ensure => file,
-    owner  => $_nginx_daemon_user,
-    group  => $_nginx_daemon_user,
-    mode   => $_installer_workroom_mode,
+  file { "${::settings::confdir}/hieradata/answers.json":
+    ensure  => file,
+    replace => false,
+    owner   => $_nginx_daemon_user,
+    group   => $_nginx_daemon_user,
+    mode    => $_installer_workroom_mode,
+    content => '{}'
   }
 
   file { '/tmp/st2installer.log':
@@ -919,7 +934,7 @@ class profile::st2server {
   ### Installer also needs the ability to kick off a Puppet run to converge the system
   sudo::conf { "env_puppet":
     priority => '5',
-    content  => 'Defaults!/usr/bin/puprun env_keep += "nocolor environment debug FACTER_installer_running"',
+    content  => 'Defaults!/usr/bin/puprun env_keep += "NOCOLOR ENV DEBUG FACTER_installer_running"',
   }
   ### Installer also needs to try and send anonymous installation data via StackStorm
   sudo::conf { "st2-call-home":
@@ -950,7 +965,10 @@ class profile::st2server {
     priority => '10',
     content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/bin/puprun",
   }
-
+  sudo::conf { "st2stop":
+    priority => '10',
+    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/bin/st2ctl stop",
+  }
   # Dependencies
   # Here lies odd dependencies that need to be put in this file. Please document them.
 
@@ -964,5 +982,23 @@ class profile::st2server {
     unless  => 'st2 action list | grep packs.install',
     path    => '/usr/bin:/usr/sbin:/bin:/sbin',
     require => Service['nginx'],
+  }
+
+  # Configure public url to the API endpoint.
+  ini_setting { 'configure_api_public_url':
+    ensure => present,
+    path   => '/etc/st2/st2.conf',
+    section => 'auth',
+    setting => 'api_url',
+    value   => $_public_api_url,
+  }
+
+  ## Perms fix for /var/log/st2.  Needs to be added to mainline puppet module
+  file { '/var/log/st2':
+    ensure  => 'directory',
+    mode    => '0775',
+    owner   => 'root',
+    group   => 'syslog',
+    recurse => true,
   }
 }

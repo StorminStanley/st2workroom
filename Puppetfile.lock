@@ -16,6 +16,10 @@ FORGE
       puppetlabs-apt (<= 3.0.0, >= 1.1.0)
       puppetlabs-stdlib (>= 4.1.0)
       stahnma-epel (>= 0.0.6)
+    garethr-erlang (0.3.0)
+      puppetlabs-apt (>= 0)
+      puppetlabs-stdlib (>= 0)
+      stahnma-epel (>= 0)
     ghoneycutt-common (1.3.0)
       puppetlabs-stdlib (< 6.0.0, >= 4.6.0)
     ghoneycutt-facter (2.1.0)
@@ -26,6 +30,7 @@ FORGE
       ghoneycutt-common (< 2.0.0, >= 1.0.2)
       ghoneycutt-nsswitch (< 2.0.0, >= 1.1.0)
       puppetlabs-stdlib (< 5.0.0, >= 3.2.0)
+    ilanco-s3cmd (0.2.1)
     jamtur01-httpauth (0.0.3)
     jfryman-nginx (0.2.7)
       puppetlabs-apt (< 3.0.0, >= 1.8.0)
@@ -63,7 +68,8 @@ FORGE
     saz-rsyslog (3.5.1)
     saz-sudo (3.0.9)
       puppetlabs-stdlib (>= 2.3.0)
-    stackstorm-st2 (0.8.0)
+    stackstorm-st2 (0.9.7)
+      garethr-erlang (>= 0.3.0)
       jamtur01-httpauth (>= 0.0.3)
       jfryman-tiller (>= 0.1.0)
       maestrodev-git (>= 1.0.6)
@@ -72,14 +78,15 @@ FORGE
       puppetlabs-apt (>= 1.7.0)
       puppetlabs-gcc (>= 0.2.0)
       puppetlabs-inifile (>= 1.2.0)
-      puppetlabs-mongodb (>= 0.8.0)
+      puppetlabs-mongodb (>= 0.11.0)
       puppetlabs-postgresql (>= 4.4.2)
       puppetlabs-rabbitmq (>= 4.1.0)
       puppetlabs-stdlib (>= 4.6.0)
       puppetlabs-vcsrepo (>= 1.2.0)
       saz-sudo (>= 3.0.9)
+      stahnma-epel (>= 1.1.0)
       stankevich-python (>= 1.7.15)
-    stahnma-epel (1.1.0)
+    stahnma-epel (1.1.1)
     stankevich-python (1.7.15)
       puppetlabs-stdlib (>= 4.0.0)
 
@@ -103,7 +110,7 @@ GIT
 GIT
   remote: https://github.com/maestrodev/puppet-wget
   ref: master
-  sha: 1e25bfeccfeecac0b8762af47a445c97e5df8810
+  sha: ba3b7ea1bcb277a6a8757c57cc56e860abc0f84a
   specs:
     maestrodev-wget (1.7.1)
 
@@ -118,6 +125,7 @@ DEPENDENCIES
   ghoneycutt-facter (= 2.1.0)
   ghoneycutt-nsswitch (= 1.2.1)
   ghoneycutt-pam (= 2.19.0)
+  ilanco-s3cmd (= 0.2.1)
   jamtur01-httpauth (= 0.0.3)
   jfryman-hubot (>= 0)
   jfryman-nginx (= 0.2.7)
@@ -140,6 +148,6 @@ DEPENDENCIES
   puppetlabs-vcsrepo (= 1.2.0)
   saz-rsyslog (= 3.5.1)
   saz-sudo (= 3.0.9)
-  stackstorm-st2 (= 0.8.0)
+  stackstorm-st2 (= 0.9.7)
   stankevich-python (= 1.7.15)
 
