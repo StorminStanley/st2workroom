@@ -481,7 +481,8 @@ class profile::st2server {
       $_ca_cert,
       '-CAkey',
       $_ca_key,
-      '-CAcreateserial',
+      '-set_serial',
+      '$RANDOM',
       '-out',
       $_ssl_cert,
     ], ' ')
