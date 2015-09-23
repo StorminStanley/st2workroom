@@ -555,6 +555,10 @@ class profile::st2server {
     group  => $_nginx_daemon_user,
     mode   => '0755',
   }
+
+  # Note: This is BAD BAD BAD
+  # We use the same empty random seed file which will result in the same
+  # certificate serial numbers.
   file { "${_openssl_root}/.rnd":
     ensure => file,
     owner  => 'root',
