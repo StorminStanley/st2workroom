@@ -68,11 +68,7 @@ FORGE
     saz-rsyslog (3.5.1)
     saz-sudo (3.0.9)
       puppetlabs-stdlib (>= 2.3.0)
-<<<<<<< HEAD
     stackstorm-st2 (0.9.7)
-=======
-    stackstorm-st2 (0.9.6)
->>>>>>> 58e3f94d897b4dace03c5fc6c8067da326a29d09
       garethr-erlang (>= 0.3.0)
       jamtur01-httpauth (>= 0.0.3)
       jfryman-tiller (>= 0.1.0)
