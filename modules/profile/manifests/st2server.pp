@@ -198,6 +198,10 @@ class profile::st2server {
     api_port          => $_mistral_port,
     before            => $_st2_profile_mistral_before,
   }
+
+  # Ensures Mistral is processed before Nginx
+  Class['::st2::profile::mistral'] -> Class['::nginx']
+
   # $_mistral_root needs to be loaded here due to load-order
   $_mistral_root = $::st2::profile::mistral::_mistral_root
 
@@ -628,6 +632,10 @@ class profile::st2server {
       'chmod-socket' => '644',
     },
     notify              => Service['mistral-api'],
+  }
+
+  nginx::resource::vhost { 'mistral-api':
+    ensure => absent,
   }
 
   # Cheating here a little bit. Because the st2web is now being
