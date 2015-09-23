@@ -482,7 +482,7 @@ class profile::st2server {
       '-CAkey',
       $_ca_key,
       '-set_serial',
-      '$RANDOM',
+      fqdn_rand(30000, 'ssl cert serial'),
       '-out',
       $_ssl_cert,
     ], ' ')
