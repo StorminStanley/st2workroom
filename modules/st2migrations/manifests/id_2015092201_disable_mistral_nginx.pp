@@ -11,20 +11,21 @@ class st2migrations::id_2015092201_disable_mistral_nginx {
 
   if $::st2migration_2015092201_disable_mistral_nginx != 'completed' {
     $_shell_script = "#!/usr/bin/env sh
-      service nginx stop
-      service mistral stop
+      if [ -f /etc/nginx/sites-enabled/mistral-api.conf ]; then
+        rm -rf /etc/nginx/sites-enabled/mistral-api.conf
+      fi
     "
 
-    file { "${_rundir}/stop_nginx_mistral_for_upgrade":
+    file { "${_rundir}/remove_mistral_nginx_config":
       ensure  => file,
       owner   => 'root',
       group   => 'root',
       mode    => '0755',
       content => $_shell_script,
-      notify  => Exec['stop nginx mistral for upgrade'],
+      notify  => Exec['remove mistral nginx config'],
     }
-    exec { 'stop nginx mistral for upgrade':
-      command => "${_rundir}/stop_st2services_for_upgrade",
+    exec { 'remove mistral nginx config':
+      command => "${_rundir}/remove_mistral_nginx_config",
       path    => [
         '/usr/bin',
         '/usr/sbin',
@@ -33,9 +34,9 @@ class st2migrations::id_2015092201_disable_mistral_nginx {
       ],
       before  => [
         Facter::Fact['st2migration_2015092201_disable_mistral_nginx'],
-        Class['::nginx'],
         Class['::st2::profile::mistral'],
       ],
+      notify => Service['::nginx'],
     }
     facter::fact { 'st2migration_2015092201_disable_mistral_nginx':
       value => 'completed',
