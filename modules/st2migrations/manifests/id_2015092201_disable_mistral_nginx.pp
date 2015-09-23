@@ -9,12 +9,9 @@
 class st2migrations::id_2015092201_disable_mistral_nginx {
   $_rundir = $::st2migrations::exec_dir
 
-  if $::st2migration_2015092201_disable_mistral_nginx != 'completed' {
+  if $::st2migration_2015092201_disable_mistral_nginx != 'completed-2x' {
     $_shell_script = "#!/usr/bin/env sh
-      if [ -f /etc/nginx/sites-enabled/mistral-api.conf ]; then
-        rm -rf /etc/nginx/sites-enabled/mistral-api.conf
-      fi
-
+      rm -rf /etc/nginx/sites-enabled/mistral-api.conf
       service nginx stop
     "
 
@@ -41,7 +38,7 @@ class st2migrations::id_2015092201_disable_mistral_nginx {
       notify => Service['::nginx'],
     }
     facter::fact { 'st2migration_2015092201_disable_mistral_nginx':
-      value => 'completed',
+      value => 'completed-2x',
     }
   }
 }
