@@ -6,7 +6,7 @@ class profile::st2rbac {
     ensure  => present,
     path    => '/etc/st2/st2.conf',
     section => 'rbac',
-    setting => 'enabled',
+    setting => 'enable',
     value   => 'False',
     require => Class['::profile::st2server'],
   }
