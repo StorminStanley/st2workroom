@@ -471,6 +471,7 @@ class profile::st2server {
       before    => Exec['sign client cert req'],
     }
 
+    $_timestamp = generate('/bin/date', '+%s%N')
     $_sign_client_req_command = join([
       'openssl',
       'x509',
@@ -482,7 +483,7 @@ class profile::st2server {
       '-CAkey',
       $_ca_key,
       '-set_serial',
-      fqdn_rand(30000, 'ssl cert serial'),
+      fqdn_rand(30000, 'ssl cert serial' + $_timestamp),
       '-out',
       $_ssl_cert,
     ], ' ')
