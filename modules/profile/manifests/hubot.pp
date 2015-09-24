@@ -71,7 +71,7 @@ class profile::hubot(
     environment => 'HOME=/opt/hubot',
   }
   nodejs::npm { $_npm_packages:
-    ensure => present,
+    ensure => latest,
     target => $_hubot_bin_dir,
     user   => $_hubot_user,
   }

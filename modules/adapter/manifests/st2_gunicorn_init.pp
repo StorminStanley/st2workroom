@@ -1,19 +1,22 @@
-# Definition: adapter::st2_uwsgi_init
+# Definition: adapter::st2_gunicorn_init
 #
 #  This adapter creates an init script calling UWSGI for
 #  a given StackStorm subsystem. This is to disable the
 #  default standalone server started by st2ctl, but to
 #  keep that script still usable.
 #
-define adapter::st2_uwsgi_init (
+define adapter::st2_gunicorn_init (
   $subsystem = $name,
-) {
-  if ! defined(Class['uwsgi']) and ! defined(Class['::st2::profile::server']) {
-    fail("[Adapter::St2_uwsgi_init[${name}]: This adapter can only be used in conjunction with 'uwsgi' and 'st2::profile::server")
-  }
+  $workers   = 1,
+  $threads   = 1,
+  $socket,
+  $user,
+  $group,
+  ) {
+  $_python_pack = $::st2::profile::server::_python_pack
 
   if $::osfamily != 'Debian' {
-    fail("[Adapter::St2_uwsgi_init[${name}]: This adapter only supports Debian, currently")
+    fail("[Adapter::St2_gunicorn_init[${name}]: This adapter only supports Debian, currently")
   }
 
   $_subsystem_map = {
@@ -27,7 +30,6 @@ define adapter::st2_uwsgi_init (
   }
   $_subsystem = $_subsystem_map[$subsystem]
   $_template = $_subsystem ? {
-    'mistral-api' => 'anchor.conf.erb',
     default       => 'init.conf.erb',
   }
 
@@ -36,7 +38,7 @@ define adapter::st2_uwsgi_init (
     owner   => 'root',
     group   => 'root',
     mode    => '0444',
-    content => template("adapter/st2_uwsgi_init/${_template}"),
+    content => template("adapter/st2_gunicorn_init/${_template}"),
     notify  => Service[$_subsystem],
   }
 
@@ -45,9 +47,9 @@ define adapter::st2_uwsgi_init (
     enable     => true,
     hasstatus  => true,
     hasrestart => true,
-    require    => Class['st2::profile::server'],
+    require    => [
+      Python::Pip['gunicorn'],
+      Class['st2::profile::server'],
+    ],
   }
-
-  # Subscribe to Uwsgi Apps of the same name.
-  File["/etc/uwsgi.d/${_subsystem}.ini"] ~> Service[$_subsystem]
 }
