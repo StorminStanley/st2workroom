@@ -268,9 +268,9 @@ class profile::st2server {
 
   # Only manage the ::st2::stanley admin account
   # when the installer has either not run (managed in workroom.yaml)
-  # or when the installer is or has ran (managed in answers.yaml)
+  # or when the installer is or has ran (managed in answers.json)
   #
-  # Answers.yaml is deleted by the st2installer after run to prevent
+  # Answers.json is deleted by the st2installer after run to prevent
   # credential leakage. To that end, if this class still is being managed
   # and no hiera data exists, SSH keys and the admint account will be
   # overwritten with default values, and this is undesirable.
@@ -960,7 +960,7 @@ class profile::st2server {
   ### Installer and clean up after itself
   sudo::conf { "delete-answer-file":
     priority => '5',
-    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /bin/rm ${::settings::confdir}/hieradata/answers.yaml",
+    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /bin/rm ${::settings::confdir}/hieradata/answers.json",
   }
   sudo::conf { "puppet":
     priority => '10',

@@ -68,7 +68,7 @@ FORGE
     saz-rsyslog (3.5.1)
     saz-sudo (3.0.9)
       puppetlabs-stdlib (>= 2.3.0)
-    stackstorm-st2 (0.9.7)
+    stackstorm-st2 (0.9.8)
       garethr-erlang (>= 0.3.0)
       jamtur01-httpauth (>= 0.0.3)
       jfryman-tiller (>= 0.1.0)
@@ -148,6 +148,6 @@ DEPENDENCIES
   puppetlabs-vcsrepo (= 1.2.0)
   saz-rsyslog (= 3.5.1)
   saz-sudo (= 3.0.9)
-  stackstorm-st2 (= 0.9.7)
+  stackstorm-st2 (= 0.9.8)
   stankevich-python (= 1.7.15)
 
