@@ -235,6 +235,27 @@ class profile::st2server {
     }
   }
 
+  # Create default admin role assignments for root_cli and admin user
+  $_users = hiera_hash('users', {})
+
+  st2::rbac { $_root_cli_username:
+    description  => 'Default admin role assignments created by the installer',
+    roles        => [
+        'admin'
+    ]
+  }
+
+  if $_users {
+      $_admin_user = $_users.keys()[0]
+
+      st2::rbac { $_admin_user:
+        description  => 'Default system_admin role assignments created by the installer',
+        roles        => [
+            'system_admin'
+        ]
+      }
+  }
+
   anchor { 'st2::pre_reqs': }
   class { '::st2::profile::client':
     username             => $_root_cli_username,
