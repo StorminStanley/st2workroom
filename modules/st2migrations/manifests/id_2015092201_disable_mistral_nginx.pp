@@ -11,8 +11,11 @@ class st2migrations::id_2015092201_disable_mistral_nginx {
 
   if $::st2migration_2015092201_disable_mistral_nginx != 'completed-2x' {
     $_shell_script = "#!/usr/bin/env sh
-      rm -rf /etc/nginx/sites-enabled/mistral-api.conf
-      service nginx stop
+      if [ -f /etc/nginx/sites-enabled/mistral-api.conf ]; then
+        rm -rf /etc/nginx/sites-enabled/mistral-api.conf
+      fi
+
+      service nginx stop || true
     "
 
     file { "${_rundir}/remove_mistral_nginx_config":

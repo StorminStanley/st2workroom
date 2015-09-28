@@ -1014,6 +1014,7 @@ class profile::st2server {
     section => 'auth',
     setting => 'api_url',
     value   => $_public_api_url,
+    require => Class['::st2::profile::server'],
   }
 
   ## Perms fix for /var/log/st2.  Needs to be added to mainline puppet module
