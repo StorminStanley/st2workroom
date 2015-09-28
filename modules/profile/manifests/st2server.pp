@@ -243,8 +243,7 @@ class profile::st2server {
     ]
   }
 
-  $_users = hiera_hash('users', {})
-  $_users = $_users.keys()
+  $_users = hiera_hash('users', {}).keys()
   if size($_users) >= 1 {
       $_admin_user = $_users[0]
 
