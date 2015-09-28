@@ -235,7 +235,7 @@ class profile::st2server {
     }
   }
 
-  # Create default admin role assignments for root_cli and admin user
+  # Create default admin role assignment for root_cli user
   st2::rbac { $_root_cli_username:
     description  => 'Default admin role assignments created by the installer',
     roles        => [
@@ -243,6 +243,8 @@ class profile::st2server {
     ]
   }
 
+  # Create default system_admin role assignment for admin user created during installation
+  # Note: Assignment is only created once the installer has completed.
   $_users = hiera_hash('users', {}).keys()
   if size($_users) >= 1 {
       $_admin_user = $_users[0]
