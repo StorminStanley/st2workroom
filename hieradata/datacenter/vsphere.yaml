@@ -1,3 +1,6 @@
 ---
 puppet::masterless::cron: false
 st2::autoupdate: false
+
+system::offline: true
+st2::enterprise::banner: true

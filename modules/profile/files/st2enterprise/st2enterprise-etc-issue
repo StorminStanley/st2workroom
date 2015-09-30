@@ -1,0 +1,36 @@
+#!/usr/bin/env sh
+
+if [ "$METHOD" = loopback ]; then
+    exit 0
+fi
+
+# Only run from ifup.
+if [ "$MODE" != start ]; then
+    exit 0
+fi
+
+IPADDRESS=$(/sbin/ifconfig eth0 | grep "inet addr" | awk '{ print $2 }' | awk -F: '{ print $2 }')
+
+if [ -f /etc/issue ]; then
+  rm -rf /etc/issue
+fi
+
+cat <<EOF > /etc/issue
+
+   _____ __             __   _____ __                     
+  / ___// /_____ ______/ /__/ ___// /_____  _________ ___ 
+  \__ \/ __/ __ `/ ___/ //_/\__ \/ __/ __ \/ ___/ __ `__ \
+ ___/ / /_/ /_/ / /__/ ,<  ___/ / /_/ /_/ / /  / / / / / /
+/____/\______,_/\_____/|_|/____/\__/\____/_/_ /_/ /_/ /_/ 
+      / ____/___  / /____  _________  _____(_)_______     
+     / __/ / __ \/ __/ _ \/ ___/ __ \/ ___/ / ___/ _ \    
+    / /___/ / / / /_/  __/ /  / /_/ / /  / (__  )  __/    
+   /_____/_/ /_/\__/\___/_/  / .___/_/  /_/____/\___/     
+                            /_/                           
+
+First time starting this machine up?
+Visit https://${IPADDRESS}/setup to configure StackStorm
+
+Otherwise, head to https://${IPADDRESS} to access the WebUI
+
+EOF
