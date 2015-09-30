@@ -857,7 +857,7 @@ class profile::st2server {
     version      => 'system',
     systempkgs   => false,
     venv_dir     => "${_st2installer_root}/.venv",
-    cwd          => $_mistral_root,
+    cwd          => $_st2installer_root,
     requirements => "${_st2installer_root}/requirements.txt",
     require      => Vcsrepo[$_st2installer_root],
     before       => Service['st2installer'],
