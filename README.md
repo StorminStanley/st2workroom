@@ -241,7 +241,7 @@ users:
 
 ## Known Issues
 
-Unfortunately, as seamless as we attemt to make this project, there are a few issues that we cannot code around. But, they're easy enough to fix, and your solution might be listed below.
+Unfortunately, as seamless as we attempt to make this project, there are a few issues that we cannot code around. But, they're easy enough to fix, and your solution might be listed below.
 
 ### IP Conflicts
 In the event you receive an error related to IP conflict, Edit the `private_neworks` address in `stacks/st2.yaml`, and adjust the third octet to a non-conflicting value. For example:
