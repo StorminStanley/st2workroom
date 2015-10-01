@@ -739,21 +739,21 @@ class profile::st2server {
   # ### Let's at least try to do this safely and consistently
 
   $_st2auth_custom_options = 'limit_except OPTIONS {
-			auth_pam "Restricted";
-      auth_pam_service_name "nginx";
-		}'
-  
+    auth_pam "Restricted";
+    auth_pam_service_name "nginx";
+    }'
+
   # Note: We need to return a custom 401 error since nginx pam module intercepts
   # 401 and there is no other way to do it :/
   $_st2auth_custom_401_error_handler = '
-    error_page 401 =401 @401_response;
+  error_page 401 =401 @401_response;
 
-    location @401_response {
-        more_set_headers "Access-Control-Allow-Origin: *";
-        more_set_headers "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS";
-        more_set_headers "Access-Control-Allow-Credentials: true";
-        return 401 "Invalid or missing credentials";
-    }'
+  location @401_response {
+    more_set_headers "Access-Control-Allow-Origin: *";
+    more_set_headers "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS";
+    more_set_headers "Access-Control-Allow-Credentials: true";
+    return 401 "Invalid or missing credentials";
+  }'
 
   # Note 1: We don't need an if block since more_set_headers only sets header if
   # already set so duplicate headers are ot a problem.
@@ -822,7 +822,7 @@ class profile::st2server {
         $_st2auth_custom_401_error_handler,
     ],
     location_raw_append => [
-      $_cors_custom_options,
+      $_st2auth_cors_custom_options,
       'proxy_pass_header Authorization;',
       'uwsgi_param  REMOTE_USER        $remote_user;',
       $_st2auth_custom_options,
