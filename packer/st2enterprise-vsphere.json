@@ -12,8 +12,7 @@
         "script/ubuntu/cleanup.sh",
         "script/st2cleanup.sh",
         "script/zerodisk.sh",
-        "script/ubuntu/vsphere/cleanup.sh",
-        "script/bootstrap-user.sh"
+        "script/ubuntu/vsphere/cleanup.sh"
       ]
     }
   ],
