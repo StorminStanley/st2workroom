@@ -6,11 +6,19 @@ DIR=$( dirname "$(readlink -f "$0")" )
 
 APT_UPDATE_FREQ=30
 
-## Only run if we haven't run APT in awhile. Speed up feedback loop
-if [ -f /var/lib/apt/periodic/update-success-stamp ]; then
-    if [ `find /var/lib/apt/periodic/update-success-stamp -mmin +${APT_UPDATE_FREQ} | grep apt` ]; then
-        apt-get update
-    fi
-else
-    apt-get update
+## This is an operation that requires access to the internet. Let's make sure
+## we're in an environment that will allow this.
+##
+## This value is set in Class['profile::infrastructure']
+OFFLINE_MODE=`facter system_offline_mode`
+
+if [ "$OFFLINE_MODE" != "true" ]; then
+  ## Only run if we haven't run APT in awhile. Speed up feedback loop
+  if [ -f /var/lib/apt/periodic/update-success-stamp ]; then
+      if [ `find /var/lib/apt/periodic/update-success-stamp -mmin +${APT_UPDATE_FREQ} | grep apt` ]; then
+          apt-get update
+      fi
+  else
+      apt-get update
+  fi
 fi
