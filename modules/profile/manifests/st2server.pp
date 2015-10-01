@@ -758,6 +758,8 @@ class profile::st2server {
   # Note 1: We don't need an if block since more_set_headers only sets header if
   # already set so duplicate headers are ot a problem.
   # Note 2: This module requires nginx-extras to be installed.
+  # Note 3: We use MoreSetHeaders module since old version of nginx we use
+  # doesn't support overriding / setting headers on non-succesful responses.
   $_st2auth_cors_custom_options = '
     more_set_headers "Access-Control-Allow-Origin: *";
     more_set_headers "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS";
