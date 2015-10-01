@@ -35,6 +35,8 @@ rm -rf /etc/ssl/st2.*
 # Other cleanup
 rm -rf /root/.cache
 rm -rf /opt/puppet/.tmp
+rm -rf /opt/puppet/.librarian
+rm -rf /opt/puppet/.bundle
 rm -rf /opt/puppet/vendor/bundle
 rm -rf /opt/puppet/environments/*
 rm -rf /var/log/puppet.log
