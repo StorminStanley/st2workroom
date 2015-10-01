@@ -192,7 +192,6 @@ class profile::st2server {
     api_url           => $_mistral_url,
     api_port          => $_mistral_port,
     before            => Anchor['st2::pre_reqs'],
-    before            => $_st2_profile_mistral_before,
   }
 
   # Ensures Mistral is processed before Nginx
