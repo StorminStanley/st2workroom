@@ -56,7 +56,7 @@ class profile::st2server {
   # We assume by default that the user has internet access, but this
   # is not always the case (restricted VPC or images we want to otherwise
   # freeze).
-  $_autoupdate = hiera('st2::autoupdate', true)
+  $_offline_mode = hiera('system::offline_mode', false)
 
   if $_user_ssl_cert and $_user_ssl_key {
     $_self_signed_cert = false
@@ -187,17 +187,11 @@ class profile::st2server {
   include $_st2_classes
   Class[$_st2_classes] -> Anchor['st2::pre_reqs']
 
-  # In the event that we are in offline mode, detach all downstream dependencies
-  # as the vcsrepo action failing will cause all downsteam dependencies to fail.
-  # It is safe to assume the requirements have been met at the time of run
-  $_st2_profile_mistral_before = $_autoupdate ? {
-    true    => Anchor['st2::pre_reqs'],
-    default => undef,
-  }
   class { '::st2::profile::mistral':
     manage_postgresql => true,
     api_url           => $_mistral_url,
     api_port          => $_mistral_port,
+    before            => Anchor['st2::pre_reqs'],
     before            => $_st2_profile_mistral_before,
   }
 
@@ -828,14 +822,6 @@ class profile::st2server {
   # attempting to download anything
   Class['::st2::profile::server'] -> Class['::nginx::service'] -> St2::Pack<||>
 
-  # Setup the installer on initial provision, and get rid of it
-  # after setup has been run.
-
-  $_st2installer_before = $_autoupdate ? {
-    true    => Uwsgi::App['st2installer'],
-    default => undef,
-  }
-
   # In some environments, the Installer must be locked down to prevent
   # it from being run by a bad actor on a public machine. If this is true,
   # then create an htaccess file, and apply it to the installer endpoint
@@ -871,7 +857,7 @@ class profile::st2server {
     provider => 'git',
     source   => 'https://github.com/stackstorm/st2installer',
     revision => $_st2installer_branch,
-    before   => $_st2installer_before,
+    before   => Uwsgi::App['st2installer'],
     notify   => Service['st2installer'],
   }
 
