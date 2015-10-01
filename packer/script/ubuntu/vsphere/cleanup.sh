@@ -13,8 +13,6 @@ done
 echo "Shredding SSH host key pairs..."
 shred -u /etc/ssh/*_key /etc/ssh/*_key.pub
 
-## Ensure Host Keys are re-generated on first boot
-echo "dpkg-reconfigure openssh-server" >> /etc/rc.local
 
 ### This must be done after password cleanup
 ## During first boot, there is a period of time where
@@ -34,4 +32,18 @@ usermod -p $PASSWORD_HASH $USER
 ## This is a bit of a hack, because the bootstrap user
 ## needs access until Packer is done, so this needs to happen on
 ## first boot.
-echo "usermod -L vagrant" >> /etc/rc.local
+
+cat <<EOF > /etc/init.d/first-boot
+#!/usr/bin/env bash
+
+# Disable vagrant user if exists
+usermod -L vagrant || true
+
+# Ensure OpenSSH Host Keys are re-rceated
+dpkg-reconfigure openssh-server
+
+# Delete this file
+rm $0
+EOF
+
+chmod +x /etc/init.d/first-boot
