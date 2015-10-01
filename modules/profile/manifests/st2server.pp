@@ -157,7 +157,7 @@ class profile::st2server {
 
   ### Infrastructure/Application Pre-requsites
 
-  ## Note: nginx-full contains PAM bits
+  ## Note: nginx-extra contains PAM and SetHeadersMore modules
   ## Note: Service restart is setup this way to prevent puppet runs from
   ##       triggering a restart. Instead, nginx restart must be executed
   ##       manually by the user
@@ -167,7 +167,7 @@ class profile::st2server {
   }
 
   class { '::nginx':
-    package_name      => 'nginx-full',
+    package_name      => 'nginx-extras',
     service_restart   => '/etc/init.d/nginx configtest',
     configtest_enable => $_nginx_configtest,
   }
