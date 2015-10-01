@@ -52,4 +52,9 @@ class puppet::masterless(
     ensure => link,
     target => "${::settings::confdir}/script/puppet-apply",
   }
+
+  service { ['puppet', 'mcollective']:
+    ensure => stopped,
+    enable => false,
+  }
 }
