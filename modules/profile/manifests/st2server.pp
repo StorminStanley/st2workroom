@@ -138,7 +138,7 @@ class profile::st2server {
 			add_header 'Content-Type' 'text/plain charset=UTF-8';
 			add_header 'Content-Length' 0;
 
-			return 204;
+			return 204  ;
 		 }"
 
   #########################################################
@@ -742,6 +742,27 @@ class profile::st2server {
 			auth_pam "Restricted";
       auth_pam_service_name "nginx";
 		}'
+  
+  # Note: We need to return a custom 401 error since nginx pam module intercepts
+  # 401 and there is no other way to do it :/
+  $_st2auth_custom_401_error_handler = '
+    error_page 401 =401 @401_response;
+
+    location @401_response {
+        more_set_headers "Access-Control-Allow-Origin: *";
+        more_set_headers "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS";
+        more_set_headers "Access-Control-Allow-Credentials: true";
+        return 401 "Invalid or missing credentials";
+    }'
+
+  # Note 1: We don't need an if block since more_set_headers only sets header if
+  # already set so duplicate headers are ot a problem.
+  # Note 2: This module requires nginx-extras to be installed.
+  $_st2auth_cors_custom_options = '
+    more_set_headers "Access-Control-Allow-Origin: *";
+    more_set_headers "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS";
+    more_set_headers "Access-Control-Allow-Credentials: true";
+'
 
   # Let's add our nginx user to the `shadow` group, but do
   # it after the package manager has installed and setup
@@ -795,7 +816,11 @@ class profile::st2server {
       'X-Real-IP $remote_addr',
       'X-Forwarded-For $proxy_add_x_forwarded_for',
     ],
+    raw_append => [
+        $_st2auth_custom_401_error_handler,
+    ],
     location_raw_append => [
+      $_cors_custom_options,
       'proxy_pass_header Authorization;',
       'uwsgi_param  REMOTE_USER        $remote_user;',
       $_st2auth_custom_options,
