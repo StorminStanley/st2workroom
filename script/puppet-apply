@@ -23,7 +23,7 @@ if [ -n "$DEBUG" ]; then
 fi
 
 # Disable color output from different tools
-if [ -n "$NO_COLOR" ]; then
+if [ -n "$NOCOLOR" ]; then
     PUPPET_COLOR_ARGS="--color=false"
 fi
 
