@@ -700,6 +700,11 @@ class profile::st2server {
     path => '/etc/environment',
     line => 'ST2_DISABLE_HTTPSERVER=true',
   }
+  # Flag to allow st2ctl to correctly report the proper IP address.
+  file_line { 'st2ctl web port':
+    path => '/etc/environment',
+    line => 'WEBUI_PORT=80',
+  }
 
   adapter::st2_gunicorn_init { 'st2api':
     socket  => $_st2api_socket,
