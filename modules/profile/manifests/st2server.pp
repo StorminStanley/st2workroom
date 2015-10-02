@@ -83,7 +83,7 @@ class profile::st2server {
   $_auth_url = "https://${_hostname}:${_st2auth_port}"
   $_public_api_url = "https://${_host_ip}:${_st2api_port}"
   $_public_auth_url = "https://${_host_ip}:${_st2auth_port}"
-  $_mistral_url = '0.0.0.0'
+  $_mistral_url = '127.0.0.1'
 
   $_st2installer_root = '/etc/st2installer'
   $_st2installer_logfile = '/var/log/st2/st2installer.log'
