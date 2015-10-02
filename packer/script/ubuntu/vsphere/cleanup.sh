@@ -43,7 +43,9 @@ usermod -L vagrant || true
 dpkg-reconfigure openssh-server
 
 # Delete this file
+rm /etc/rc.d/first-boot
 rm $0
 EOF
 
 chmod +x /etc/init.d/first-boot
+ln -s /etc/init.d/first-boot /etc/rc.d/
