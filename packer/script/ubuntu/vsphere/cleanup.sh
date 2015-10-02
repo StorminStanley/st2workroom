@@ -48,4 +48,4 @@ rm $0
 EOF
 
 chmod +x /etc/init.d/first-boot
-ln -s /etc/init.d/first-boot /etc/rc.d/
+ln -s /etc/init.d/first-boot /etc/rc.d/first-boot
