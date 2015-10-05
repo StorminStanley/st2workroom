@@ -33,8 +33,7 @@ class profile::st2flow(
     default => str2bool($::st2flow_bootstrapped),
   }
 
-  $_enterprise_username = hiera('st2enterprise::username', undef)
-  $_enterprise_password = hiera('st2enterprise::password', undef)
+  $_enterprise_token = hiera('st2enterprise::token', undef)
 
   $distro_path = $osfamily ? {
     'Debian' => "apt/${lsbdistcodename}",
@@ -42,10 +41,10 @@ class profile::st2flow(
     'RedHat' => "yum/el/${operatingsystemmajrelease}"
   }
 
-  if $_enterprise_username and $_enterprise_password {
+  if $_enterprise_token {
 
     wget::fetch { 'Download Flow artifact':
-      source      => "https://${_enterprise_username}:${_enterprise_password}@downloads.stackstorm.net/st2enterprise/${distro_path}/st2flow/flow-${st2::version}.tar.gz",
+      source      => "https://${_enterprise_token}:@downloads.stackstorm.net/st2enterprise/${distro_path}/st2flow/flow-${st2::version}.tar.gz",
       cache_dir   => '/var/cache/wget',
       destination => '/tmp/flow.tar.gz',
       before      => Exec['extract flow'],

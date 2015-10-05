@@ -2,7 +2,9 @@
 #
 # Enable RBAC for StackStorm
 class profile::st2rbac {
-  if $_enterprise_username and $_enterprise_password {
+  $_enterprise_token = hiera('st2enterprise::token', undef)
+
+  if $_enterprise_token {
     ini_setting { 'disable st2 rbac':
       ensure  => present,
       path    => '/etc/st2/st2.conf',
