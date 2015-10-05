@@ -9,7 +9,7 @@
 class st2migrations::id_2015092102_disable_st2services_for_upgrade {
   $_rundir = $::st2migrations::exec_dir
 
-  if $::st2migration_2015092102_disable_st2services_for_upgrade != 'completed' {
+  if $::st2migration_2015092102_disable_st2services_for_upgrade != 'completed_2x' {
     $_shell_script = "#!/usr/bin/env sh
       service st2actionrunner stop || true
       service st2api stop || true
@@ -44,7 +44,7 @@ class st2migrations::id_2015092102_disable_st2services_for_upgrade {
       ],
     }
     facter::fact { 'st2migration_2015092102_disable_st2services_for_upgrade':
-      value => 'completed',
+      value => 'completed_2x',
     }
   }
 }

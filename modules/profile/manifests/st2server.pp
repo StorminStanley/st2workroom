@@ -277,6 +277,7 @@ class profile::st2server {
   class { '::st2::profile::web':
     api_url  => "https://:${_st2api_port}",
     auth_url => "https://:${_st2auth_port}",
+    flow_url => '/flow',
     require  => Class['::st2::profile::server'],
   }
 
@@ -1025,8 +1026,8 @@ class profile::st2server {
 
   # Configure public url to the API endpoint.
   ini_setting { 'configure_api_public_url':
-    ensure  => present,
-    path    => '/etc/st2/st2.conf',
+    ensure => present,
+    path   => '/etc/st2/st2.conf',
     section => 'auth',
     setting => 'api_url',
     value   => $_public_api_url,
