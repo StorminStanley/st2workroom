@@ -1,6 +1,17 @@
 #!/usr/bin/env sh
 set -e
 
+if [ -n "$1" ]; then
+  if [ "$1" = "clean" ]; then
+    echo "Removing bootstrap lock files..."
+    rm -f /etc/facter/facts.d/mistral_bootstrapped.txt
+    rm -f /etc/facter/facts.d/st2client_bootstrapped.txt
+    rm -f /etc/facter/facts.d/st2flow_bootstrapped.txt
+    rm -f /etc/facter/facts.d/st2server_bootstrapped.txt
+    rm -f /etc/facter/facts.d/st2web_bootstrapped.txt
+  fi
+fi
+
 DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
@@ -23,7 +34,7 @@ if [ -n "$DEBUG" ]; then
 fi
 
 # Disable color output from different tools
-if [ -n "$NO_COLOR" ]; then
+if [ -n "$NOCOLOR" ]; then
     PUPPET_COLOR_ARGS="--color=false"
 fi
 

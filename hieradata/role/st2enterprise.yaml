@@ -1,0 +1,37 @@
+---
+classes:
+  - 'role::st2enterprise'
+
+st2::version: 0.14dev
+st2::revision: 132
+st2::autoupdate: false
+st2::mistral_git_branch: master
+
+profile::enterprise_auth_backend::version: 0.1.0
+
+hubot::external_scripts:
+  - "hubot-stackstorm"
+
+npm::proxy: false
+puppet::masterless::cron: disable
+st2::packs:
+  puppet:
+    ensure: present
+  github:
+    ensure: present
+  victorops:
+    ensure: present
+  sensu:
+    ensure: present
+  slack:
+    ensure: present
+  libcloud:
+    ensure: present
+  jira:
+    ensure: present
+  openstack:
+    ensure: present
+  aws:
+    ensure: present
+  twitter:
+    ensure: present
