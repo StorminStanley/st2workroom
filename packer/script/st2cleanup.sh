@@ -32,9 +32,16 @@ rm -rf /var/lib/mongodb/*
 echo "cleaning up ssl certs for first run"
 rm -rf /etc/ssl/st2.*
 
+# Lets get rid of the root_cli user
+echo "removing root_cli user"
+rm -Rf /root/.st2/*
+userdel root_cli
+
 # Other cleanup
 rm -rf /root/.cache
 rm -rf /opt/puppet/.tmp
+rm -rf /opt/puppet/.librarian
+rm -rf /opt/puppet/.bundle
 rm -rf /opt/puppet/vendor/bundle
 rm -rf /opt/puppet/environments/*
 rm -rf /var/log/puppet.log

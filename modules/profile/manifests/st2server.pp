@@ -56,7 +56,7 @@ class profile::st2server {
   # We assume by default that the user has internet access, but this
   # is not always the case (restricted VPC or images we want to otherwise
   # freeze).
-  $_autoupdate = hiera('st2::autoupdate', true)
+  $_offline_mode = hiera('system::offline_mode', false)
 
   if $_user_ssl_cert and $_user_ssl_key {
     $_self_signed_cert = false
@@ -83,7 +83,7 @@ class profile::st2server {
   $_auth_url = "https://${_hostname}:${_st2auth_port}"
   $_public_api_url = "https://${_host_ip}:${_st2api_port}"
   $_public_auth_url = "https://${_host_ip}:${_st2auth_port}"
-  $_mistral_url = '0.0.0.0'
+  $_mistral_url = '127.0.0.1'
 
   $_st2installer_root = '/etc/st2installer'
   $_st2installer_logfile = '/var/log/st2/st2installer.log'
@@ -138,7 +138,7 @@ class profile::st2server {
 			add_header 'Content-Type' 'text/plain charset=UTF-8';
 			add_header 'Content-Length' 0;
 
-			return 204;
+			return 204  ;
 		 }"
 
   #########################################################
@@ -157,7 +157,7 @@ class profile::st2server {
 
   ### Infrastructure/Application Pre-requsites
 
-  ## Note: nginx-full contains PAM bits
+  ## Note: nginx-extra contains PAM and SetHeadersMore modules
   ## Note: Service restart is setup this way to prevent puppet runs from
   ##       triggering a restart. Instead, nginx restart must be executed
   ##       manually by the user
@@ -167,7 +167,7 @@ class profile::st2server {
   }
 
   class { '::nginx':
-    package_name      => 'nginx-full',
+    package_name      => 'nginx-extras',
     service_restart   => '/etc/init.d/nginx configtest',
     configtest_enable => $_nginx_configtest,
   }
@@ -187,18 +187,11 @@ class profile::st2server {
   include $_st2_classes
   Class[$_st2_classes] -> Anchor['st2::pre_reqs']
 
-  # In the event that we are in offline mode, detach all downstream dependencies
-  # as the vcsrepo action failing will cause all downsteam dependencies to fail.
-  # It is safe to assume the requirements have been met at the time of run
-  $_st2_profile_mistral_before = $_autoupdate ? {
-    true    => Anchor['st2::pre_reqs'],
-    default => undef,
-  }
   class { '::st2::profile::mistral':
     manage_postgresql => true,
     api_url           => $_mistral_url,
     api_port          => $_mistral_port,
-    before            => $_st2_profile_mistral_before,
+    before            => Anchor['st2::pre_reqs'],
   }
 
   # Ensures Mistral is processed before Nginx
@@ -262,14 +255,15 @@ class profile::st2server {
   class { '::st2::profile::web':
     api_url  => "https://:${_st2api_port}",
     auth_url => "https://:${_st2auth_port}",
+    flow_url => '/flow',
     require  => Class['::st2::profile::server'],
   }
 
   # Only manage the ::st2::stanley admin account
   # when the installer has either not run (managed in workroom.yaml)
-  # or when the installer is or has ran (managed in answers.yaml)
+  # or when the installer is or has ran (managed in answers.json)
   #
-  # Answers.yaml is deleted by the st2installer after run to prevent
+  # Answers.json is deleted by the st2installer after run to prevent
   # credential leakage. To that end, if this class still is being managed
   # and no hiera data exists, SSH keys and the admint account will be
   # overwritten with default values, and this is undesirable.
@@ -684,6 +678,11 @@ class profile::st2server {
     path => '/etc/environment',
     line => 'ST2_DISABLE_HTTPSERVER=true',
   }
+  # Flag to allow st2ctl to correctly report the proper IP address.
+  file_line { 'st2ctl web port':
+    path => '/etc/environment',
+    line => 'WEBUI_PORT=80',
+  }
 
   adapter::st2_gunicorn_init { 'st2api':
     socket  => $_st2api_socket,
@@ -723,9 +722,32 @@ class profile::st2server {
   # ### Let's at least try to do this safely and consistently
 
   $_st2auth_custom_options = 'limit_except OPTIONS {
-			auth_pam "Restricted";
-      auth_pam_service_name "nginx";
-		}'
+    auth_pam "Restricted";
+    auth_pam_service_name "nginx";
+    }'
+
+  # Note: We need to return a custom 401 error since nginx pam module intercepts
+  # 401 and there is no other way to do it :/
+  $_st2auth_custom_401_error_handler = '
+  error_page 401 =401 @401_response;
+
+  location @401_response {
+    more_set_headers "Access-Control-Allow-Origin: *";
+    more_set_headers "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS";
+    more_set_headers "Access-Control-Allow-Credentials: true";
+    return 401 "Invalid or missing credentials";
+  }'
+
+  # Note 1: We don't need an if block since more_set_headers only sets header if
+  # already set so duplicate headers are ot a problem.
+  # Note 2: This module requires nginx-extras to be installed.
+  # Note 3: We use MoreSetHeaders module since old version of nginx we use
+  # doesn't support overriding / setting headers on non-succesful responses.
+  $_st2auth_cors_custom_options = '
+    more_set_headers "Access-Control-Allow-Origin: *";
+    more_set_headers "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS";
+    more_set_headers "Access-Control-Allow-Credentials: true";
+'
 
   # Let's add our nginx user to the `shadow` group, but do
   # it after the package manager has installed and setup
@@ -779,7 +801,11 @@ class profile::st2server {
       'X-Real-IP $remote_addr',
       'X-Forwarded-For $proxy_add_x_forwarded_for',
     ],
+    raw_append => [
+        $_st2auth_custom_401_error_handler,
+    ],
     location_raw_append => [
+      $_st2auth_cors_custom_options,
       'proxy_pass_header Authorization;',
       'uwsgi_param  REMOTE_USER        $remote_user;',
       $_st2auth_custom_options,
@@ -804,14 +830,6 @@ class profile::st2server {
   # Ensure that the st2auth service is started up and serving before
   # attempting to download anything
   Class['::st2::profile::server'] -> Class['::nginx::service'] -> St2::Pack<||>
-
-  # Setup the installer on initial provision, and get rid of it
-  # after setup has been run.
-
-  $_st2installer_before = $_autoupdate ? {
-    true    => Uwsgi::App['st2installer'],
-    default => undef,
-  }
 
   # In some environments, the Installer must be locked down to prevent
   # it from being run by a bad actor on a public machine. If this is true,
@@ -848,7 +866,7 @@ class profile::st2server {
     provider => 'git',
     source   => 'https://github.com/stackstorm/st2installer',
     revision => $_st2installer_branch,
-    before   => $_st2installer_before,
+    before   => Uwsgi::App['st2installer'],
     notify   => Service['st2installer'],
   }
 
@@ -959,7 +977,7 @@ class profile::st2server {
   ### Installer and clean up after itself
   sudo::conf { "delete-answer-file":
     priority => '5',
-    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /bin/rm ${::settings::confdir}/hieradata/answers.yaml",
+    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /bin/rm ${::settings::confdir}/hieradata/answers.json",
   }
   sudo::conf { "puppet":
     priority => '10',
@@ -986,8 +1004,8 @@ class profile::st2server {
 
   # Configure public url to the API endpoint.
   ini_setting { 'configure_api_public_url':
-    ensure  => present,
-    path    => '/etc/st2/st2.conf',
+    ensure => present,
+    path   => '/etc/st2/st2.conf',
     section => 'auth',
     setting => 'api_url',
     value   => $_public_api_url,

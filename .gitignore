@@ -14,6 +14,7 @@ current_environment
 current_role
 mounts/*
 hieradata/workroom.yaml
+hieradata/answers.json
 hieradata/answers.yaml
 hieradata/workroom.json
 bin/*

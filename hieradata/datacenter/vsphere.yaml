@@ -1,3 +1,6 @@
 ---
 puppet::masterless::cron: false
-st2::autoupdate: false
+puppet::masterless::run_at_boot: true
+
+system::offline_mode: true
+st2::enterprise::banner: true

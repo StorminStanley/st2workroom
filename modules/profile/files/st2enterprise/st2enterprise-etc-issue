@@ -1,0 +1,39 @@
+#!/usr/bin/env sh
+
+if [ "$METHOD" = loopback ]; then
+    exit 0
+fi
+
+# Only run from ifup.
+if [ "$MODE" != start ]; then
+    exit 0
+fi
+
+IPADDRESS=$(/sbin/ifconfig eth0 | grep "inet addr" | awk '{ print $2 }' | awk -F: '{ print $2 }')
+
+if [ -f /etc/issue ]; then
+  rm -rf /etc/issue
+fi
+
+cat <<EOF > /etc/issue
+
+  ____  _             _     ____  _
+ / ___|| |_ __ _  ___| | __/ ___|| |_ ___  _ __ _ __ ___
+ \___ \| __/ _` |/ __| |/ /\___ \| __/ _ \| '__| '_ ` _ \
+  ___) | || (_| | (__|   <  ___) | || (_) | |  | | | | | |
+ |____/ \__\__,_|\___|_|\_\|____/ \__\___/|_|  |_| |_| |_|
+
+   _____       _                       _
+  | ____|_ __ | |_ ___ _ __ _ __  _ __(_)___  ___
+  |  _| | '_ \| __/ _ \ '__| '_ \| '__| / __|/ _ \
+  | |___| | | | ||  __/ |  | |_) | |  | \__ \  __/
+  |_____|_| |_|\__\___|_|  | .__/|_|  |_|___/\___|
+
+
+First time starting this machine up?
+Visit https://${IPADDRESS}/setup to configure StackStorm
+
+Otherwise, head to https://${IPADDRESS} to access the WebUI, or login
+with your administrative credentials.
+
+EOF
