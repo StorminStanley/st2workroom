@@ -1,5 +1,5 @@
 class puppet::masterless(
-  $cron        = true,
+  $cron        = false,
   $run_at_boot = false,
 ) inherits puppet {
   $offset = fqdn_rand(30)
