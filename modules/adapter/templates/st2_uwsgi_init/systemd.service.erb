@@ -1,0 +1,14 @@
+[Unit]
+Description=StackStorm <%= @_subsystem %> uWSGI script.
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=uwsgi --ini /etc/uwsgi.d/<%= @_subsystem %>.ini
+TimeoutSec=60
+PrivateTmp=true
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
