@@ -8,6 +8,55 @@ if [ $(id -u) -ne 0 ]; then
     exit 1
 fi
 
+### CLI Parsing
+show_help() {
+  echo "StackStorm All-in-one Installer"
+  echo "Usage: $0 [OPTION]..."
+  echo
+  echo "  -a,  --answers     Supply installer with an answer file"
+  echo "  -h,  --help        This help screen"
+  echo
+}
+
+ANSWER_FILE=""
+
+while :; do
+    case $1 in
+        -h|-\?|--help)
+            show_help
+            exit
+            ;;
+        -a|--answers)
+            if [ -n "$2" ]; then
+                ANSWER_FILE=$2
+                shift 2
+                continue
+            else
+                printf 'ERROR: "--answers" requires a non-empty option argument.\n' >&2
+                exit 1
+            fi
+            ;;
+        --answers=?*)
+            ANSWER_FILE=${1#*=}
+            ;;
+        --answers=)
+            printf 'ERROR: "--answers" requires a non-empty option argument.\n' >&2
+            exit 1
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -?*)
+            printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
+            ;;
+        *)
+            break
+    esac
+    shift
+done
+
+### Installation Steps
 # Install Pre-req for git
 if [ -f /usr/bin/apt-get ]; then
   apt-get install -y git
@@ -40,6 +89,17 @@ echo "role=st2express" > /etc/facter/facts.d/role.txt
 
 # Start up the st2express bootstrap
 ${PROJECT_ROOT}/script/bootstrap-os
+
+# If a user provides an answer file, put it in the right place
+if [ -n "$ANSWER_FILE" ]; then
+  # Get rid of any answers file that may be there.
+  if [ -f "${PROJECT_ROOT}/hieradata/answers.yaml" ]; then
+    rm -rf ${PROJECT_ROOT}/hieradata/answers.yaml
+  fi
+
+  # Put the answers file in the right place
+  cp $ANSWER_FILE ${PROJECT_ROOT}/hieradata/answers.yaml
+fi
 
 # Converge the system
 ${PROJECT_ROOT}/script/puppet-apply
