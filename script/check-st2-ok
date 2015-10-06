@@ -2,7 +2,10 @@
 
 DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
-. /etc/profile.d/st2.sh
+
+if [ -f /etc/profile.d/st2.sh ]; then
+  . /etc/profile.d/st2.sh
+fi
 
 ST2_PATH=`which st2`
 
