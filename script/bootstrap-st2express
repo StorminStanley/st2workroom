@@ -3,6 +3,11 @@
 
 PROJECT_ROOT=/opt/puppet
 
+if [[ $EUID != 0 ]]; then
+  echo 'StackStorm installation requires superuser access rights!'
+  echo 'Please run with sudo or from root user.'
+  exit 1
+fi
 
 # Install Pre-req for git
 if [ -f /usr/bin/apt-get ]; then
