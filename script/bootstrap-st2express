@@ -56,8 +56,6 @@ while :; do
     shift
 done
 
-exit 0
-
 ### Installation Steps
 # Install Pre-req for git
 if [ -f /usr/bin/apt-get ]; then
