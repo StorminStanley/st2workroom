@@ -46,7 +46,10 @@ if [ -x "${ST2_PATH}" ]; then
     echo ""
     echo "First time starting this machine up?"
     echo "Visit https://${ST2_IP}/setup to configure StackStorm"
-    echo ""
     echo "Otherwise, head to https://${ST2_FQDN} to access the WebUI"
+    echo ""
+    echo "If you would like to use the CLI interface, please log out and"
+    echo "login to your session again. This is necessary to properly source"
+    echo "StackStorm ENV variables"
   fi
 fi
