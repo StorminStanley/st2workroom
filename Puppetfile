@@ -31,6 +31,7 @@ mod 'ghoneycutt-nsswitch',           '1.2.1'
 mod 'ghoneycutt-common',             '1.3.0'
 mod 'ghoneycutt-facter',             '2.1.0'
 mod 'saz-rsyslog',                   '3.5.1'
+mod 'treydock-gpg_key',              '0.0.3'
 
 mod 'jfryman-hubot',
   :git => 'https://github.com/jfryman/evenup-hubot',

@@ -89,6 +89,7 @@ FORGE
     stahnma-epel (1.1.1)
     stankevich-python (1.7.15)
       puppetlabs-stdlib (>= 4.0.0)
+    treydock-gpg_key (0.0.3)
 
 GIT
   remote: https://github.com/jfryman/evenup-hubot
@@ -150,4 +151,4 @@ DEPENDENCIES
   saz-sudo (= 3.0.9)
   stackstorm-st2 (= 0.9.14)
   stankevich-python (= 1.7.15)
-
+  treydock-gpg_key (= 0.0.3)
