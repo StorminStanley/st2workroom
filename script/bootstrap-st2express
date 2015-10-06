@@ -3,6 +3,10 @@
 
 PROJECT_ROOT=/opt/puppet
 
+if [ $UID -ne 0 ]; then
+  echo "$0 must be run with root privileges"
+  exit 1
+fi
 
 # Install Pre-req for git
 if [ -f /usr/bin/apt-get ]; then
