@@ -201,29 +201,23 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
           rsync__exclude: ['.bundle/', 'vendor/bundle', 'artifacts', 'graphs',
                            'packer', '.tmp/', '.librarian/', 'src/', '.bundler',
                            '.puppetfile', 'bin', 'environments']
-        n.vm.provision 'shell', inline: '/opt/puppet/script/bootstrap-os'
-        n.vm.provision 'shell', inline: <<-EOF
-          # Skips the `git pull` step, since you're working out of it directly
-          export DISABLE_GIT=true
 
-          # Use the current branch by default as the envirnment. Override with environment=XXX
-          export ENV=current_working_directory
+        if config.has_key?('puppet') &&
+           config['puppet'].has_key?('facts') &&
+           config['puppet']['facts'].has_key?('role')
+          n.vm.provision 'shell', inline: <<-EOF
+            mkdir -p /etc/facter/facts.d
+            export FACTOR_ROLE=#{config['puppet']['facts']['role']}
+            echo "role=${FACTOR_ROLE}" > /etc/facter/facts.d/role.txt
+            cat /etc/facter/facts.d/role.txt
 
-          # Do not update Gems/Puppetfile/Environments each run
-          export CACHE_LIBRARIES=true
-
-          # Notify this is a development workspace
-          export WS_ENV=development
-
-          # Pass through Debug Commands
-          export DEBUG=#{ENV['DEBUG']}
-
-          # Collect facts for reference within puppet
-          #{config['puppet']['facts'].collect { |k,v| "export FACTER_#{k}=#{v}"}.join("\n")}
-          export FACTER_stack=#{@stack.stack}
-          #{ROOT_DIR}/script/puppet-apply
-          #{ROOT_DIR}/script/check-st2-ok
+            export DISABLE_GIT=true
+            /opt/puppet/script/bootstrap-os
+            /opt/puppet/script/puppet-apply
+            /opt/puppet/script/check-st2-ok
 EOF
+        end
+
       when 'ansible-local' then
         n.vm.provision 'shell', inline: '/vagrant/script/bootstrap-ansible'
         n.vm.provision 'shell', inline: <<-EOF
