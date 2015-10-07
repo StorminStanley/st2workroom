@@ -65,12 +65,12 @@ else
 fi
 
 # Setup Puppet environments
+mkdir -p $PROJECT_ROOT/environments
 if [ "$PUPPET_ENV" = "current_working_directory" ]; then
     # Make sure the current working directory is an environment too!
     # This is sort of a hack to support environments while developing
     # on the currently active branch in Vagrant or other environments
     echo "Setting up 'current_working_directory'..."
-    mkdir -p $PROJECT_ROOT/environments
     rsync $RSYNC_DEBUG_ARGS -arh --delete --exclude "environments" \
           --exclude "vendor" --exclude "artifacts" --exclude "graphs" \
           --exclude "packer" --exclude "script" --exclude ".git" \
