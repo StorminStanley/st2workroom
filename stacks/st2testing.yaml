@@ -1,0 +1,25 @@
+---
+# Defaults can be defined and reused with YAML anchors
+defaults: &defaults
+  domain: vagrant.stackstorm.net
+  memory: 2048
+  cpus: 1
+  puppet:
+    facts:
+      role: norole
+ubuntu1404:
+  <<: *defaults
+  hostname: ubuntu1404
+  box: puppetlabs/ubuntu-14.04-64-nocm
+centos6:
+  <<: *defaults
+  hostname: centos6
+  box: puppetlabs/centos-6.6-64-nocm
+centos7:
+  <<: *defaults
+  hostname: centos6
+  box: puppetlabs/centos-7.0-64-nocm
+debian8:
+  <<: *defaults
+  hostname: debian8
+  box: debian/jessie64
