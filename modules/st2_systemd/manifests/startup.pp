@@ -7,7 +7,13 @@ define st2_systemd::startup (
   $process_type = single
   ) {
 
-  file{"/etc/systemd/system/${st2_process}.service":
+  if $process_type = multi {
+    $type = "${process_type}@"
+  } else {
+    $type = ''
+  }
+  
+  file{"/etc/systemd/system/${st2_process}${type}.service":
     ensure => file,
     owner  => 'root',
     group  => 'root',
