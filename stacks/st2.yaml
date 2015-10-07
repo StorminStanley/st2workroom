@@ -21,7 +21,8 @@ st2dev:
 st2express:
   <<: *defaults
   hostname: st2express
-  box: stackstorm/st2express
+  # box: stackstorm/st2express
+  box: puppetlabs/centos-7.0-64-nocm
   ansible:
     playbook: playbooks/st2express.yaml
   puppet:
