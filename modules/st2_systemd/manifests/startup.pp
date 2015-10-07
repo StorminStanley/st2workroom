@@ -13,7 +13,7 @@ define st2_systemd::startup (
     group  => 'root',
     mode   => '0444',
     content => template("modules/st2_systemd/st2service_${process_type}.service.erb"),
-    notify  => Service["${st2_process"],
+    notify  => Service["${st2_process}"],
   }
 
 }
