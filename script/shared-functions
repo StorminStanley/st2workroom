@@ -5,12 +5,10 @@
 # DIR=$( dirname "$(readlink -f "$0")" )
 # . $DIR/shared-functions
 
-# Some OSes just don't have Ruby, so we gotta get it
-if [ -f /etc/profile.d/rvm.sh ]; then
-  . /etc/profile.d/rvm.sh
-fi
-if [ -f /usr/local/rvm/scripts/rvm ]; then
-  . /usr/local/rvm/scripts/rvm
+# On hosts that use RH Software collections, ensure that
+# the profile is up and ready to go to source ruby.
+if [ -f /opt/rh/ruby193/enable ]; then
+  . /opt/rh/ruby193/enable
 fi
 
 PROJECT_ROOT=/opt/puppet
@@ -42,9 +40,3 @@ elif [ "$OS" = "Linux" ]; then
     CODENAME=`/usr/bin/lsb_release -c -s`
 	fi
 fi
-
-install_rvm() {
-  curl -sSL https://rvm.io/mpapis.asc | sudo gpg2 --import -
-  curl -sSL https://get.rvm.io | bash -s stable --ruby=2.0.0
-  gem install bundler
-}
