@@ -752,8 +752,30 @@ class profile::st2server {
   # Let's add our nginx user to the `shadow` group, but do
   # it after the package manager has installed and setup
   # the user
+
+  group {'shadow':
+    ensure => 'present'
+  }
+
   user { $_nginx_daemon_user:
     groups  => ['shadow'],
+    require => Group['shadow']
+  }
+
+  # RHEL needs shadow-utils and some perms finagling to make PAM work
+  if $osfamily == 'RedHat' {
+    package {'shadow-utils':
+      ensure => 'present',
+      require => Group['shadow']
+      before => User["$_nginx_daemon_user"]
+    }
+
+    file {'/etc/shadow':
+      ensure => 'present',
+      group  => 'shadow'
+      require => Group['shadow']
+      before => User["$_nginx_daemon_user"]
+    }
   }
 
   pam::service { 'nginx':
