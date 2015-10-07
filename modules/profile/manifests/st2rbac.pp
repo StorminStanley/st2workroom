@@ -4,6 +4,8 @@
 class profile::st2rbac {
   $_enterprise_token = hiera('st2enterprise::token', undef)
 
+  $_root_cli_username = $::profile::st2server::_root_cli_username
+
   if $_enterprise_token {
     ini_setting { 'disable st2 rbac':
       ensure  => present,
