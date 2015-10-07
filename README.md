@@ -13,7 +13,7 @@ A full fledged development environment for working with StackStorm. This project
 
 ## Project Goals
 
-The goal of this project is to have a workspace that allows you to develop infrastructure in conjuction
+The goal of this project is to have a workspace that allows you to develop infrastructure in conjunction
 with StackStorm, or even work on the StackStorm product itself. This project also serves as a template
 to be used to begin building out and deploying infrastructure using your favorite Configuration Management
 tool in conjunction with StackStorm
