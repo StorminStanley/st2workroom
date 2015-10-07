@@ -8,12 +8,11 @@
 define adapter::st2_uwsgi_init (
   $subsystem = $name,
 ) {
+  include puppet::params
+  $_init_type = $puppet::params::init_type
+
   if ! defined(Class['uwsgi']) and ! defined(Class['::st2::profile::server']) {
     fail("[Adapter::St2_uwsgi_init[${name}]: This adapter can only be used in conjunction with 'uwsgi' and 'st2::profile::server")
-  }
-
-  if $::initsystem != 'upstart' or $::initsystem != 'systemd' {
-    fail("[Adapter::St2_uwsgi_init[${name}]: This adapter only supports systemd and upstart init systems, currently")
   }
 
   $_subsystem_map = {
@@ -27,18 +26,20 @@ define adapter::st2_uwsgi_init (
   }
   $_subsystem = $_subsystem_map[$subsystem]
 
-  if $::initsystem == 'upstart' {
+  if $_init_type == 'upstart' {
     $_init_file = "/etc/init/${_subsystem}.conf"
     $_template = $_subsystem ? {
       'mistral-api' => 'anchor.conf.erb',
       default       => 'init.conf.erb',
     }
-  } elsif $::initsystem == 'systemd' {
+  } elsif $_init_type == 'systemd' {
     $_init_file = "/etc/systemd/system/${_subsystem}.service"
     $_template = $_subsystem ? {
       'mistral-api' => 'anchor.service.erb',
       default       => 'init.service.erb',
     }
+  } else {
+    fail("[adapter::st2_uwsgi_init] Unable to setup adapter for Init System ${_init_type}. Not supported")
   }
 
   file { $_init_file:
