@@ -61,7 +61,7 @@ subjectAltName = @alt_names
 [ alt_names ]
 <%- dns = 0 -%>
 <%- ip = 0 -%>
-<%- @_server_names.sort.each do |name| -%>
+<%- @altnames.sort.each do |name| -%>
   <%- next if name == @_fqdn -%>
   <%- if IPAddress.valid?(name) then -%>
 IP.<%= ip =+ 1 %> = <%= name %>
