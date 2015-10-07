@@ -32,9 +32,8 @@ class profile::st2server {
   $_root_cli_gid = 2000
 
   # Syslog user differs based on distro
-  $syslog_user = $osfamily ? {
+  $syslog_user = $::osfamily ? {
     'Debian'  => 'syslog',
-    'Ubuntu'  => 'syslog',
     'RedHat'  => 'root'
   }
 
