@@ -29,11 +29,22 @@ define adapter::st2_gunicorn_init (
     'mistral'      => 'mistral-api',
   }
   $_subsystem = $_subsystem_map[$subsystem]
-  $_template = $_subsystem ? {
-    default       => 'init.conf.erb',
+
+  if $::initsystem == 'upstart' {
+    $_init_file = "/etc/init/${_subsystem}.conf"
+    $_template = $_subsystem ? {
+      'mistral-api' => 'anchor.conf.erb',
+      default       => 'init.conf.erb',
+    }
+  } elsif $::initsystem == 'systemd' {
+    $_init_file = "/etc/systemd/system/${_subsystem}.service"
+    $_template = $_subsystem ? {
+      'mistral-api' => 'anchor.service.erb',
+      default       => 'init.service.erb',
+    }
   }
 
-  file { "/etc/init/${_subsystem}.conf":
+  file { $_init_file:
     ensure  => file,
     owner   => 'root',
     group   => 'root',

@@ -12,8 +12,8 @@ define adapter::st2_uwsgi_init (
     fail("[Adapter::St2_uwsgi_init[${name}]: This adapter can only be used in conjunction with 'uwsgi' and 'st2::profile::server")
   }
 
-  if $::osfamily != 'Debian' {
-    fail("[Adapter::St2_uwsgi_init[${name}]: This adapter only supports Debian, currently")
+  if $::initsystem != 'upstart' or $::initsystem != 'systemd' {
+    fail("[Adapter::St2_uwsgi_init[${name}]: This adapter only supports systemd and upstart init systems, currently")
   }
 
   $_subsystem_map = {
@@ -26,12 +26,22 @@ define adapter::st2_uwsgi_init (
     'mistral'      => 'mistral-api',
   }
   $_subsystem = $_subsystem_map[$subsystem]
-  $_template = $_subsystem ? {
-    'mistral-api' => 'anchor.conf.erb',
-    default       => 'init.conf.erb',
+
+  if $::initsystem == 'upstart' {
+    $_init_file = "/etc/init/${_subsystem}.conf"
+    $_template = $_subsystem ? {
+      'mistral-api' => 'anchor.conf.erb',
+      default       => 'init.conf.erb',
+    }
+  } elsif $::initsystem == 'systemd' {
+    $_init_file = "/etc/systemd/system/${_subsystem}.service"
+    $_template = $_subsystem ? {
+      'mistral-api' => 'anchor.service.erb',
+      default       => 'init.service.erb',
+    }
   }
 
-  file { "/etc/init/${_subsystem}.conf":
+  file { $_init_file:
     ensure  => file,
     owner   => 'root',
     group   => 'root',
