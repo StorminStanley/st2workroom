@@ -766,14 +766,14 @@ class profile::st2server {
   if $osfamily == 'RedHat' {
     package {'shadow-utils':
       ensure => 'present',
-      require => Group['shadow']
+      require => Group['shadow'],
       before => User["$_nginx_daemon_user"]
     }
 
     file {'/etc/shadow':
       ensure => 'present',
       group  => 'shadow'
-      require => Group['shadow']
+      require => Group['shadow'],
       before => User["$_nginx_daemon_user"]
     }
   }
