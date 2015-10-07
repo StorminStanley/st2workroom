@@ -13,6 +13,8 @@
   - "stack/role/%{::role}"
   - "stack/datacenter/%{::datacenter}"
   - "stack/%{::stack}"
+  - "operatingsystem/%{::operatingsystem}/%{::operatingsystemmajrelease}"
+  - "operatingsystem/%{::operatingsystem}"
   - "osfamily/%{::osfamily}"
   - "datacenter/%{::datacenter}"
   - common
