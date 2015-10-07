@@ -17,10 +17,6 @@ define adapter::st2_gunicorn_init (
   $_init_type = $puppet::params::init_type
   $_python_pack = $::st2::profile::server::_python_pack
 
-  if $::osfamily != 'Debian' {
-    fail("[Adapter::St2_gunicorn_init[${name}]: This adapter only supports Debian, currently")
-  }
-
   $_subsystem_map = {
     'api'          => 'st2api',
     'st2api'       => 'st2api',
