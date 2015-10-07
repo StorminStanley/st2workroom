@@ -31,6 +31,13 @@ class profile::st2server {
   $_root_cli_uid = 2000
   $_root_cli_gid = 2000
 
+  # Syslog user differs based on distro
+  $syslog_user = $osfamily ? {
+    'Debian'  => 'syslog',
+    'Ubuntu'  => 'syslog',
+    'RedHat'  => 'root'
+  }
+
   # Need to determine the state of the Installer for purposes of User management.
   # Users and their corresponding SSH keys only need to be created during the
   # installer process. Any other management of these values may end up in
@@ -1039,7 +1046,7 @@ class profile::st2server {
     ensure  => 'directory',
     mode    => '0775',
     owner   => 'root',
-    group   => 'syslog',
+    group   => '$syslog_user',
     recurse => true,
   }
 }
