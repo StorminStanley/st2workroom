@@ -152,3 +152,4 @@ DEPENDENCIES
   stackstorm-st2 (= 0.9.14)
   stankevich-python (= 1.7.15)
   treydock-gpg_key (= 0.0.3)
+

@@ -1,8 +1,7 @@
 class profile::infrastructure {
-  $_fqdn = hiera('system::hostname', $::fqdn)
-  $_host_ip = hiera('system::ipaddress', $::ipaddress_eth0)
   $_packages = hiera('system::packages', [])
   $_offline_mode = hiera('system::offline_mode', false)
+  $_fqdn = hiera('system::hostname', $::fqdn)
 
   include ::ntp
   include ::profile::rsyslog
@@ -23,24 +22,6 @@ class profile::infrastructure {
   exec { "apply hostname":
     command => "/bin/hostname -F /etc/hostname",
     unless  => "/usr/bin/test `hostname` = `/bin/cat /etc/hostname`",
-  }
-
-  # Manage the entire /etc/hosts
-  # This is needed to ensure no dangling left-over host entries.
-  resources { 'host':
-    purge => true,
-  }
-  host { 'default v4 localhost':
-    ensure       => present,
-    name         => 'localhost.localdomain',
-    ip           => '127.0.0.1',
-    host_aliases => 'localhost',
-  }
-  host { 'default hostname v4':
-    ensure       => present,
-    name         => $_fqdn,
-    ip           => $_host_ip,
-    host_aliases => $::hostname,
   }
 
   # Set offline State

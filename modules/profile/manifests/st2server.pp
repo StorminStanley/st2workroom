@@ -14,7 +14,7 @@ class profile::st2server {
   $_user_ca_cert = hiera('st2::ssl_ca_cert', undef)
   $_hostname = hiera('system::hostname', $::hostname)
   $_fqdn = hiera('system::fqdn', $::fqdn)
-  $_host_ip = hiera('system::ipaddress', $::ipaddress_eth0)
+  $_host_ip = hiera('system::ipaddress', $::ipaddress)
   $_installer_workroom_mode = hiera('st2::installer_workroom_mode', '0660')
   $_st2auth_uwsgi_threads = hiera('st2::auth_uwsgi_threads', 10)
   $_st2auth_uwsgi_processes = hiera('st2::auth_uwsgi_processes', 1)
