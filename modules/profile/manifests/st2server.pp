@@ -1045,7 +1045,7 @@ class profile::st2server {
     ensure  => 'directory',
     mode    => '0775',
     owner   => 'root',
-    group   => '$syslog_user',
+    group   => $syslog_user,
     recurse => true,
   }
 }
