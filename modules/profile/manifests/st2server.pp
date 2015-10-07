@@ -665,17 +665,18 @@ class profile::st2server {
 
   # Configure NGINX WebUI on 443
   nginx::resource::vhost { 'st2webui':
-    ensure               => present,
-    listen_port          => '443',
-    ssl                  => true,
-    ssl_cert             => $_ssl_cert,
-    ssl_key              => $_ssl_key,
-    ssl_protocols        => $_ssl_protocols,
-    ssl_ciphers          => $_cipher_list,
-    server_name          => $_server_names,
-    add_header           => $_headers,
-    www_root             => '/opt/stackstorm/static/webui/',
-    subscribe            => File[$_ssl_cert],
+    ensure           => present,
+    listen_port      => '443',
+    ssl              => true,
+    ssl_cert         => $_ssl_cert,
+    ssl_key          => $_ssl_key,
+    ssl_protocols    => $_ssl_protocols,
+    ssl_ciphers      => $_cipher_list,
+    rewrite_to_https => true,
+    server_name      => $_server_names,
+    add_header       => $_headers,
+    www_root         => '/opt/stackstorm/static/webui/',
+    subscribe        => File[$_ssl_cert],
   }
 
   # Flag set in st2ctl to prevent the SimpleHTTPServer from starting. This
