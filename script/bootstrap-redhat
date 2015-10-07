@@ -4,14 +4,15 @@ set -e
 DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
-export PACKAGES="unzip curl git-core"
+PACKAGES=""
 
 if [ $MAJORVER = "6" ]; then
     EPEL="https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm"
-    BUILD_RUBY=true
+    RBEL="http://rbel.frameos.org/rbel6"
+    PACKAGES="rubygems glibc glibc-headers glibc-devel nscd nc git unzip curl"
 elif [ $MAJORVER = "7" ]; then
     EPEL="https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
-    PACKAGES="ruby ruby-devel rubygem-bundler $PACKAGES"
+    PACKAGES="ruby ruby-devel rubygem-bundler unzip curl git-core"
 fi
 
 # Install EPEL on RHEL boxen
@@ -19,8 +20,12 @@ if [ -n "$EPEL" ]; then
     rpm -ivh $EPEL
 fi
 
-#yum update -y
+if [ -n "$RBEL" ]; then
+    rpm -ivh $RBEL
+fi
 
+yum clean all
+yum clean dbcache
 yum groupinstall -y "Development Tools"
 
 if [ -n "$BUILD_RUBY" ]; then
