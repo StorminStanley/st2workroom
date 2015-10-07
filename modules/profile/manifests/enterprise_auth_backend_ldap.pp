@@ -21,30 +21,27 @@ class profile::enterprise_auth_backend_ldap(
   $version = '0.1.0',
 ) inherits st2 {
 
-  $_access_key = hiera('aws::access_key', undef)
-  $_secret_key = hiera('aws::secret_access_key', undef)
+  $_enterprise_token = hiera('st2enterprise::token', undef)
 
-  if $_access_key and $_secret_key {
-    if !defined(Class['s3cmd']){
-      class {'s3cmd':
-        aws_access_key => $_access_key,
-        aws_secret_key => $_secret_key,
-        gpg_passphrase => fqdn_rand_string(32),
-        owner          => 'root',
-      }
-    }
-    s3cmd::commands::get { "/tmp/st2_enterprise_auth_backend_ldap-${version}-py2.7.egg":
-      s3_object => "s3://st2enterprise/st2_enterprise_auth_backend_ldap-${version}-py2.7.egg",
-      cwd       => '/tmp',
-      owner     => 'root',
-      require   => Class['s3cmd'],
+  $distro_path = $osfamily ? {
+    'Debian' => "apt/${lsbdistcodename}",
+    'Ubuntu' => "apt/${lsbdistcodename}",
+    'RedHat' => "yum/el/${operatingsystemmajrelease}"
+  }
+
+  if $_enterprise_token {
+
+    wget::fetch { "Download enterprise auth ldap backend":
+      source      => "https://${_enterprise_token}:@downloads.stackstorm.net/st2enterprise/${distro_path}/auth_backends/st2_enterprise_auth_backend_ldap-${version}-py2.7.egg",
+      cache_dir   => '/var/cache/wget',
+      destination => "/tmp/st2_enterprise_auth_backend_ldap-${version}-py2.7.egg"
     }
   }
   
   exec { 'install auth backend':
     command => "easy_install /tmp/st2_enterprise_auth_backend_ldap-${version}-py2.7.egg",
     path    => '/usr/bin:/usr/sbin:/bin:/sbin',
-    require => S3cmd::Commands::Get["/tmp/st2_enterprise_auth_backend_ldap-${version}-py2.7.egg"]
+    require => Wget::Fetch["Download enterprise auth ldap backend"]
   }
 
 }

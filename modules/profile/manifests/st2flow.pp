@@ -33,24 +33,21 @@ class profile::st2flow(
     default => str2bool($::st2flow_bootstrapped),
   }
 
-  $_access_key = hiera('aws::access_key', undef)
-  $_secret_key = hiera('aws::secret_access_key', undef)
+  $_enterprise_token = hiera('st2enterprise::token', undef)
 
-  if $_access_key and $_secret_key {
-    if !defined(Class['s3cmd']){
-      class {'s3cmd':
-        aws_access_key => $_access_key,
-        aws_secret_key => $_secret_key,
-        gpg_passphrase => fqdn_rand_string(32),
-        owner          => 'root',
-      }
-    }
-    s3cmd::commands::get { '/tmp/flow.tar.gz':
-      s3_object => "s3://st2flow/flow-${st2::version}.tar.gz",
-      cwd       => '/tmp',
-      owner     => 'root',
-      require   => Class['s3cmd'],
-      before    => Exec['extract flow'],
+  $distro_path = $osfamily ? {
+    'Debian' => "apt/${lsbdistcodename}",
+    'Ubuntu' => "apt/${lsbdistcodename}",
+    'RedHat' => "yum/el/${operatingsystemmajrelease}"
+  }
+
+  if $_enterprise_token {
+
+    wget::fetch { 'Download Flow artifact':
+      source      => "https://${_enterprise_token}:@downloads.stackstorm.net/st2enterprise/${distro_path}/st2flow/flow-${st2::version}.tar.gz",
+      cache_dir   => '/var/cache/wget',
+      destination => '/tmp/flow.tar.gz',
+      before      => Exec['extract flow'],
     }
   }
   
