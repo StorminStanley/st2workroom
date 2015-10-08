@@ -7,35 +7,36 @@ if [ -f /etc/profile.d/st2.sh ]; then
   . /etc/profile.d/st2.sh
 fi
 
-ST2_PATH=`which st2`
+retry_message() {
+    ST2_DATACENTER=`facter datacenter`
+    if [ "$ST2_DATACENTER" = "vagrant" ]; then
+        KICK_COMMAND="vagrant provision st2enterprise"
+    else
+        KICK_COMMAND="update-system"
+    fi
 
-if [ -x "${ST2_PATH}" ]; then
-  ST2_IP=`facter st2_ip`
-  ST2_FQDN=`facter fqdn`
-  ST2_DATACENTER=`facter datacenter`
-  if [ "$ST2_DATACENTER" = "vagrant" ]; then
-      KICK_COMMAND="vagrant provision st2enterprise"
-  else
-      KICK_COMMAND="update-system"
-  fi
-
-  sudo st2 run core.local date &> /dev/null
-  ACTIONEXIT=$?
-  if [ ! "${ACTIONEXIT}" = 0 ]; then
     echo ""
     echo "OH NOES!"
     echo "Don't worry! Occasionally something goes wrong, and you just have"
-    echo "to kick the tires a bit. Try re-provisioning the workroom with"
+    echo "to kick the tires a bit. Try re-provisioning by executing the command:"
     echo ""
     echo "${KICK_COMMAND}"
     echo ""
     echo "If you don't happen to get the 'OK' after that, give us a shout!"
     echo "We don't want to leave you hanging! Come find your favorite way to"
-    echo "contact us (slack, irc, groups, or just plain ol email) at"
-    echo "http://stackstorm.com/contact"
+    echo "contact us, and we'll get you going faster than you can say..."
+    echo "AUTOMATE ALL THE THINGS!"
     echo
-    exit 2
-  else
+    echo "Email: support@stackstorm.com"
+    echo "IRC: irc.freenode.net/#stackstorm"
+    echo "Slack: http://stackstorm.com/community-signup"
+    echo
+}
+
+ok_message() {
+    ST2_IP=`facter st2_ip`
+    ST2_FQDN=`facter fqdn`
+
     echo ""
     echo ""
     echo ""
@@ -51,9 +52,31 @@ if [ -x "${ST2_PATH}" ]; then
     echo "First time starting this machine up?"
     echo "Visit https://${ST2_IP}/setup to configure StackStorm"
     echo "Otherwise, head to https://${ST2_FQDN} to access the WebUI"
-    echo ""
-    echo "If you would like to use the CLI interface, please log out and"
-    echo "login to your session again. This is necessary to properly source"
-    echo "StackStorm ENV variables"
+    echo
+    echo "If you would like to use the CLI interface, you will need"
+    echo "to ensure that StackStorm environment variables are properly"
+    echo "set. You can do this by logging out and logging back in, or"
+    echo "running the command:"
+    echo
+    echo ". /etc/profile.d/st2.sh"
+    echo
+    echo "Thanks for installing StackStorm! Come visit us in our Slack Channel"
+    echo "and tell us how it's going. We'd love to hear from you!"
+    echo "http://stackstorm.com/community-signup"
+}
+
+# Only run the check for StackStorm in the event that it actually exists
+if [ -f /usr/bin/st2 ]; then
+  sudo st2 run core.local date &> /dev/null
+  ACTIONEXIT=$?
+  if [ ! "${ACTIONEXIT}" = 0 ]; then
+    retry_message
+    exit 1 # Failure with the self-check
+  else
+    ok_message
+    exit 0
   fi
+else
+  retry_message
+  exit 2 # StackStorm is not installed on the system
 fi
