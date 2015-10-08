@@ -673,7 +673,8 @@ class profile::st2server {
   # Configure NGINX WebUI on 443
   nginx::resource::vhost { 'st2webui':
     ensure           => present,
-    listen_port      => '443',
+    listen_port      => '80',
+    ssl_port         => '443',
     ssl              => true,
     ssl_cert         => $_ssl_cert,
     ssl_key          => $_ssl_key,
