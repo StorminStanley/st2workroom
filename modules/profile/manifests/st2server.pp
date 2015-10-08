@@ -26,6 +26,7 @@ class profile::st2server {
   $_installer_lockdown = hiera('st2::installer::lockdown', false)
   $_installer_username = hiera('st2::installer::username', 'installer')
   $_installer_password = hiera('st2::installer::password', fqdn_rand_string(32))
+  $_enterprise_token = hiera('st2enterprise::token', undef)
   $_root_cli_username = 'root_cli'
   $_root_cli_password = fqdn_rand_string(32)
   $_root_cli_uid = 2000
@@ -35,6 +36,12 @@ class profile::st2server {
   $syslog_user = $::osfamily ? {
     'Debian'  => 'syslog',
     'RedHat'  => 'root'
+  }
+
+  # StackStorm Flow Setup. Only enable if there is a supplied token
+  $_flow_url = $_enterprise_token ? {
+    undef   => undef,
+    default => '/flow',
   }
 
   # Need to determine the state of the Installer for purposes of User management.
@@ -261,7 +268,7 @@ class profile::st2server {
   class { '::st2::profile::web':
     api_url  => "https://:${_st2api_port}",
     auth_url => "https://:${_st2auth_port}",
-    flow_url => '/flow',
+    flow_url => $_flow_url,
     require  => Class['::st2::profile::server'],
   }
 
