@@ -24,7 +24,7 @@ fi
 # If we're using the Software Collection Library, downlad the repo
 # and get it ready for usage
 if [ -n "$SCL" ]; then
-    wget $SCL -O /etc/yum.repos.d/scl_ruby193.repo
+    curl -o /etc/yum.repos.d/scl_ruby193.repo $SCL
 fi
 
 
