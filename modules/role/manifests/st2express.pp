@@ -7,10 +7,6 @@ class role::st2express {
   include ::st2migrations
 
   if $_enable_hubot {
-    if $::osfamily == 'RedHat' and $::operatingsystemmajrelease == '6' {
-      notify { 'Hubot is not supported on this platform': }
-    } else {
-      include ::profile::hubot
-    }
+    include ::profile::hubot
   }
 }
