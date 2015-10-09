@@ -28,27 +28,27 @@ define adapter::st2_uwsgi_init (
 
   case $_init_type {
     'upstart': {
-      $_init_file = "/etc/init/${_subsystem}.conf"
-      $_init_mode = '0644'
-      $_template = $_subsystem ? {
-        'mistral-api' => 'anchor.conf.erb',
-        default       => 'init.conf.erb',
-      }
-      'systemd': {
-        $_init_file = "/etc/systemd/system/${_subsystem}.service"
+        $_init_file = "/etc/init/${_subsystem}.conf"
         $_init_mode = '0644'
         $_template = $_subsystem ? {
-          'mistral-api' => 'anchor.service.erb',
-          default       => 'init.service.erb',
+          'mistral-api' => 'anchor.conf.erb',
+          default       => 'init.conf.erb',
         }
       }
-      'sysv': {
-        $_init_file = "/etc/init.d/${_subsystem}"
-        $_init_mode = '0755'
-        $_template = $_subsystem ? {
-          'mistral-api' => 'anchor.sysv.erb',
-          default       => 'init.sysv.erb',
-        }
+    'systemd': {
+      $_init_file = "/etc/systemd/system/${_subsystem}.service"
+      $_init_mode = '0644'
+      $_template = $_subsystem ? {
+        'mistral-api' => 'anchor.service.erb',
+        default       => 'init.service.erb',
+      }
+    }
+    'sysv': {
+      $_init_file = "/etc/init.d/${_subsystem}"
+      $_init_mode = '0755'
+      $_template = $_subsystem ? {
+        'mistral-api' => 'anchor.sysv.erb',
+        default       => 'init.sysv.erb',
       }
     }
     default: {

@@ -28,20 +28,34 @@ define adapter::st2_gunicorn_init (
   }
   $_subsystem = $_subsystem_map[$subsystem]
 
-  if $_init_type == 'upstart' {
-    $_init_file = "/etc/init/${_subsystem}.conf"
-    $_template = $_subsystem ? {
-      'mistral-api' => 'anchor.conf.erb',
-      default       => 'init.conf.erb',
+  case $_init_type {
+    'upstart': {
+      $_init_file = "/etc/init/${_subsystem}.conf"
+      $_init_mode = '0644'
+      $_template = $_subsystem ? {
+        'mistral-api' => 'anchor.conf.erb',
+        default       => 'init.conf.erb',
+      }
     }
-  } elsif $_init_type == 'systemd' {
-    $_init_file = "/etc/systemd/system/${_subsystem}.service"
-    $_template = $_subsystem ? {
-      'mistral-api' => 'anchor.service.erb',
-      default       => 'init.service.erb',
+    'systemd': {
+      $_init_file = "/etc/systemd/system/${_subsystem}.service"
+      $_init_mode = '0644'
+      $_template = $_subsystem ? {
+        'mistral-api' => 'anchor.service.erb',
+        default       => 'init.service.erb',
+      }
     }
-  } else {
-    fail("[adapter::st2_uwsgi_init] Unable to setup adapter for Init System ${_init_type}. Not supported")
+    'sysv': {
+      $_init_file = "/etc/init.d/${_subsystem}"
+      $_init_mode = '0755'
+      $_template = $_subsystem ? {
+        'mistral-api' => 'anchor.sysv.erb',
+        default       => 'init.sysv.erb',
+      }
+    }
+    default: {
+      fail("[adapter::st2_uwsgi_init] Unable to setup adapter for Init System ${_init_type}. Not supported")
+    }
   }
 
   file { $_init_file:

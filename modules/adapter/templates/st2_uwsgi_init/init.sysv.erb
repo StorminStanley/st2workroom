@@ -1,0 +1,115 @@
+#!/bin/sh
+# Init script for <%= @_subsystem %> WSGI Daemon
+# Maintained by StackStorm Engineering <opsadmin@stackstorm.com>
+# Implemented based on LSB Core 3.1:
+#   * Sections: 20.2, 20.3
+#
+### BEGIN INIT INFO
+# Provides:          st2api
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: StackStorm <%= @_subsystem %> service
+# Description:       StackStorm <%= @_subsystem %> service
+### END INIT INFO
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+export PATH
+
+name="<%= @_subsystem %>"
+program="/usr/bin/uwsgi"
+args="--ini /etc/uwsgi.d/<%= @_subsystem %>.ini"
+pidfile="/var/run/$name.pid"
+
+[ -r /etc/default/$name ] && . /etc/default/$name
+[ -r /etc/sysconfig/$name ] && . /etc/sysconfig/$name
+
+trace() {
+  logger -t "/etc/init.d/<%= @_subsystem %>" "$@"
+}
+
+emit() {
+  trace "$@"
+  echo "$@"
+}
+
+start() {
+  exec $program $args
+  echo $! > $pidfile
+  emit "$name started"
+  return 0
+}
+
+stop() {
+  # Try a few times to kill TERM the program
+  if status ; then
+    pid=$(cat "$pidfile")
+    trace "Killing $name (pid $pid) with SIGTERM"
+    kill -TERM $pid
+    # Wait for it to exit.
+    for i in 1 2 3 4 5 ; do
+      trace "Waiting $name (pid $pid) to die..."
+      status || break
+      sleep 1
+    done
+    if status ; then
+      emit "$name stop failed; still running."
+    else
+      emit "$name stopped."
+    fi
+  fi
+}
+
+status() {
+  if [ -f "$pidfile" ] ; then
+    pid=$(cat "$pidfile")
+    if ps -p $pid > /dev/null 2> /dev/null ; then
+      return 0
+    else
+      return 2 # program is dead but pid file exists
+    fi
+  else
+    return 3 # program is not running
+  fi
+}
+
+case "$1" in
+  start|stop|restart)
+    trace "Attempting '$1' on <%= @_subsystem %>"
+    ;;
+esac
+
+case "$1" in
+  start)
+    status
+    code=$?
+    if [ $code -eq 0 ]; then
+      emit "$name is already running"
+      exit $code
+    else
+      start
+      exit $?
+    fi
+    ;;
+  stop) stop ;;
+  status)
+    status
+    code=$?
+    if [ $code -eq 0 ] ; then
+      emit "$name is running"
+    else
+      emit "$name is not running"
+    fi
+    exit $code
+    ;;
+  restart)
+    stop && start
+    ;;
+  *)
+    echo "Usage: $SCRIPTNAME {start|stop|status|restart}" >&2
+    exit 3
+  ;;
+esac
+
+exit $?
