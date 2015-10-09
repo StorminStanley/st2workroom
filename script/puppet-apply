@@ -71,6 +71,11 @@ if [ "$PUPPET_ENV" = "current_working_directory" ]; then
     # This is sort of a hack to support environments while developing
     # on the currently active branch in Vagrant or other environments
     echo "Setting up 'current_working_directory'..."
+
+    ## Install Puppet libs
+    librarian-puppet install
+
+    ## Setup an environment for this project
     rsync $RSYNC_DEBUG_ARGS -arh --delete --exclude "environments" \
           --exclude "vendor" --exclude "artifacts" --exclude "graphs" \
           --exclude "packer" --exclude "script" --exclude ".git" \
