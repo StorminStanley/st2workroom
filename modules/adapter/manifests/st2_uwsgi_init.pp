@@ -44,11 +44,11 @@ define adapter::st2_uwsgi_init (
       }
     }
     'init': {
-      $_init_file = "/etc/init.d/${_subsystem}"
-      $_init_mode = '0755'
+      $_init_file = "/etc/init/${_subsystem}.conf"
+      $_init_mode = '0644'
       $_template = $_subsystem ? {
-        'mistral-api' => 'anchor.sysv.erb',
-        default       => 'init.sysv.erb',
+        'mistral-api' => 'anchor.conf.erb',
+        default       => 'init.conf.erb',
       }
     }
     default: {
