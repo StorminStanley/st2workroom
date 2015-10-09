@@ -19,5 +19,6 @@ class profile::python {
   }
 
   Exec['update-pip'] -> Python::Pip<||>
+  Class['::st2::profile::repos'] -> Class['::st2::profile::python']
 
 }

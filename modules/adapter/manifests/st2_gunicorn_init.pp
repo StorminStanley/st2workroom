@@ -62,7 +62,7 @@ define adapter::st2_gunicorn_init (
     ensure  => file,
     owner   => 'root',
     group   => 'root',
-    mode    => '0444',
+    mode    => $_init_mode,
     content => template("adapter/st2_gunicorn_init/${_template}"),
     notify  => Service[$_subsystem],
   }
