@@ -18,7 +18,9 @@ fi
 
 # Install EPEL on RHEL boxen
 if [ -n "$EPEL" ]; then
-    rpm -ivh $EPEL
+    if [ ! -f /etc/yum.repos.d/epel.repo ]; then
+        rpm -ivh $EPEL
+    fi
 fi
 
 # If we're using the Software Collection Library, downlad the repo
