@@ -8,8 +8,8 @@
 define adapter::st2_uwsgi_init (
   $subsystem = $name,
 ) {
-  include puppet::params
-  $_init_type = $puppet::params::init_type
+  include ::st2::params
+  $_init_type = $::st2::params::init_type
 
   if ! defined(Class['uwsgi']) and ! defined(Class['::st2::profile::server']) {
     fail("[Adapter::St2_uwsgi_init[${name}]: This adapter can only be used in conjunction with 'uwsgi' and 'st2::profile::server")

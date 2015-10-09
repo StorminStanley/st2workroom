@@ -13,8 +13,8 @@ define adapter::st2_gunicorn_init (
   $user,
   $group,
   ) {
-  include puppet::params
-  $_init_type = $puppet::params::init_type
+  include ::st2::params
+  $_init_type = $::st2::params::init_type
   $_python_pack = $::st2::profile::server::_python_pack
 
   $_subsystem_map = {
