@@ -17,6 +17,11 @@ centos6:
   <<: *defaults
   hostname: centos6
   box: puppetlabs/centos-6.6-64-nocm
+  puppet:
+    facts:
+      role: st2express
+  ssh:
+    pty: true
 centos7:
   <<: *defaults
   hostname: centos7
