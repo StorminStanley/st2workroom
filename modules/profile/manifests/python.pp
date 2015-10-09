@@ -15,6 +15,7 @@ class profile::python {
     command     => 'pip install -U pip',
     path        => '/usr/sbin:/usr/bin:/sbin:/bin',
     refreshonly => true,
+    require     => Class['::st2::profile::repos'],
   }
 
   Exec['update-pip'] -> Python::Pip<||>
