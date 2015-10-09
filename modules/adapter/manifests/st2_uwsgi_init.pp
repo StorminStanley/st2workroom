@@ -43,7 +43,7 @@ define adapter::st2_uwsgi_init (
         default       => 'init.service.erb',
       }
     }
-    'sysv': {
+    'init': {
       $_init_file = "/etc/init.d/${_subsystem}"
       $_init_mode = '0755'
       $_template = $_subsystem ? {
