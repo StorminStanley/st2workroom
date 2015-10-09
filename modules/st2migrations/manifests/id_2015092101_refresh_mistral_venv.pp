@@ -49,6 +49,7 @@ class st2migrations::id_2015092101_refresh_mistral_venv {
         '/bin',
         '/sbin',
       ],
+      require => Class['::postgresql'],
       before  => [
         Facter::Fact['st2migration_2015092101_refresh_mistral_venv'],
         Class['::st2::profile::mistral'],
