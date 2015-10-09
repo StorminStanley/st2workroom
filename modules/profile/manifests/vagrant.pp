@@ -31,4 +31,10 @@ class profile::vagrant {
     mode    => '0444',
     content => 'datacenter=vagrant',
   }
+
+  file_line { 'disable_tty':
+    path  => '/etc/sudoers',
+    match => 'requiretty',
+    line  => '## Defaults requiretty',
+  }
 }
