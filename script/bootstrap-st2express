@@ -104,6 +104,16 @@ fi
 # Converge the system
 ${PROJECT_ROOT}/script/puppet-apply
 
+# Place CLI config file with correct base_url for local user.
+CLI_CONFIG_RC_FILE_PATH=${HOME}/.st2/config
+if [ ! -f "${CLI_CONFIG_RC_FILE_PATH}" ]; then
+  bash -c "cat > ${CLI_CONFIG_RC_FILE_PATH}" <<EOL
+[general]
+base_url = https://127.0.0.1
+
+EOL
+fi
+
 # Check to see if StackStorm is running properly
 if [ -z "$SKIP_OK_CHECK" ]; then
   ${PROJECT_ROOT}/script/check-st2-ok
