@@ -607,18 +607,9 @@ class profile::st2server {
   if $_ca_cert {
     ## Add the certificate to the trusted root store to get rid
     ## of annoying issues related to self-signed or trusted
-    file { '/usr/local/share/ca-certificates/st2_ca.crt':
-      ensure  => file,
-      owner   => 'root',
-      mode    => '0444',
-      source  => $_ca_cert,
-      require => File[$_ca_cert],
-      notify  => Exec['update-ca-certificates'],
-    }
-    exec { 'update-ca-certificates':
-      command     => 'update-ca-certificates',
-      path        => '/usr/bin:/usr/sbin:/bin:/sbin',
-      refreshonly => true,
+    ca_cert::ca { 'StackStorm Auto-Generated Trusted CA':
+      ensure => 'trusted',
+      source => "file:${_ca_cer}",
     }
   }
 

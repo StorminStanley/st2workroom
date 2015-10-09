@@ -40,6 +40,8 @@ FORGE
       puppetlabs-stdlib (>= 1.0.0)
     maestrodev-git (1.0.6)
     nanliu-staging (1.0.2)
+    pcfens-ca_cert (1.1.1)
+      puppetlabs-stdlib (< 5.0.0, >= 3.0.0)
     puppetlabs-apt (1.8.0)
       puppetlabs-stdlib (>= 2.2.1)
     puppetlabs-concat (1.2.2)
@@ -99,8 +101,8 @@ GIT
 
 GIT
   remote: https://github.com/stackstorm/puppet-st2
-  ref: sysv-scripts
-  sha: 286c849dea4eb1643170e477ef9bfac897da2f7a
+  ref: 8979d20b01cab01302958681a68f4462a4afe47f
+  sha: 8979d20b01cab01302958681a68f4462a4afe47f
   specs:
     stackstorm-st2 (0.9.15)
       garethr-erlang (>= 0.3.0)
@@ -141,6 +143,7 @@ DEPENDENCIES
   maestrodev-git (= 1.0.6)
   maestrodev-wget (>= 0)
   nanliu-staging (= 1.0.2)
+  pcfens-ca_cert (= 1.1.1)
   puppetlabs-apt (= 1.8.0)
   puppetlabs-concat (= 1.2.2)
   puppetlabs-gcc (= 0.2.0)
