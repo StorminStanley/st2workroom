@@ -1,5 +1,6 @@
 class profile::python {
   include ::st2::profile::python
+  include ::st2::profile::repos
 
   file { '/etc/facter/facts.d/pip_upgrade_20150902.txt':
     ensure  => file,
