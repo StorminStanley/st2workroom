@@ -26,5 +26,7 @@ class profile::python {
       path    => '/usr/bin/virtualenv-2.7',
       require => Class['::st2::profile::python'],
     }
+
+    Alternatives['virtualenv'] -> Python::Virtualenv<||>
   }
 }
