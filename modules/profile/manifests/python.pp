@@ -21,4 +21,10 @@ class profile::python {
   Exec['update-pip'] -> Python::Pip<||>
   Class['::st2::profile::repos'] -> Class['::st2::profile::python']
 
+  if $::osfamily == 'RedHad' and $::operatingsystemrelease == '6' {
+    alternatives { 'virtualenv':
+      path    => '/usr/bin/virtualenv-2.7',
+      require => Class['::st2::profile::python'],
+    }
+  }
 }
