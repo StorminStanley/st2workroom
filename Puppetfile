@@ -33,6 +33,7 @@ mod 'ghoneycutt-facter',             '2.1.0'
 mod 'saz-rsyslog',                   '3.5.1'
 mod 'treydock-gpg_key',              '0.0.3'
 mod 'pcfens-ca_cert',                '1.1.1'
+mod 'adrien-alternatives',           '0.3.0'
 
 mod 'jfryman-hubot',
   :git => 'https://github.com/jfryman/evenup-hubot',
