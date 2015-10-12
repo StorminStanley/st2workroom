@@ -1,6 +1,4 @@
 #!/usr/bin/env sh
-set -e
-
 DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
@@ -8,9 +6,8 @@ PACKAGES=""
 
 if [ $MAJORVER = "6" ]; then
     EPEL="https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm"
-    PACKAGES="scl-utils ruby193 ruby193-ruby-devel glibc glibc-headers glibc-devel nscd nc git unzip curl python27 python27-pip python27-virtualenv python27-devel augeas augeas-devel"
-    SCL="http://linuxsoft.cern.ch/cern/scl/slc6-scl.repo"
-
+    PACKAGES="scl-utils ruby193 ruby193-ruby-devel glibc glibc-headers glibc-devel nscd nc git unzip curl python27 python27-pip python27-virtualenv python27-devel augeas"
+    SCL="centos-release-SCL"
 elif [ $MAJORVER = "7" ]; then
     EPEL="https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
     PACKAGES="ruby ruby-devel rubygem-bundler unzip curl git-core"
@@ -26,7 +23,7 @@ fi
 # If we're using the Software Collection Library, downlad the repo
 # and get it ready for usage
 if [ -n "$SCL" ]; then
-    curl -o /etc/yum.repos.d/scl_ruby193.repo $SCL
+    yum install -y $SCR
 fi
 
 
