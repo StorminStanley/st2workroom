@@ -96,6 +96,6 @@ fi
 ## Run Puppet
 puppet apply $PUPPET_DEBUG_ARGS --environment $PUPPET_ENV    \
     --config $PROJECT_ROOT/puppet.conf $PUPPET_COLOR_ARGS    \
-    $PROJECT_ROOT/environments/$PUPPET_ENV/manifests $@ 2>&1 | \
-      sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"   | \ # Strip Special Colors for Log File
-      tee -a $LOG_FILE
+    $PROJECT_ROOT/environments/$PUPPET_ENV/manifests $@ 2>&1 \
+      | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" \
+      | tee -a $LOG_FILE
