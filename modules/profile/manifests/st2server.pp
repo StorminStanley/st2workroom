@@ -1051,4 +1051,11 @@ class profile::st2server {
     group   => $syslog_user,
     recurse => true,
   }
+
+  if $osfamily == 'RedHat' {
+    exec { 'upgrade_six':
+      path => '/bin:/usr/bin:/usr/local/bin:/sbin',
+      command => 'pip install -U six'
+    }
+  }
 }
