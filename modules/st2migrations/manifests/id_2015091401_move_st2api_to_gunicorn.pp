@@ -1,4 +1,4 @@
-# Migration: Move pecan server to uWSGI
+# Migration: Move pecan server to gunicorn
 #
 # Previous iterations of `st2workroom` were built
 # with st2api being controlled via st2ctl. This
@@ -9,11 +9,12 @@
 class st2migrations::id_2015091401_move_st2api_to_gunicorn {
   $_rundir = $::st2migrations::exec_dir
 
-  if ! $::st2migration_2015091401_move_st2api_to_uwsgi {
+  if ! $::st2migration_2015091401_move_st2api_to_gunicorn {
     $_shell_script = "#!/usr/bin/env sh
-    service st2api stop
-    ps ax | grep st2api | grep python | awk '{print \$1}' | xargs kill -9
-    ps ax | grep st2api | grep uwsgi | awk '{print \$1}' | xargs kill -9"
+    service st2api stop || true
+    ps ax | grep st2api | grep python | awk '{print \$1}' | xargs kill -9 || true > /dev/null 2>&1
+    ps ax | grep st2api | grep gunicorn | awk '{print \$1}' | xargs kill -9 || true > /dev/null 2>&1
+    "
 
     file { "${_rundir}/kill_st2api_standalone":
       ensure  => file,
@@ -32,11 +33,11 @@ class st2migrations::id_2015091401_move_st2api_to_gunicorn {
         '/sbin',
       ],
       before  => [
-        Facter::Fact['st2migration_2015091401_move_st2api_to_uwsgi'],
+        Facter::Fact['st2migration_2015091401_move_st2api_to_gunicorn'],
         Service['nginx'],
       ],
     }
-    facter::fact { 'st2migration_2015091401_move_st2api_to_uwsgi':
+    facter::fact { 'st2migration_2015091401_move_st2api_to_gunicorn':
       value => 'completed',
     }
 
