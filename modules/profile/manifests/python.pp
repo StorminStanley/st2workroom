@@ -26,6 +26,10 @@ class profile::python {
       path    => '/usr/bin/virtualenv-2.7',
       require => Class['::st2::profile::python'],
     }
+    alternatives { 'pip':
+      path    => '/usr/bin/pip-2.7',
+      require => Class['::st2::profile::python'],
+    }
 
     Alternatives['virtualenv'] -> Exec<| tag == 'virtualenv' |>
   }
