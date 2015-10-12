@@ -49,7 +49,7 @@ class profile::python {
       require => Class['::st2::profile::python'],
     }
 
-    alternative_entry {'/usr/bin/virtualenv2.7':
+    alternative_entry {'/usr/bin/virtualenv-2.7':
       ensure   => present,
       altlink  => '/usr/bin/virtualenv',
       altname  => 'virtualenv',
