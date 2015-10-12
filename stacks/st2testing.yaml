@@ -22,6 +22,8 @@ centos6:
       role: st2express
   ssh:
     pty: true
+  private_networks:
+    - 172.168.50.13
 centos7:
   <<: *defaults
   hostname: centos7
@@ -31,7 +33,11 @@ centos7:
       role: st2express
   ssh:
     pty: true
+  private_networks:
+    - 172.168.50.14
 debian8:
   <<: *defaults
   hostname: debian8
   box: debian/jessie64
+  private_networks:
+    - 172.168.50.15
