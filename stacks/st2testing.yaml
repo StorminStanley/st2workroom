@@ -26,6 +26,11 @@ centos7:
   <<: *defaults
   hostname: centos7
   box: puppetlabs/centos-7.0-64-nocm
+  puppet:
+    facts:
+      role: st2express
+  ssh:
+    pty: true
 debian8:
   <<: *defaults
   hostname: debian8
