@@ -32,6 +32,9 @@ mod 'ghoneycutt-common',             '1.3.0'
 mod 'ghoneycutt-facter',             '2.1.0'
 mod 'saz-rsyslog',                   '3.5.1'
 mod 'treydock-gpg_key',              '0.0.3'
+mod 'pcfens-ca_cert',                '1.1.1'
+mod 'adrien-alternatives',           '0.3.0'
+mod 'rodjek-logrotate',              '1.1.1'
 
 mod 'jfryman-hubot',
   :git => 'https://github.com/jfryman/evenup-hubot',
@@ -45,6 +48,9 @@ mod 'maestrodev-wget',
   :git => 'https://github.com/maestrodev/puppet-wget',
   :ref => 'master'
 
-mod 'stackstorm-st2',                '0.9.14'
+#mod 'stackstorm-st2',                '0.9.14'
+mod 'stackstorm-st2',
+  :git => 'https://github.com/stackstorm/puppet-st2',
+  :ref => '8979d20b01cab01302958681a68f4462a4afe47f'
 
 mod 'ilanco-s3cmd', '0.2.1'

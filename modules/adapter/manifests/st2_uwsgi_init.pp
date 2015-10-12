@@ -8,8 +8,8 @@
 define adapter::st2_uwsgi_init (
   $subsystem = $name,
 ) {
-  include puppet::params
-  $_init_type = $puppet::params::init_type
+  include ::st2::params
+  $_init_type = $::st2::params::init_type
 
   if ! defined(Class['uwsgi']) and ! defined(Class['::st2::profile::server']) {
     fail("[Adapter::St2_uwsgi_init[${name}]: This adapter can only be used in conjunction with 'uwsgi' and 'st2::profile::server")
@@ -28,13 +28,13 @@ define adapter::st2_uwsgi_init (
 
   case $_init_type {
     'upstart': {
-      $_init_file = "/etc/init/${_subsystem}.conf"
-      $_init_mode = '0644'
-      $_template = $_subsystem ? {
-        'mistral-api' => 'anchor.conf.erb',
-        default       => 'init.conf.erb',
+        $_init_file = "/etc/init/${_subsystem}.conf"
+        $_init_mode = '0644'
+        $_template = $_subsystem ? {
+          'mistral-api' => 'anchor.conf.erb',
+          default       => 'init.conf.erb',
+        }
       }
-    }
     'systemd': {
       $_init_file = "/etc/systemd/system/${_subsystem}.service"
       $_init_mode = '0644'
@@ -43,12 +43,12 @@ define adapter::st2_uwsgi_init (
         default       => 'init.service.erb',
       }
     }
-    'sysv': {
-      $_init_file = "/etc/init.d/${_subsystem}"
-      $_init_mode = '0755'
+    'init': {
+      $_init_file = "/etc/init/${_subsystem}.conf"
+      $_init_mode = '0644'
       $_template = $_subsystem ? {
-        'mistral-api' => 'anchor.sysv.erb',
-        default       => 'init.sysv.erb',
+        'mistral-api' => 'anchor.conf.erb',
+        default       => 'init.conf.erb',
       }
     }
     default: {

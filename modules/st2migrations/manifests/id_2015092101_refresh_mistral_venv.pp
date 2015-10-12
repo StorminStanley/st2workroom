@@ -26,8 +26,8 @@ class st2migrations::id_2015092101_refresh_mistral_venv {
       rm -rf /etc/mistral/database_setup.lock
     fi
 
-    sudo -u postgres psql -c \"DROP DATABASE IF EXISTS mistral;\"
-    sudo -u postgres psql -c \"DROP USER IF EXISTS mistral;\"
+    su postgres -c 'psql -c \"DROP DATABASE IF EXISTS mistral;\"'
+    su postgres -c 'psql -c \"DROP USER IF EXISTS mistral;\"'
     "
 
     file { "${_rundir}/refresh_mistral_venv":
@@ -49,6 +49,7 @@ class st2migrations::id_2015092101_refresh_mistral_venv {
         '/bin',
         '/sbin',
       ],
+      require => Class['::postgresql::server'],
       before  => [
         Facter::Fact['st2migration_2015092101_refresh_mistral_venv'],
         Class['::st2::profile::mistral'],
