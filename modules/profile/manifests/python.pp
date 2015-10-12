@@ -25,16 +25,42 @@ class profile::python {
   # from IUS to provide Python 2.7. The following sets up latest Python
   # to be the System Python
   if $::osfamily == 'RedHat' and $::operatingsystemmajrelease == '6' {
+    alternative_entry {'/usr/bin/python2.7':
+      ensure   => present,
+      altlink  => '/usr/bin/python',
+      altname  => 'python',
+      priority => 10,
+      require  => Class['::st2::profile::python'],
+    }
     alternatives { 'python':
+      ensure  => present,
       path    => '/usr/bin/python2.7',
       require => Class['::st2::profile::python'],
     }
-    alternatives { 'virtualenv':
-      path    => '/usr/bin/virtualenv-2.7',
-      require => Class['::st2::profile::python'],
+
+    alternative_entry {'/usr/bin/pip2.7':
+      ensure   => present,
+      altlink  => '/usr/bin/pip',
+      altname  => 'pip',
+      priority => 10,
+      require  => Class['::st2::profile::python'],
     }
     alternatives { 'pip':
+      ensure  => present,
       path    => '/usr/bin/pip2.7',
+      require => Class['::st2::profile::python'],
+    }
+
+    alternative_entry {'/usr/bin/virtualenv2.7':
+      ensure   => present,
+      altlink  => '/usr/bin/virtualenv',
+      altname  => 'virtualenv',
+      priority => 10,
+      require  => Class['::st2::profile::python'],
+    }
+    alternatives { 'virtualenv':
+      ensure  => present,
+      path    => '/usr/bin/virtualenv-2.7',
       require => Class['::st2::profile::python'],
     }
 
