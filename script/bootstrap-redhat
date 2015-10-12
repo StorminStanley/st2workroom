@@ -8,7 +8,7 @@ PACKAGES=""
 
 if [ $MAJORVER = "6" ]; then
     EPEL="https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm"
-    PACKAGES="scl-utils ruby193 ruby193-ruby-devel glibc glibc-headers glibc-devel nscd nc git unzip curl python27 python27-pip python27-virtualenv python27-devel"
+    PACKAGES="scl-utils ruby193 ruby193-ruby-devel glibc glibc-headers glibc-devel nscd nc git unzip curl python27 python27-pip python27-virtualenv python27-devel augeas augeas-devel"
     SCL="http://people.redhat.com/bkabrda/scl_ruby193.repo"
 
 elif [ $MAJORVER = "7" ]; then
