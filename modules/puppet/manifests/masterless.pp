@@ -55,7 +55,6 @@ class puppet::masterless(
 
   # Ensure puppet logs are kept logrotating properly
   logrotate::rule { 'puppet-masterless':
-    path   => '/var/log/puppet.log',
-    size   => '1m',
+    path => '/var/log/puppet.log',
   }
 }
