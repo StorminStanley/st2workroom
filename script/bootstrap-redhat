@@ -6,7 +6,11 @@ PACKAGES=""
 
 if [ $MAJORVER = "6" ]; then
     EPEL="https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm"
-    PACKAGES="scl-utils ruby193 ruby193-ruby-devel glibc glibc-headers glibc-devel nscd nc git unzip curl python27 python27-pip python27-virtualenv python27-devel augeas"
+    TOOL_PACKAGES="nscd nc git unzip curl scl-utils"
+    RUBY_PACKAGES="ruby193 ruby193-ruby-devel"
+    PYTHON_PACKAGES="python27 python27-pip python27-virtualenv python27-devel"
+    AUGEAS_PACKAGES="augeas augeas-devel"
+    PACKAGES="$TOOL_PACKAGES $RUBY_PACKAGES $PYTHON_PACKAGES $AUGEAS_PACKAGES"
     SCL="centos-release-SCL"
 elif [ $MAJORVER = "7" ]; then
     EPEL="https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
@@ -21,7 +25,8 @@ if [ -n "$EPEL" ]; then
 fi
 
 # If we're using the Software Collection Library, downlad the repo
-# and get it ready for usage
+# and get it ready for usage. Needs to happen before other packages
+# attempt to install
 if [ -n "$SCL" ]; then
     yum install -y $SCL
 fi
