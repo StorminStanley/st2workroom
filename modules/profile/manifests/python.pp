@@ -33,7 +33,6 @@ class profile::python {
       require  => Class['::st2::profile::python'],
     }
     alternatives { 'python':
-      ensure  => present,
       path    => '/usr/bin/python2.7',
       require => Class['::st2::profile::python'],
     }
@@ -46,7 +45,6 @@ class profile::python {
       require  => Class['::st2::profile::python'],
     }
     alternatives { 'pip':
-      ensure  => present,
       path    => '/usr/bin/pip2.7',
       require => Class['::st2::profile::python'],
     }
@@ -59,7 +57,6 @@ class profile::python {
       require  => Class['::st2::profile::python'],
     }
     alternatives { 'virtualenv':
-      ensure  => present,
       path    => '/usr/bin/virtualenv-2.7',
       require => Class['::st2::profile::python'],
     }
