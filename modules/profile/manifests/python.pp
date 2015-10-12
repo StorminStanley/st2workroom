@@ -27,6 +27,6 @@ class profile::python {
       require => Class['::st2::profile::python'],
     }
 
-    Alternatives['virtualenv'] -> Python::Virtualenv<||>
+    Alternatives['virtualenv'] -> Exec<| tag == 'virtualenv' |>
   }
 }
