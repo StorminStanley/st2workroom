@@ -52,4 +52,11 @@ class puppet::masterless(
     ensure => link,
     target => "${::settings::confdir}/script/puppet-apply",
   }
+
+  # Ensure puppet logs are kept logrotating properly
+  logrotate::rule { 'puppet-masterless':
+    path   => '/var/log/puppet.log',
+    rotate => 5,
+    size   => '1m',
+  }
 }
