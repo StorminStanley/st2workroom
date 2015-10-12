@@ -41,3 +41,14 @@ if [ -n "$BUILD_RUBY" ]; then
 fi
 
 yum install -y $PACKAGES
+
+
+# Resource the world, because we may have made an entirely new one!
+. $DIR/shared-functions
+
+# Required since the version of ruby inclued with the OS does not
+# have an OS package we can grab. Too old, and leveraging SCL for
+# ruby.
+if [ "$DIST" = "RedHat" ] && [ "$MAJORVER" = "6" ]; then
+    gem install ruby-augeas --no-ri --no-rdoc
+fi
