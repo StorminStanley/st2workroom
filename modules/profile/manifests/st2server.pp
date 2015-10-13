@@ -341,7 +341,7 @@ class profile::st2server {
     service_enable      => false,
     install_python_dev  => false,
     install_pip         => false,
-    manage_Service_file => false,
+    manage_service_file => false,
   }
 
   python::pip { 'uwsgi':
