@@ -21,6 +21,8 @@ bin/*
 artifacts/*
 .vagrant/*
 src/*
+.DS_Store
+*.swp
 
 # Puppet modules
 modules/apt
