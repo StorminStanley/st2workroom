@@ -179,8 +179,14 @@ class profile::st2server {
     default => true,
   }
 
+  $_nginx_package = $osfamily ? {
+    'Debian'  => 'nginx-extras',
+    'RedHat'  => 'nginx',
+    'default' => 'nginx'
+  }
+
   class { '::nginx':
-    package_name      => 'nginx-extras',
+    package_name      => "${_nginx_package}",
     service_restart   => '/etc/init.d/nginx configtest',
     configtest_enable => $_nginx_configtest,
   }
@@ -655,12 +661,30 @@ class profile::st2server {
   #
   # This is a pretty tight coupling to the st2 puppet module for right now.
   # TODO Fix when it makes sense and it has a home.
-  file { '/etc/init/st2web.conf':
-    ensure  => file,
-    owner   => 'root',
-    group   => 'root',
-    mode    => '0444',
-    source  => 'puppet:///modules/st2/etc/init/st2actionrunner.conf',
+
+  case $osfamily {
+    'Debian': {
+      file { '/etc/init/st2web.conf':
+        ensure  => file,
+        owner   => 'root',
+        group   => 'root',
+        mode    => '0444',
+        source  => 'puppet:///modules/st2/etc/init/st2actionrunner.conf',
+      }
+    }
+    'RedHat': {
+      if $operatingsystemmajrelease == '7' {
+        notify {'we need a st2web dummy systemd service': }
+        #file { '/etc/systemd/system/st2web.service':
+        #  ensure => file,
+        #  owner  => 'root',
+        #  group  => 'root',
+        #  mode   => '0444',
+        #}
+      } elsif $operatingsystemmajrelease == '6' {
+        notify {'we need a st2web dummy sysV service': }
+      }
+    }      
   }
 
   # Configure NGINX WebUI on 443
@@ -1052,10 +1076,4 @@ class profile::st2server {
     recurse => true,
   }
 
-  if $osfamily == 'RedHat' {
-    exec { 'upgrade_six':
-      path => '/bin:/usr/bin:/usr/local/bin:/sbin',
-      command => 'pip install -U six'
-    }
-  }
 }
