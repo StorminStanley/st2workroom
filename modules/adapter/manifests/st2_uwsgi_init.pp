@@ -44,11 +44,11 @@ define adapter::st2_uwsgi_init (
       }
     }
     'init': {
-      $_init_file = "/etc/init/${_subsystem}.conf"
-      $_init_mode = '0644'
+      $_init_file = "/etc/init.d/${_subsystem}"
+      $_init_mode = '0755'
       $_template = $_subsystem ? {
-        'mistral-api' => 'anchor.conf.erb',
-        default       => 'init.conf.erb',
+        'mistral-api' => 'anchor.sysv.erb',
+        default       => 'init.sysv.erb',
       }
     }
     default: {
@@ -74,5 +74,5 @@ define adapter::st2_uwsgi_init (
   }
 
   # Subscribe to Uwsgi Apps of the same name.
-  File["/etc/uwsgi.d/${_subsystem}.ini"] ~> Service[$_subsystem]
+  File[$_init_file] ~> Service[$_subsystem]
 }
