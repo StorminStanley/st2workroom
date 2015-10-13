@@ -1,8 +1,8 @@
 class profile::uwsgi {
 
   # Get upstream provider from StackStorm module
-  include st2::profile
-  $_init_type = $::st2::profile::init_type
+  include st2::params
+  $_init_type = $::st2::params::init_type
 
   # Manage uwsgi with module, but install it using python pack
   # There is an odd error with installing directly via
