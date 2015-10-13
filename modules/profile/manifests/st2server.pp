@@ -335,12 +335,13 @@ class profile::st2server {
   # adapter::st2_uwsgi_service to start uwsgi services that
   # will be proxied to nginx.
   class { '::uwsgi':
-    install_package    => false,
-    log_rotate         => 'yes',
-    service_ensure     => false,
-    service_enable     => false,
-    install_python_dev => false,
-    install_pip        => false,
+    install_package     => false,
+    log_rotate          => 'yes',
+    service_ensure      => false,
+    service_enable      => false,
+    install_python_dev  => false,
+    install_pip         => false,
+    manage_Service_file => false,
   }
 
   python::pip { 'uwsgi':
