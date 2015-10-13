@@ -54,4 +54,5 @@ class profile::infrastructure {
   facter::fact { 'system_offline_mode':
     value => $_offline_mode,
   }
+
 }

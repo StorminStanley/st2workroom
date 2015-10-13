@@ -179,8 +179,14 @@ class profile::st2server {
     default => true,
   }
 
+  $_nginx_package = $osfamily ? {
+    'Debian'  => 'nginx-extras',
+    'RedHat'  => 'nginx',
+    'default' => 'nginx'
+  }
+
   class { '::nginx':
-    package_name      => 'nginx-extras',
+    package_name      => "${_nginx_package}",
     service_restart   => '/etc/init.d/nginx configtest',
     configtest_enable => $_nginx_configtest,
   }
@@ -329,12 +335,14 @@ class profile::st2server {
   # adapter::st2_uwsgi_service to start uwsgi services that
   # will be proxied to nginx.
   class { '::uwsgi':
-    install_package    => false,
-    log_rotate         => 'yes',
-    service_ensure     => false,
-    service_enable     => false,
-    install_python_dev => false,
-    install_pip        => false,
+    install_package     => false,
+    log_rotate          => 'yes',
+    service_ensure      => false,
+    service_enable      => false,
+    service_provider    => $::st2::params::init_type,
+    install_python_dev  => false,
+    install_pip         => false,
+    manage_service_file => false,
   }
 
   python::pip { 'uwsgi':
@@ -655,12 +663,30 @@ class profile::st2server {
   #
   # This is a pretty tight coupling to the st2 puppet module for right now.
   # TODO Fix when it makes sense and it has a home.
-  file { '/etc/init/st2web.conf':
-    ensure  => file,
-    owner   => 'root',
-    group   => 'root',
-    mode    => '0444',
-    source  => 'puppet:///modules/st2/etc/init/st2actionrunner.conf',
+
+  case $osfamily {
+    'Debian': {
+      file { '/etc/init/st2web.conf':
+        ensure  => file,
+        owner   => 'root',
+        group   => 'root',
+        mode    => '0444',
+        source  => 'puppet:///modules/st2/etc/init/st2actionrunner.conf',
+      }
+    }
+    'RedHat': {
+      if $operatingsystemmajrelease == '7' {
+        notify {'we need a st2web dummy systemd service': }
+        #file { '/etc/systemd/system/st2web.service':
+        #  ensure => file,
+        #  owner  => 'root',
+        #  group  => 'root',
+        #  mode   => '0444',
+        #}
+      } elsif $operatingsystemmajrelease == '6' {
+        notify {'we need a st2web dummy sysV service': }
+      }
+    }      
   }
 
   # Configure NGINX WebUI on 443
@@ -1051,4 +1077,5 @@ class profile::st2server {
     group   => $syslog_user,
     recurse => true,
   }
+
 }

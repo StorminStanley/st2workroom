@@ -5,7 +5,7 @@ After=network.target
 [Service]
 Type=simple
 Environment="PYTHONPATH=<%= @_python_pack %>/<%= @_subsystem %>/<%= @_subsystem %>"
-ExecStart=gunicorn_pecan <%= @_python_pack %>/<%= @_subsystem %>/gunicorn_config.py \
+ExecStart=/bin/gunicorn_pecan <%= @_python_pack %>/<%= @_subsystem %>/gunicorn_config.py \
       -k eventlet -b unix:<%= @socket %> --threads <%= @threads %> \
       --workers <%= @workers %> -u <%= @user %> -g <%= @group %>
 TimeoutSec=60
