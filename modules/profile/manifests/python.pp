@@ -21,6 +21,22 @@ class profile::python {
   Exec['update-pip'] -> Python::Pip<||>
   Class['::st2::profile::repos'] -> Class['::st2::profile::python']
 
+  if $osfamily == 'RedHat' {
+    file { '/etc/facter/facts.d/six_upgrade_20151012.txt':
+      ensure  => file,
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0644',
+      content => 'six_upgrade_20151012=true',
+      notify  => Exec['update-six'],
+    }
+    exec { 'update-six':
+      command     => 'pip install -U pip',
+      path        => '/usr/sbin:/usr/bin:/sbin:/bin',
+      refreshonly => true,
+    }
+  }
+
   # RedHad 6 uses Python 2.6 by default, and we are pulling upstream
   # from IUS to provide Python 2.7. The following sets up latest Python
   # to be the System Python
