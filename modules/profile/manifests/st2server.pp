@@ -339,6 +339,7 @@ class profile::st2server {
     log_rotate          => 'yes',
     service_ensure      => false,
     service_enable      => false,
+    service_provider    => $::st2::params::init_type,
     install_python_dev  => false,
     install_pip         => false,
     manage_service_file => false,
