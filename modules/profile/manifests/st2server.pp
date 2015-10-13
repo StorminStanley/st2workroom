@@ -326,29 +326,7 @@ class profile::st2server {
   # $_python_pack needs to be loaded here due to load-order
   $_python_pack = $::st2::profile::server::_python_pack
 
-  # Manage uwsgi with module, but install it using python pack
-  # There is an odd error with installing directly via
-  # the `pip` provider when used via Class['uwsgi']
-  #
-  # This class also disables the emperor service. To that end
-  # to manage a service for StackStorm, you must use the
-  # adapter::st2_uwsgi_service to start uwsgi services that
-  # will be proxied to nginx.
-  class { '::uwsgi':
-    install_package     => false,
-    log_rotate          => 'yes',
-    service_ensure      => false,
-    service_enable      => false,
-    service_provider    => $::st2::params::init_type,
-    install_python_dev  => false,
-    install_pip         => false,
-    manage_service_file => false,
-  }
-
-  python::pip { 'uwsgi':
-    ensure => present,
-    before => Class['::uwsgi'],
-  }
+  include ::profile::uwsgi
 
   python::pip { 'gunicorn':
     ensure => present,
