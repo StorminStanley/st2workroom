@@ -1,4 +1,6 @@
 class profile::st2server {
+  include ::st2::params
+
   ### Profile Data Collection
   ### Each of these values are values that can be set via Hiera
   ### to configure this class for different environments.
