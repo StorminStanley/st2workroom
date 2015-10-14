@@ -52,7 +52,7 @@ class profile::uwsgi {
       }
     }
     'systemd': {
-      $_systemd_content = "[Unit]\nDescription=Dummy uWSGI\n[Service]\nType=oneshot\nExecStart=/bin/true\n[Install]\nWantedBy=multi-user.target",
+      $_systemd_content = "[Unit]\nDescription=Dummy uWSGI\n[Service]\nType=oneshot\nExecStart=/bin/true\n[Install]\nWantedBy=multi-user.target"
       file { '/etc/systemd/system/uwsgi.service':
         ensure  => file,
         owner   => 'root',
