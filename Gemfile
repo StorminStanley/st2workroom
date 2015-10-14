@@ -17,6 +17,6 @@ group :development do
   gem 'puppet-lint',  '~> 0.3.2'
 end
 
-group :rhel6 do
+group :augeas do
   gem 'ruby-augeas', '0.5.0'
 end
