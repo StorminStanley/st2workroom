@@ -31,6 +31,9 @@ class profile::mongodb {
 
   # Create Docker Data Container
   ## see http://docs.docker.com/userguide/dockervolumes/
+  ## This is used to manage UID descrepencies between host
+  ## and guest. In this way, data containers can be saved
+  ## or pushed to docker registries for safe-keeping.
   docker::run { 'mongodata':
     image            => 'mongo',
     command          => '/bin/true',
