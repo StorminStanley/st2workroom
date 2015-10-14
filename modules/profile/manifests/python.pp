@@ -34,6 +34,7 @@ class profile::python {
       command     => 'pip install -U pip',
       path        => '/usr/sbin:/usr/bin:/sbin:/bin',
       refreshonly => true,
+      require     => Exec['update-pip'],
     }
   }
 
