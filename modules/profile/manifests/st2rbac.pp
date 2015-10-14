@@ -47,7 +47,6 @@ class profile::st2rbac {
               'system_admin'
           ]
         }
-      }
     }
   }
 }
