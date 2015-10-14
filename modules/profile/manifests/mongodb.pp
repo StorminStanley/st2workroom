@@ -39,5 +39,8 @@ class profile::mongodb {
     image            => 'mongo',
     command          => '/bin/true',
     extra_parameters => '-v /data',
+    require => [
+      Docker::Image['mongo'],
+    ],
   }
 }
