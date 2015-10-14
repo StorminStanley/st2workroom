@@ -32,6 +32,8 @@ class profile::st2server {
   $_root_cli_uid = 2000
   $_root_cli_gid = 2000
 
+  $_init_type = $::st2::params::init_type
+
   # Syslog user differs based on distro
   $syslog_user = $::osfamily ? {
     'Debian'  => 'syslog',
@@ -612,8 +614,8 @@ class profile::st2server {
   # This is a pretty tight coupling to the st2 puppet module for right now.
   # TODO Fix when it makes sense and it has a home.
 
-  case $osfamily {
-    'Debian': {
+  case $_init_type {
+    'upstart': {
       file { '/etc/init/st2web.conf':
         ensure  => file,
         owner   => 'root',
@@ -622,18 +624,11 @@ class profile::st2server {
         source  => 'puppet:///modules/st2/etc/init/st2actionrunner.conf',
       }
     }
-    'RedHat': {
-      if $operatingsystemmajrelease == '7' {
-        notify {'we need a st2web dummy systemd service': }
-        #file { '/etc/systemd/system/st2web.service':
-        #  ensure => file,
-        #  owner  => 'root',
-        #  group  => 'root',
-        #  mode   => '0444',
-        #}
-      } elsif $operatingsystemmajrelease == '6' {
-        notify {'we need a st2web dummy sysV service': }
-      }
+    'systemd': {
+      notify {'this is a dummy systemd service block': }
+    }
+    'init': {
+        notify {'this is a dummy sysV service block': }
     }
   }
 
