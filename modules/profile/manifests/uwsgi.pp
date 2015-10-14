@@ -62,6 +62,4 @@ class profile::uwsgi {
       }
     }
   }
-  if $_init_type == 'init' {
-  }
 }
