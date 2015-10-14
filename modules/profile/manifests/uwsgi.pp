@@ -32,13 +32,36 @@ class profile::uwsgi {
   ## Upstream module only managed upstart/systemd, but there is no
   ## reason it shouldn't also be able to be used with older SysV
   ## systems.
-  if $_init_type == 'init' {
-    file { '/etc/init.d/uwsgi':
-      ensure  => file,
-      owner   => 'root',
-      group   => 'root',
-      mode    => '0755',
-      content => "#!/bin/sh\ntrue",
+  case $_init_type {
+    'init': {
+      file { '/etc/init.d/uwsgi':
+        ensure  => file,
+        owner   => 'root',
+        group   => 'root',
+        mode    => '0755',
+        content => "#!/bin/sh\ntrue",
+      }
     }
+    'upstart': {
+      file { '/etc/init/uwsgi.conf':
+        ensure  => file,
+        owner   => 'root',
+        group   => 'root',
+        mode    => '0444',
+        content => "script\n  exec /bin/true\nend script",
+      }
+    }
+    'systemd': {
+      $_systemd_content = "[Unit]\nDescription=Dummy uWSGI\n[Service]\nType=oneshot\nExecStart=/bin/true\n[Install]\nWantedBy=multi-user.target",
+      file { '/etc/systemd/system/uwsgi.service':
+        ensure  => file,
+        owner   => 'root',
+        group   => 'root',
+        mode    => '0444',
+        content => $_systemd_content,
+      }
+    }
+  }
+  if $_init_type == 'init' {
   }
 }
