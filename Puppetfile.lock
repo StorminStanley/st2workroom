@@ -97,14 +97,14 @@ GIT
 GIT
   remote: https://github.com/maestrodev/puppet-wget
   ref: master
-  sha: ba3b7ea1bcb277a6a8757c57cc56e860abc0f84a
+  sha: 68e25654e845e8040f79d2b80aa2b719ed7228f6
   specs:
-    maestrodev-wget (1.7.1)
+    maestrodev-wget (1.7.2)
 
 GIT
   remote: https://github.com/stackstorm/puppet-st2
-  ref: 8979d20b01cab01302958681a68f4462a4afe47f
-  sha: 8979d20b01cab01302958681a68f4462a4afe47f
+  ref: f4b37dab2ce6877db251cac0f1a5e8ed4cf180e5
+  sha: f4b37dab2ce6877db251cac0f1a5e8ed4cf180e5
   specs:
     stackstorm-st2 (0.9.15)
       garethr-erlang (>= 0.3.0)
