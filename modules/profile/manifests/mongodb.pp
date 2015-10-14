@@ -25,7 +25,6 @@ class profile::mongodb {
     require => [
       Docker::Image['mongo'],
       Docker::Run['mongodata'],
-      File['/var/lib/mongodb'],
     ],
   }
 
