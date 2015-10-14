@@ -23,6 +23,7 @@ args="<%= @_python_pack %>/<%= @_subsystem %>/gunicorn_config.py   \
       -k eventlet -b unix:<%= @socket %> --threads <%= @threads %> \
       --workers <%= @workers %> -u <%= @user %> -g <%= @group %>   \
       --pid /var/run/$name.pid"
+pidfile="/var/run/$name.pid"
 
 [ -r /etc/default/$name ] && . /etc/default/$name
 [ -r /etc/sysconfig/$name ] && . /etc/sysconfig/$name
