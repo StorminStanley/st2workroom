@@ -5,7 +5,15 @@ DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
 # Install necessary gems. Ignore if CACHE_LIBRARIES is set
-BUNDLER_ARGS="--deployment --binstubs --without development"
+BUNDLER_ARGS="--deployment --binstubs"
+
+# Ensure RHEL 6 libraries are loaded if need be
+if [ "$OS" = "Linux" ] && [ "$MAJORVER" = "6" ]; then
+  BUNDLER_ARGS="$BUNDLER_ARGS"
+else
+  BUNDLER_ARGS="$BUNDLER_ARGS --without rhel6 --without development"
+fi
+
 if [ -n "$CACHE_LIBRARIES" ]; then
 
     # Seed files on first-run

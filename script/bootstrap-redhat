@@ -36,9 +36,3 @@ yum clean dbcache
 yum groupinstall -y "Development Tools"
 
 yum install -y $PACKAGES
-
-# In the event that Augeas packages are needed, then also install the rubygem
-if [ -n "$AUGEAS_PACKAGES" ]; then
-  . $DIR/shared-functions
-  gem install ruby-augeas --no-ri --no-rdoc
-fi
