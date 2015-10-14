@@ -4,8 +4,9 @@
 class profile::st2rbac {
   $_enterprise_token = hiera('st2enterprise::token', undef)
 
+  $_hubot_data = hiera('hubot::env_export')
   $_root_cli_username = $::profile::st2server::_root_cli_username
-  $_chatops_bot_username = 'chatops_bot'
+  $_chatops_bot_username = $_hubot_data['ST2_AUTH_USERNAME']
 
   if $_enterprise_token {
     ini_setting { 'disable st2 rbac':
