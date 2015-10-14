@@ -15,7 +15,7 @@
 #
 # === Examples
 #
-#  include ::profile::enterprise_auth_backend
+#  include ::profile::auth_backend_pam
 #
 class profile::auth_backend_pam(
   $version = '0.1.0',

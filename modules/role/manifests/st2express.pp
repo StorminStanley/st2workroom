@@ -3,6 +3,7 @@ class role::st2express {
 
   include ::profile::infrastructure
   include ::profile::st2server
+  include ::profile::auth_backend_pam
   include ::profile::users
   include ::st2migrations
 
