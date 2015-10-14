@@ -1,6 +1,6 @@
 # Class: profile::st2rbac
 #
-# Enable RBAC for StackStorm and write default role asignments.
+# Enable RBAC for StackStorm and write default role assignments.
 class profile::st2rbac {
   $_enterprise_token = hiera('st2enterprise::token', undef)
   if $_enterprise_token {
