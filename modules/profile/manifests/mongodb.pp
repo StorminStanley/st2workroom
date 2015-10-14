@@ -16,14 +16,24 @@ class profile::mongodb {
 
   docker::run { 'mongo':
     image   => 'mongo',
-    volumes => [
-      '/var/lib/mongodb:/data/db',
+    volumes_from => [
+      'mongodata',
     ],
     ports   => [
       '27017:27017',
     ],
     require => [
       Docker::Image['mongo'],
+      Docker::Run['mongodata'],
+      File['/var/lib/mongodb'],
     ],
+  }
+
+  # Create Docker Data Container
+  ## see http://docs.docker.com/userguide/dockervolumes/
+  docker::run { 'mongodata':
+    image            => 'mongo',
+    command          => '/bin/true',
+    extra_parameters => '-v /data',
   }
 }
