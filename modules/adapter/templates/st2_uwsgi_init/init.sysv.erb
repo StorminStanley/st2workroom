@@ -35,7 +35,7 @@ emit() {
 }
 
 start() {
-  exec $program $args
+  $program $args &
   echo $! > $pidfile
   emit "$name started"
   return 0
