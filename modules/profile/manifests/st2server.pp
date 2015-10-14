@@ -1029,7 +1029,7 @@ class profile::st2server {
   # Here lies a few things that need to be done only on the first run. Make sure at some point
   # that we converge all of the content on the machine. This is needed to reduce shipping size
   # of the final asset, so databases are sent un-populated.
-  Class['::nginx'] -> Exec<| title == 'register st2 content' |>
+  Service['nginx'] -> Exec<| title == 'register st2 content' |>
   Class['::profile::mongodb'] -> Exec<| title == 'register st2 content' |>
 
   # Configure public url to the API endpoint.
