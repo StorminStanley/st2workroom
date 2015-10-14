@@ -72,6 +72,24 @@ FORGE
     saz-rsyslog (3.5.1)
     saz-sudo (3.0.9)
       puppetlabs-stdlib (>= 2.3.0)
+    stackstorm-st2 (0.9.15)
+      garethr-erlang (>= 0.3.0)
+      jamtur01-httpauth (>= 0.0.3)
+      jfryman-tiller (>= 0.1.0)
+      maestrodev-git (>= 1.0.6)
+      maestrodev-wget (>= 1.5.6)
+      nanliu-staging (>= 1.0.2)
+      puppetlabs-apt (>= 1.7.0)
+      puppetlabs-gcc (>= 0.2.0)
+      puppetlabs-inifile (>= 1.2.0)
+      puppetlabs-mongodb (>= 0.11.0)
+      puppetlabs-postgresql (>= 4.4.2)
+      puppetlabs-rabbitmq (>= 4.1.0)
+      puppetlabs-stdlib (>= 4.6.0)
+      puppetlabs-vcsrepo (>= 1.2.0)
+      saz-sudo (>= 3.0.9)
+      stahnma-epel (>= 1.1.0)
+      stankevich-python (>= 1.7.15)
     stahnma-epel (1.1.1)
     stankevich-python (1.7.15)
       puppetlabs-stdlib (>= 4.0.0)
@@ -100,30 +118,6 @@ GIT
   sha: 68e25654e845e8040f79d2b80aa2b719ed7228f6
   specs:
     maestrodev-wget (1.7.2)
-
-GIT
-  remote: https://github.com/stackstorm/puppet-st2
-  ref: f4b37dab2ce6877db251cac0f1a5e8ed4cf180e5
-  sha: f4b37dab2ce6877db251cac0f1a5e8ed4cf180e5
-  specs:
-    stackstorm-st2 (0.9.15)
-      garethr-erlang (>= 0.3.0)
-      jamtur01-httpauth (>= 0.0.3)
-      jfryman-tiller (>= 0.1.0)
-      maestrodev-git (>= 1.0.6)
-      maestrodev-wget (>= 1.5.6)
-      nanliu-staging (>= 1.0.2)
-      puppetlabs-apt (>= 1.7.0)
-      puppetlabs-gcc (>= 0.2.0)
-      puppetlabs-inifile (>= 1.2.0)
-      puppetlabs-mongodb (>= 0.11.0)
-      puppetlabs-postgresql (>= 4.4.2)
-      puppetlabs-rabbitmq (>= 4.1.0)
-      puppetlabs-stdlib (>= 4.6.0)
-      puppetlabs-vcsrepo (>= 1.2.0)
-      saz-sudo (>= 3.0.9)
-      stahnma-epel (>= 1.1.0)
-      stankevich-python (>= 1.7.15)
 
 DEPENDENCIES
   adrien-alternatives (= 0.3.0)
@@ -162,7 +156,7 @@ DEPENDENCIES
   rodjek-logrotate (= 1.1.1)
   saz-rsyslog (= 3.5.1)
   saz-sudo (= 3.0.9)
-  stackstorm-st2 (>= 0)
+  stackstorm-st2 (= 0.9.15)
   stankevich-python (= 1.7.15)
   treydock-gpg_key (= 0.0.3)
 
