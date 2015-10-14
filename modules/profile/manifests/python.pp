@@ -31,7 +31,7 @@ class profile::python {
       notify  => Exec['update-six'],
     }
     exec { 'update-six':
-      command     => 'pip2.7 install -U pip',
+      command     => 'pip2.7 install "six==1.9.0"',
       path        => '/usr/sbin:/usr/bin:/sbin:/bin',
       refreshonly => true,
       require     => Exec['update-pip'],
