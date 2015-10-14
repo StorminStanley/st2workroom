@@ -22,9 +22,11 @@ class profile::mongodb {
     ports   => [
       '27017:27017',
     ],
+    depends => [
+      'mongodata'
+    ],
     require => [
       Docker::Image['mongo'],
-      Docker::Run['mongodata'],
     ],
   }
 
