@@ -22,9 +22,16 @@ class profile::hubot(
     'hubot-hipchat',
   ]
 
-  if $osfamily == 'RedHat' {
+  if $::osfamily == 'RedHat' {
     package { 'libicu-devel':
       ensure => 'present'
+    }
+
+    # Needed for XMPP and HipChat adapters
+    if $::operatingsystemmajversion == '6' {
+      package { 'nodejs-node-expat':
+        ensure => present,
+      }
     }
   }
 

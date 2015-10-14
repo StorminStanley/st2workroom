@@ -16,14 +16,26 @@ class profile::mongodb {
 
   docker::run { 'mongo':
     image   => 'mongo',
-    volumes => [
-      '/var/lib/mongodb:/data/db',
+    volumes_from => [
+      'mongodata',
     ],
     ports   => [
       '27017:27017',
     ],
     require => [
       Docker::Image['mongo'],
+      Docker::Run['mongodata'],
     ],
+  }
+
+  # Create Docker Data Container
+  ## see http://docs.docker.com/userguide/dockervolumes/
+  ## This is used to manage UID descrepencies between host
+  ## and guest. In this way, data containers can be saved
+  ## or pushed to docker registries for safe-keeping.
+  docker::run { 'mongodata':
+    image            => 'mongo',
+    command          => '/bin/true',
+    extra_parameters => '-v /data',
   }
 }

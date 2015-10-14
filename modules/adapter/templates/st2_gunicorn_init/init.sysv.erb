@@ -19,7 +19,10 @@ export PATH
 
 name="<%= @_subsystem %>"
 program="/usr/bin/gunicorn_pecan"
-args="<%= @_python_pack %>/<%= @_subsystem %>/gunicorn_config.py  -k eventlet -b unix:<%= @socket %> --threads <%= @threads %>  --workers <%= @workers %> -u <%= @user %> -g <%= @group %> pidfile=\"/var/run/$name.pid\""
+args="<%= @_python_pack %>/<%= @_subsystem %>/gunicorn_config.py   \
+      -k eventlet -b unix:<%= @socket %> --threads <%= @threads %> \
+      --workers <%= @workers %> -u <%= @user %> -g <%= @group %>   \
+      --pid /var/run/$name.pid"
 
 [ -r /etc/default/$name ] && . /etc/default/$name
 [ -r /etc/sysconfig/$name ] && . /etc/sysconfig/$name
@@ -34,7 +37,7 @@ emit() {
 }
 
 start() {
-  exec $program $args
+  $program $args &
   echo $! > $pidfile
   emit "$name started"
   return 0
