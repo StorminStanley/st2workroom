@@ -2,7 +2,7 @@
   - json
   - yaml
 :yaml:
-  :datadir: /opt/puppet/environments/%{::environment}/hieradata
+  :datadir: /opt/puppet/hieradata
 :json:
   :datadir: /opt/puppet/hieradata
 :hierarchy:
