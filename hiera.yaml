@@ -1,7 +1,7 @@
 :backends:
   - json
   - yaml
-  :datadir: /opt/puppet/hieradata
+:yaml:
   :datadir: /opt/puppet/environments/%{::environment}/hieradata
 :json:
   :datadir: /opt/puppet/environments/%{::environment}/hieradata
