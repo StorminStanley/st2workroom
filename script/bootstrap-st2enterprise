@@ -71,7 +71,7 @@ if [ ! -d ${PROJECT_ROOT}/.git ]; then
   if [ -d ${PROJECT_ROOT} ]; then
     mv ${PROJECT_ROOT} ${PROJECT_ROOT}.old
   fi
-  git clone https://github.com/StackStorm/st2enterprise ${PROJECT_ROOT}
+  git clone https://github.com/StackStorm/st2workroom ${PROJECT_ROOT}
 fi
 
 # Ability to disable hubot, drop to long-term setting for installer.
