@@ -599,36 +599,6 @@ class profile::st2server {
     }
   }
 
-  ## Mistral uWSGI
-  ## This creates the init script to start the
-  ## mistral api service via uwsgi
-  adapter::st2_uwsgi_init { 'mistral': }
-
-  # File permissions to allow uWSGI process to write logs
-  file { $_mistral_logfile:
-    ensure => file,
-    owner  => $_nginx_daemon_user,
-    group  => $_nginx_daemon_user,
-    mode   => '0664',
-  }
-
-  uwsgi::app { 'mistral-api':
-    ensure              => present,
-    uid                 => $_nginx_daemon_user,
-    gid                 => $_nginx_daemon_user,
-    application_options => {
-      'socket'       => $_mistral_socket,
-      'processes'    => $_mistral_uwsgi_processes,
-      'threads'      => $_mistral_uwsgi_threads,
-      'home'         => "${_mistral_root}/.venv/",
-      'wsgi-file'    => "${_mistral_root}/mistral/api/wsgi.py",
-      'vacuum'       => true,
-      'logto'        => $_mistral_logfile,
-      'chmod-socket' => '644',
-    },
-    notify              => Service['mistral-api'],
-  }
-
   # Cheating here a little bit. Because the st2web is now being
   # served via nginx/HTTPS, the SimpleHTTPServer is no longer needed
   # Only problem is, if there is not a service named `st2web`, `st2ctl`
@@ -664,7 +634,7 @@ class profile::st2server {
       } elsif $operatingsystemmajrelease == '6' {
         notify {'we need a st2web dummy sysV service': }
       }
-    }      
+    }
   }
 
   # Configure NGINX WebUI on 443
