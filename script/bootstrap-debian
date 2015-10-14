@@ -10,7 +10,7 @@ RUBY_PACKAGES="ruby ruby-dev"
 AUGEAS_PACKAGES="libaugeas-dev pkg-config"
 
 if [ "$CODENAME" = "wheezy" ]; then
-    PACKAGES="bundler $PACKAGES"
+    PACKAGES="bundler $PACKAGES $AUGEAS_PACKAGES"
 elif [ "$CODENAME" = "precise" ]; then
     BUILD_RUBY=true
     GEM_BUNDLER=true
