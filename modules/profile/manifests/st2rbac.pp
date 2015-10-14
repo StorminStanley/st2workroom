@@ -4,9 +4,7 @@
 class profile::st2rbac {
   $_enterprise_token = hiera('st2enterprise::token', undef)
 
-  $_hubot_data = hiera('hubot::env_export')
   $_root_cli_username = $::profile::st2server::_root_cli_username
-  $_chatops_bot_username = $_hubot_data['ST2_AUTH_USERNAME']
 
   if $_enterprise_token {
     ini_setting { 'disable st2 rbac':
@@ -27,12 +25,17 @@ class profile::st2rbac {
     }
 
     # Create default admin role assignment for ChatOps user
-    st2::rbac { $_chatops_bot_username:
-      description  => 'Default admin role assignment created by the installer',
-      roles        => [
-          'admin'
-      ]
+    $_hubot_data = hiera_hash('hubot::env_export', {})
+    if size($_hubot_data.keys()) >= 1 {
+        $_chatops_bot_username = $_hubot_data['ST2_AUTH_USERNAME']
+        st2::rbac { $_chatops_bot_username:
+          description  => 'Default admin role assignment created by the installer',
+          roles        => [
+              'admin'
+          ]
+        }
     }
+
     # Create default system_admin role assignment for admin user created during installation
     # Note: Assignment is only created once the installer has completed.
     $_users = hiera_hash('users', {}).keys()
