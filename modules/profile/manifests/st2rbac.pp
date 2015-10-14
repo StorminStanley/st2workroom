@@ -12,6 +12,7 @@ class profile::st2rbac {
       setting => 'enable',
       value   => 'True',
       require => Class['::profile::st2server'],
+    }
 
     # Create default admin role assignment for root_cli user
     $_root_cli_username = $::profile::st2server::_root_cli_username
