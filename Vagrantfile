@@ -197,11 +197,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
       ## Bootstrap using different provisioners.
       case PROVISIONER
       when 'puppet-apply' then
-        n.vm.synced_folder '.', '/opt/puppet', type: config['sync_type'],
+        n.vm.synced_folder '.', ROOT_DIR, type: config['sync_type'],
           rsync__exclude: ['.bundle/', 'vendor/bundle', 'artifacts', 'graphs',
                            'packer', '.tmp/', '.librarian/', 'src/', '.bundler',
                            '.puppetfile', 'bin', 'environments']
-        n.vm.provision 'shell', inline: '/opt/puppet/script/bootstrap-os'
+        n.vm.provision 'shell', inline: "#{ROOT_DIR}/script/bootstrap-os"
         n.vm.provision 'shell', inline: <<-EOF
           # Skips the `git pull` step, since you're working out of it directly
           export DISABLE_GIT=true
@@ -222,8 +222,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
           #{config['puppet']['facts'].collect { |k,v| "export FACTER_#{k}=#{v}"}.join("\n")}
           export FACTER_stack=#{@stack.stack}
           #{ROOT_DIR}/script/puppet-apply
-          #{ROOT_DIR}/script/check-st2-ok
 EOF
+        # Only run self-check if explicitly asked via Stack
+        if config.has_key?('self-check')
+          n.vm.provision 'shell', inline: "#{ROOT_DIR}/script/check-st2-ok"
+        end
       when 'ansible-local' then
         n.vm.provision 'shell', inline: '/vagrant/script/bootstrap-ansible'
         n.vm.provision 'shell', inline: <<-EOF
@@ -261,6 +264,9 @@ EOF
           env PYTHONUNBUFFERED=1 ansible-playbook #{config['ansible']['playbook']} -i 'localhost,' --connection=local
           popd
 EOF
+        if config.has_key?('self-check')
+          n.vm.provision 'shell', inline: "#{ROOT_DIR}/script/check-st2-ok"
+        end
       else
         puts "Unsupported provisioner: #{PROVISIONER}. Skipping..."
       end
