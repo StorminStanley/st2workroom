@@ -22,6 +22,19 @@ class profile::hubot(
     'hubot-hipchat',
   ]
 
+  if $::osfamily == 'RedHat' {
+    package { 'libicu-devel':
+      ensure => 'present'
+    }
+
+    # Needed for XMPP and HipChat adapters
+    if $::operatingsystemmajversion == '6' {
+      package { 'nodejs-node-expat':
+        ensure => present,
+      }
+    }
+  }
+
   Exec<| title == 'Hubot init' |> {
     path => '/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin',
   }

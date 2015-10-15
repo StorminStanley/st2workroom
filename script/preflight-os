@@ -5,7 +5,8 @@ DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
 # Install necessary gems. Ignore if CACHE_LIBRARIES is set
-BUNDLER_ARGS="--deployment --binstubs --without development"
+BUNDLER_ARGS="--deployment --binstubs"
+
 if [ -n "$CACHE_LIBRARIES" ]; then
 
     # Seed files on first-run

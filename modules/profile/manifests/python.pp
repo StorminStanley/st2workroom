@@ -21,6 +21,22 @@ class profile::python {
   Exec['update-pip'] -> Python::Pip<||>
   Class['::st2::profile::repos'] -> Class['::st2::profile::python']
 
+  if $osfamily == 'RedHat' and $::operatingsystemmajrelease == '7' {
+    file { '/etc/facter/facts.d/six_upgrade_20151012.txt':
+      ensure  => file,
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0644',
+      content => 'six_upgrade_20151012=true',
+      notify  => Package['python-six-1.9.0-1.el7.noarch.rpm'],
+    }
+    package {'python-six-1.9.0-1.el7.noarch.rpm':
+      ensure   => 'present',
+      provider => 'rpm',
+      source   => 'http://cbs.centos.org/kojifiles/packages/python-six/1.9.0/1.el7/noarch/python-six-1.9.0-1.el7.noarch.rpm'
+    }
+  }
+
   # RedHad 6 uses Python 2.6 by default, and we are pulling upstream
   # from IUS to provide Python 2.7. The following sets up latest Python
   # to be the System Python

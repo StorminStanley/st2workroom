@@ -1,4 +1,6 @@
 class profile::st2server {
+  include ::st2::params
+
   ### Profile Data Collection
   ### Each of these values are values that can be set via Hiera
   ### to configure this class for different environments.
@@ -31,6 +33,8 @@ class profile::st2server {
   $_root_cli_password = fqdn_rand_string(32)
   $_root_cli_uid = 2000
   $_root_cli_gid = 2000
+
+  $_init_type = $::st2::params::init_type
 
   # Syslog user differs based on distro
   $syslog_user = $::osfamily ? {
@@ -179,8 +183,14 @@ class profile::st2server {
     default => true,
   }
 
+  $_nginx_package = $osfamily ? {
+    'Debian'  => 'nginx-extras',
+    'RedHat'  => 'nginx',
+    'default' => 'nginx'
+  }
+
   class { '::nginx':
-    package_name      => 'nginx-extras',
+    package_name      => "${_nginx_package}",
     service_restart   => '/etc/init.d/nginx configtest',
     configtest_enable => $_nginx_configtest,
   }
@@ -262,9 +272,6 @@ class profile::st2server {
     syslog                 => true,
     before                 => Anchor['st2::pre_reqs'],
   }
-  class { '::st2::auth::proxy':
-    require => Class['::st2::profile::server'],
-  }
   class { '::st2::profile::web':
     api_url  => "https://:${_st2api_port}",
     auth_url => "https://:${_st2auth_port}",
@@ -320,27 +327,7 @@ class profile::st2server {
   # $_python_pack needs to be loaded here due to load-order
   $_python_pack = $::st2::profile::server::_python_pack
 
-  # Manage uwsgi with module, but install it using python pack
-  # There is an odd error with installing directly via
-  # the `pip` provider when used via Class['uwsgi']
-  #
-  # This class also disables the emperor service. To that end
-  # to manage a service for StackStorm, you must use the
-  # adapter::st2_uwsgi_service to start uwsgi services that
-  # will be proxied to nginx.
-  class { '::uwsgi':
-    install_package    => false,
-    log_rotate         => 'yes',
-    service_ensure     => false,
-    service_enable     => false,
-    install_python_dev => false,
-    install_pip        => false,
-  }
-
-  python::pip { 'uwsgi':
-    ensure => present,
-    before => Class['::uwsgi'],
-  }
+  include ::profile::uwsgi
 
   python::pip { 'gunicorn':
     ensure => present,
@@ -556,9 +543,6 @@ class profile::st2server {
 
   # Ensure the SSL Certificates are owned by the proper
   # group to be readable by NGINX.
-  # This relies on the NGINX daemon user belonging to the shadow
-  # group, given that this is also necessary for PAM access, gives
-  # a tidy way to keep permissions limited.
   file { $_openssl_root:
     ensure => directory,
     owner  => $_nginx_daemon_user,
@@ -613,36 +597,6 @@ class profile::st2server {
     }
   }
 
-  ## Mistral uWSGI
-  ## This creates the init script to start the
-  ## mistral api service via uwsgi
-  adapter::st2_uwsgi_init { 'mistral': }
-
-  # File permissions to allow uWSGI process to write logs
-  file { $_mistral_logfile:
-    ensure => file,
-    owner  => $_nginx_daemon_user,
-    group  => $_nginx_daemon_user,
-    mode   => '0664',
-  }
-
-  uwsgi::app { 'mistral-api':
-    ensure              => present,
-    uid                 => $_nginx_daemon_user,
-    gid                 => $_nginx_daemon_user,
-    application_options => {
-      'socket'       => $_mistral_socket,
-      'processes'    => $_mistral_uwsgi_processes,
-      'threads'      => $_mistral_uwsgi_threads,
-      'home'         => "${_mistral_root}/.venv/",
-      'wsgi-file'    => "${_mistral_root}/mistral/api/wsgi.py",
-      'vacuum'       => true,
-      'logto'        => $_mistral_logfile,
-      'chmod-socket' => '644',
-    },
-    notify              => Service['mistral-api'],
-  }
-
   # Cheating here a little bit. Because the st2web is now being
   # served via nginx/HTTPS, the SimpleHTTPServer is no longer needed
   # Only problem is, if there is not a service named `st2web`, `st2ctl`
@@ -655,12 +609,23 @@ class profile::st2server {
   #
   # This is a pretty tight coupling to the st2 puppet module for right now.
   # TODO Fix when it makes sense and it has a home.
-  file { '/etc/init/st2web.conf':
-    ensure  => file,
-    owner   => 'root',
-    group   => 'root',
-    mode    => '0444',
-    source  => 'puppet:///modules/st2/etc/init/st2actionrunner.conf',
+
+  case $_init_type {
+    'upstart': {
+      file { '/etc/init/st2web.conf':
+        ensure  => file,
+        owner   => 'root',
+        group   => 'root',
+        mode    => '0444',
+        source  => 'puppet:///modules/st2/etc/init/st2actionrunner.conf',
+      }
+    }
+    'systemd': {
+      notify {'this is a dummy systemd service block': }
+    }
+    'init': {
+        notify {'this is a dummy sysV service block': }
+    }
   }
 
   # Configure NGINX WebUI on 443
@@ -725,15 +690,6 @@ class profile::st2server {
   }
 
   # ## Authentication
-  # ### Nginx needs access to make calls to PAM, and by
-  # ### extension, needs access to /etc/shadow to validate users.
-  # ### Let's at least try to do this safely and consistently
-
-  $_st2auth_custom_options = 'limit_except OPTIONS {
-    auth_pam "Restricted";
-    auth_pam_service_name "nginx";
-    }'
-
   # Note: We need to return a custom 401 error since nginx pam module intercepts
   # 401 and there is no other way to do it :/
   $_st2auth_custom_401_error_handler = '
@@ -756,39 +712,6 @@ class profile::st2server {
     more_set_headers "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS";
     more_set_headers "Access-Control-Allow-Credentials: true";
 '
-
-  # Let's add our nginx user to the `shadow` group, but do
-  # it after the package manager has installed and setup
-  # the user
-
-  group {'shadow':
-    ensure => 'present'
-  }
-
-  user { $_nginx_daemon_user:
-    groups  => ['shadow'],
-    require => Group['shadow']
-  }
-
-  # RHEL needs shadow-utils and some perms finagling to make PAM work
-  if $osfamily == 'RedHat' {
-    package {'shadow-utils':
-      ensure => 'present',
-      require => Group['shadow'],
-      before => User["$_nginx_daemon_user"]
-    }
-
-    file {'/etc/shadow':
-      ensure => 'present',
-      group  => 'shadow',
-      require => Group['shadow'],
-      before => User["$_nginx_daemon_user"]
-    }
-  }
-
-  pam::service { 'nginx':
-    content => '@include common-auth',
-  }
 
   ## This creates the init script to start the
   ## st2auth service via uwsgi
@@ -838,7 +761,6 @@ class profile::st2server {
       $_st2auth_cors_custom_options,
       'proxy_pass_header Authorization;',
       'uwsgi_param  REMOTE_USER        $remote_user;',
-      $_st2auth_custom_options,
     ],
   }
 
@@ -1025,13 +947,7 @@ class profile::st2server {
   # Here lies a few things that need to be done only on the first run. Make sure at some point
   # that we converge all of the content on the machine. This is needed to reduce shipping size
   # of the final asset, so databases are sent un-populated.
-
-  exec { 'register all st2 content':
-    command => 'st2ctl reload --register-all',
-    unless  => 'st2 action list | grep packs.install',
-    path    => '/usr/bin:/usr/sbin:/bin:/sbin',
-    require => Service['nginx'],
-  }
+  Class['::profile::mongodb'] -> Exec<| title == 'register st2 content' |>
 
   # Configure public url to the API endpoint.
   ini_setting { 'configure_api_public_url':
@@ -1070,4 +986,5 @@ class profile::st2server {
     group   => $syslog_user,
     recurse => true,
   }
+
 }

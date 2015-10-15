@@ -16,3 +16,7 @@ group :development do
   gem 'pry',          '~> 0.10.1'
   gem 'puppet-lint',  '~> 0.3.2'
 end
+
+group :augeas do
+  gem 'ruby-augeas', '0.5.0'
+end
