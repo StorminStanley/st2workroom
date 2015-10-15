@@ -28,19 +28,12 @@ class profile::python {
       group   => 'root',
       mode    => '0644',
       content => 'six_upgrade_20151012=true',
-      notify  => Exec['update-six'],
+      notify  => Package['python-six-1.9.0-1.el7.noarch.rpm'],
     }
-    exec { 'remove-six':
-      command     => 'echo "y" | pip2.7 uninstall six',
-      path        => '/usr/sbin:/usr/bin:/sbin:/bin',
-      refreshonly => true,
-      require     => Exec['update-pip'],
-    }
-    exec { 'update-six':
-      command     => 'pip2.7 install "six==1.9.0"',
-      path        => '/usr/sbin:/usr/bin:/sbin:/bin',
-      refreshonly => true,
-      require     => Exec['remove-six'],
+    package {'python-six-1.9.0-1.el7.noarch.rpm':
+      ensure   => 'present',
+      provider => 'rpm',
+      source   => 'http://cbs.centos.org/kojifiles/packages/python-six/1.9.0/1.el7/noarch/python-six-1.9.0-1.el7.noarch.rpm'
     }
   }
 
