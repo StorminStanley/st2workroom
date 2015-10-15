@@ -543,9 +543,6 @@ class profile::st2server {
 
   # Ensure the SSL Certificates are owned by the proper
   # group to be readable by NGINX.
-  # This relies on the NGINX daemon user belonging to the shadow
-  # group, given that this is also necessary for PAM access, gives
-  # a tidy way to keep permissions limited.
   file { $_openssl_root:
     ensure => directory,
     owner  => $_nginx_daemon_user,
@@ -693,10 +690,6 @@ class profile::st2server {
   }
 
   # ## Authentication
-  # ### Nginx needs access to make calls to PAM, and by
-  # ### extension, needs access to /etc/shadow to validate users.
-  # ### Let's at least try to do this safely and consistently
-
   # Note: We need to return a custom 401 error since nginx pam module intercepts
   # 401 and there is no other way to do it :/
   $_st2auth_custom_401_error_handler = '
@@ -719,23 +712,6 @@ class profile::st2server {
     more_set_headers "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS";
     more_set_headers "Access-Control-Allow-Credentials: true";
 '
-
-
-  # RHEL needs shadow-utils and some perms finagling to make PAM work
-  if $osfamily == 'RedHat' {
-    package {'shadow-utils':
-      ensure => 'present',
-      require => Group['shadow'],
-      before => User["$_nginx_daemon_user"]
-    }
-
-    file {'/etc/shadow':
-      ensure => 'present',
-      group  => 'shadow',
-      require => Group['shadow'],
-      before => User["$_nginx_daemon_user"]
-    }
-  }
 
   ## This creates the init script to start the
   ## st2auth service via uwsgi
