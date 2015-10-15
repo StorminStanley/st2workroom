@@ -75,4 +75,5 @@ define adapter::st2_uwsgi_init (
 
   # Subscribe to Uwsgi Apps of the same name.
   File[$_init_file] ~> Service[$_subsystem]
+  Ini_setting<| tag == 'st2::config' |> ~> Service[$_subsystem]
 }
