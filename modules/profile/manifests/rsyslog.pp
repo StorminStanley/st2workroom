@@ -12,7 +12,7 @@ class profile::rsyslog {
     notify => Service['rsyslog']
   }
 
-  # Note: We also listen on TCP so long messages are notr truncated
+  # Note: We also listen on TCP so long messages are not truncated
   file_line{'$ModLoad imtcp':
     path   => '/etc/rsyslog.conf',
     line   => '$ModLoad imtcp',
