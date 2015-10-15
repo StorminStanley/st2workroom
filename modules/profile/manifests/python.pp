@@ -22,21 +22,26 @@ class profile::python {
   Class['::st2::profile::repos'] -> Class['::st2::profile::python']
 
   if $osfamily == 'RedHat' {
-    notify { 'notification stubby': }
-    #file { '/etc/facter/facts.d/six_upgrade_20151012.txt':
-    #  ensure  => file,
-    #  owner   => 'root',
-    #  group   => 'root',
-    #  mode    => '0644',
-    #  content => 'six_upgrade_20151012=true',
-    #  notify  => Exec['update-six'],
-    #}
-    #exec { 'update-six':
-    #  command     => 'pip2.7 install "six==1.9.0"',
-    #  path        => '/usr/sbin:/usr/bin:/sbin:/bin',
-    #  refreshonly => true,
-    #  require     => Exec['update-pip'],
-    #}
+    file { '/etc/facter/facts.d/six_upgrade_20151012.txt':
+      ensure  => file,
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0644',
+      content => 'six_upgrade_20151012=true',
+      notify  => Exec['update-six'],
+    }
+    exec { 'remove-six':
+      command     => 'pip2.7 uninstall six',
+      path        => '/usr/sbin:/usr/bin:/sbin:/bin',
+      refreshonly => true,
+      require     => Exec['update-pip'],
+    }
+    exec { 'update-six':
+      command     => 'pip2.7 install "six==1.9.0"',
+      path        => '/usr/sbin:/usr/bin:/sbin:/bin',
+      refreshonly => true,
+      require     => Exec['remove-six'],
+    }
   }
 
   # RedHad 6 uses Python 2.6 by default, and we are pulling upstream
