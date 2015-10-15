@@ -77,4 +77,7 @@ define adapter::st2_gunicorn_init (
       Class['st2::profile::server'],
     ],
   }
+
+  # Needed to grab service refreshes from config settings
+  Ini_setting<| tag == 'st2::config' |> ~> Service[$_subsystem]
 }
