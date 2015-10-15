@@ -12,6 +12,18 @@ class profile::rsyslog {
     notify => Service['rsyslog']
   }
 
+  # Note: We also listen on TCP so long messages are notr truncated
+  file_line{'$ModLoad imtcp':
+    path   => '/etc/rsyslog.conf',
+    line   => '$ModLoad imtcp',
+    notify => Service['rsyslog']
+  }
+  file_line{'$InputTCPServerRun 515':
+    path => '/etc/rsyslog.conf',
+    line => '$InputTCPServerRun 515',
+    notify => Service['rsyslog']
+  }
+
   # Ensure latest version of rsyslogd is available for RHEL 6 systems
   if $::osfamily == 'RedHat' and $::operatingsystemmajrelease == '6' {
     wget::fetch { 'rsyslogd repo':
