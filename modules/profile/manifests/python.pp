@@ -31,7 +31,7 @@ class profile::python {
       notify  => Exec['update-six'],
     }
     exec { 'remove-six':
-      command     => 'pip2.7 uninstall six',
+      command     => 'echo "y" | pip2.7 uninstall six',
       path        => '/usr/sbin:/usr/bin:/sbin:/bin',
       refreshonly => true,
       require     => Exec['update-pip'],
