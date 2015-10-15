@@ -4,6 +4,12 @@
 class profile::st2rbac {
   $_enterprise_token = hiera('st2enterprise::token', undef)
   if $_enterprise_token {
+
+    # Sets a tag on all the Ini_setting resources
+    Ini_setting {
+      tag => 'st2::config',
+    }
+
     # Enable RBAC if enterprise token is present, write default role assignments
     ini_setting { 'enable st2 rbac':
       ensure  => present,
