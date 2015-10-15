@@ -272,9 +272,6 @@ class profile::st2server {
     syslog                 => true,
     before                 => Anchor['st2::pre_reqs'],
   }
-  class { '::st2::auth::proxy':
-    require => Class['::st2::profile::server'],
-  }
   class { '::st2::profile::web':
     api_url  => "https://:${_st2api_port}",
     auth_url => "https://:${_st2auth_port}",
