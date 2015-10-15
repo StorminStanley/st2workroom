@@ -52,14 +52,14 @@ ok_message() {
     echo "First time starting this machine up?"
     echo "Visit https://${ST2_IP}/setup to configure StackStorm"
     echo "Otherwise, head to https://${ST2_FQDN} to access the WebUI"
-    echo
+    echo ""
     echo "If you would like to use the CLI interface, you will need"
     echo "to ensure that StackStorm environment variables are properly"
     echo "set. You can do this by logging out and logging back in, or"
     echo "running the command:"
-    echo
+    echo ""
     echo ". /etc/profile.d/st2.sh"
-    echo
+    echo ""
     echo "Thanks for installing StackStorm! Come visit us in our Slack Channel"
     echo "and tell us how it's going. We'd love to hear from you!"
     echo "http://stackstorm.com/community-signup"

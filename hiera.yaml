@@ -4,7 +4,7 @@
 :yaml:
   :datadir: /opt/puppet/environments/%{::environment}/hieradata
 :json:
-  :datadir: /opt/puppet/hieradata
+  :datadir: /opt/puppet/environments/%{::environment}/hieradata
 :hierarchy:
   - answers
   - "node/%{::fqdn}"
