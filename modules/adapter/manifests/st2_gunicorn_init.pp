@@ -77,4 +77,6 @@ define adapter::st2_gunicorn_init (
       Class['st2::profile::server'],
     ],
   }
+
+  Ini_setting<| tag == 'st2::config' |> ~> Service[$_subsystem]
 }
