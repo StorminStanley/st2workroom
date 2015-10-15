@@ -21,7 +21,7 @@ class profile::python {
   Exec['update-pip'] -> Python::Pip<||>
   Class['::st2::profile::repos'] -> Class['::st2::profile::python']
 
-  if $osfamily == 'RedHat' {
+  if $osfamily == 'RedHat' and $::operatingsystemmajrelease == '7' {
     file { '/etc/facter/facts.d/six_upgrade_20151012.txt':
       ensure  => file,
       owner   => 'root',
