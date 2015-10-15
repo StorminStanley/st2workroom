@@ -83,7 +83,7 @@ namespace :environments do
       FileUtils.rm_rf "#{env_checkout}.old" if File.directory? "#{env_checkout}.old"
 
       if File.exists?(BOOTSTRAP_ANSWERS_FILE_PATH)
-          FileUtils.copy BOOTSTRAP_ANSWERS_FILE_PATH, "/opt/puppet/environments/#{branch}/hieradata/answers.yaml"
+          FileUtils.copy BOOTSTRAP_ANSWERS_FILE_PATH, "/opt/puppet/environments/#{env_checkout}/hieradata/answers.yaml"
       end
     end
   end
