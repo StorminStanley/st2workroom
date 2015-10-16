@@ -28,12 +28,24 @@ class profile::python {
       group   => 'root',
       mode    => '0644',
       content => 'six_upgrade_20151012=true',
+      notify  => Exec['remove-six']
+    }
+    exec { 'remove-six':
+      command     => 'yum remove -y python-six',
+      path        => '/usr/sbin:/usr/bin:/sbin:/bin',
+      refreshonly => true,
       notify  => Package['python-six-1.9.0-1.el7.noarch.rpm'],
     }
     package {'python-six-1.9.0-1.el7.noarch.rpm':
       ensure   => 'present',
       provider => 'rpm',
-      source   => 'http://cbs.centos.org/kojifiles/packages/python-six/1.9.0/1.el7/noarch/python-six-1.9.0-1.el7.noarch.rpm'
+      source   => 'http://cbs.centos.org/kojifiles/packages/python-six/1.9.0/1.el7/noarch/python-six-1.9.0-1.el7.noarch.rpm',
+      notify   => Exec['install jsonpath-rw']
+    }
+    exec { 'install jsonpath-rw':
+      command     => 'pip install -y jsonpath-rw',
+      path        => '/usr/sbin:/usr/bin:/sbin:/bin',
+      refreshonly => true,
     }
   }
 
