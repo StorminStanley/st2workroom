@@ -663,6 +663,7 @@ class profile::st2server {
     threads => $_st2api_threads,
     user    => $_nginx_daemon_user,
     group   => $_nginx_daemon_user,
+    require => Class['::nginx'],
   }
 
   nginx::resource::vhost { 'st2api':
@@ -715,7 +716,9 @@ class profile::st2server {
 
   ## This creates the init script to start the
   ## st2auth service via uwsgi
-  adapter::st2_uwsgi_init { 'st2auth': }
+  adapter::st2_uwsgi_init { 'st2auth':
+    require => Class['::nginx'],
+  }
 
   # File permissions to allow uWSGI process to write logs
   File<| title == '/var/log/st2/st2auth.log' |> {
@@ -836,7 +839,9 @@ class profile::st2server {
 
   ## This creates the init script to start the
   ## st2installer service via uwsgi
-  adapter::st2_uwsgi_init { 'st2installer': }
+  adapter::st2_uwsgi_init { 'st2installer':
+    require => Class['::nginx'],
+  }
 
   # File permissions to allow uWSGI process to write logs
   file { $_st2installer_logfile:
