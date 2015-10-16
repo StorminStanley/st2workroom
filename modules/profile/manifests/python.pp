@@ -22,14 +22,10 @@ class profile::python {
   Class['::st2::profile::repos'] -> Class['::st2::profile::python']
 
   if $osfamily == 'RedHat' and $::operatingsystemmajrelease == '7' {
-    facter::fact { 'six_upgrade_20151012':
-      value => 'true',
-    }
     exec { 'remove-six':
       command     => 'yum remove -y python-six',
       path        => '/usr/sbin:/usr/bin:/sbin:/bin',
       refreshonly => true,
-      notify  => Package['python-six-1.9.0-1.el7.noarch.rpm'],
     }
 
     # Ensure to only try and install a single time, otherwise
@@ -48,6 +44,12 @@ class profile::python {
       command     => 'pip install -y jsonpath-rw',
       path        => '/usr/sbin:/usr/bin:/sbin:/bin',
       refreshonly => true,
+      before      => Facter::Fact['six_upgrade_20151012'],
+    }
+
+    # Set a breadcrumb for future Puppet runs
+    facter::fact { 'six_upgrade_20151012':
+      value => 'true',
     }
   }
 
@@ -93,4 +95,5 @@ class profile::python {
 
     Alternatives['virtualenv'] -> Exec<| tag == 'virtualenv' |>
   }
+
 }
