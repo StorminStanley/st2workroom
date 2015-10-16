@@ -484,7 +484,6 @@ class profile::st2server {
       path      => '/usr/sbin:/usr/bin:/sbin:/bin',
       logoutput => true,
       require   => File["${_openssl_root}/.rnd"],
-      notify    => Service['nginx'],
     }
     ## CA Certificate END ##
 
