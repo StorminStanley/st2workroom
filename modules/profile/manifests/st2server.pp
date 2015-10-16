@@ -770,7 +770,9 @@ class profile::st2server {
 
   # Needed for uWSGI server to write to logs
   file { [
+    '/var/log/st2/st2api.log',
     '/var/log/st2/st2api.uwsgi.log',
+    '/var/log/st2/st2auth.log',
     '/var/log/st2/st2auth.uwsgi.log',
   ]:
     ensure  => present,
