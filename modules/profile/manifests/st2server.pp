@@ -723,7 +723,6 @@ class profile::st2server {
     location_raw_append => [
       'proxy_pass_header Authorization;',
       'uwsgi_param  REMOTE_USER        $remote_user;',
-      $_st2auth_custom_options,
     ],
   }
 
