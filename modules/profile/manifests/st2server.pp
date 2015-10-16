@@ -700,6 +700,30 @@ class profile::st2server {
     owner   => $_nginx_daemon_user,
     require => Class['::nginx'],
   }
+  group {'shadow':
+    ensure => 'present'
+  }
+
+  user { $_nginx_daemon_user:
+    groups  => ['shadow'],
+    require => Group['shadow']
+  }
+
+  # RHEL needs shadow-utils and some perms finagling to make PAM work
+  if $osfamily == 'RedHat' {
+    package {'shadow-utils':
+      ensure => 'present',
+      require => Group['shadow'],
+      before => User["$_nginx_daemon_user"]
+    }
+
+    file {'/etc/shadow':
+      ensure => 'present',
+      group  => 'shadow',
+      require => Group['shadow'],
+      before => User["$_nginx_daemon_user"]
+    }
+  }
 
   uwsgi::app { 'st2auth':
     ensure              => present,
