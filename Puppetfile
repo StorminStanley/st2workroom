@@ -48,6 +48,9 @@ mod 'maestrodev-wget',
   :git => 'https://github.com/maestrodev/puppet-wget',
   :ref => 'master'
 
-mod 'stackstorm-st2',                '0.10.0'
+#mod 'stackstorm-st2',                '0.10.0'
+mod 'stackstorm-st2',
+  :git => 'https://github.com/stackstorm/puppet-st2',
+  :ref => 'module-cleanup'
 
 mod 'ilanco-s3cmd', '0.2.1'
