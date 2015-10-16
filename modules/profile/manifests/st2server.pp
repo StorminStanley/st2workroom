@@ -269,6 +269,8 @@ class profile::st2server {
     manage_st2auth_service => false,
     manage_st2web_service  => false,
     syslog                 => true,
+    syslog_protocol        => 'tcp',
+    syslog_port            => '515',
     before                 => Anchor['st2::pre_reqs'],
   }
   class { '::st2::profile::web':
@@ -278,18 +280,7 @@ class profile::st2server {
     require  => Class['::st2::profile::server'],
   }
 
-  # Only manage the ::st2::stanley admin account
-  # when the installer has either not run (managed in workroom.yaml)
-  # or when the installer is or has ran (managed in answers.json)
-  #
-  # Answers.json is deleted by the st2installer after run to prevent
-  # credential leakage. To that end, if this class still is being managed
-  # and no hiera data exists, SSH keys and the admint account will be
-  # overwritten with default values, and this is undesirable.
-  if ! $_installer_run {
-    include ::st2::stanley
-  }
-
+  include ::st2::stanley
   include ::st2::logging::rsyslog
 
   # Hubot Hack
@@ -931,25 +922,6 @@ class profile::st2server {
     require => Class['::st2::profile::server'],
   }
 
-  # Configure st2 services to use TCP syslog transport
-  ini_setting { 'configure_st2_to_use_tcp_syslog_transport':
-    ensure => present,
-    path   => '/etc/st2/st2.conf',
-    section => 'syslog',
-    setting => 'protocol',
-    value   => 'tcp',
-    require => Class['::st2::profile::server'],
-  }
-
-  ini_setting { 'configure_st2_to_use_tcp_515_syslog_transport_port':
-    ensure => present,
-    path   => '/etc/st2/st2.conf',
-    section => 'syslog',
-    setting => 'port',
-    value   => '515',
-    require => Class['::st2::profile::server'],
-  }
-
   ## Perms fix for /var/log/st2.  Needs to be added to mainline puppet module
   file { '/var/log/st2':
     ensure  => 'directory',
@@ -958,5 +930,4 @@ class profile::st2server {
     group   => $syslog_user,
     recurse => true,
   }
-
 }

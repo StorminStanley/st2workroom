@@ -5,7 +5,6 @@ classes:
 rsyslog::client::log_local: true
 
 sudo::purge: false
-st2::ng_init: true
 st2::packs:
   hubot:
     ensure: present
