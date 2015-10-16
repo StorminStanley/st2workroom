@@ -13,6 +13,9 @@ ubuntu1404:
   <<: *defaults
   hostname: ubuntu1404
   box: puppetlabs/ubuntu-14.04-64-nocm
+  puppet:
+    facts:
+      role: st2express
 centos6:
   <<: *defaults
   hostname: centos6
