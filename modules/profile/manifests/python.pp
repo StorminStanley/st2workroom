@@ -41,7 +41,7 @@ class profile::python {
     }
 
     exec { 'install jsonpath-rw':
-      command     => 'pip install -y jsonpath-rw',
+      command     => 'pip install jsonpath-rw',
       path        => '/usr/sbin:/usr/bin:/sbin:/bin',
       refreshonly => true,
       before      => Facter::Fact['six_upgrade_20151012'],
