@@ -22,13 +22,8 @@ class profile::python {
   Class['::st2::profile::repos'] -> Class['::st2::profile::python']
 
   if $osfamily == 'RedHat' and $::operatingsystemmajrelease == '7' {
-    file { '/etc/facter/facts.d/six_upgrade_20151012.txt':
-      ensure  => file,
-      owner   => 'root',
-      group   => 'root',
-      mode    => '0644',
-      content => 'six_upgrade_20151012=true',
-      notify  => Exec['remove-six']
+    facter::fact { 'six_upgrade_20151012':
+      value => 'true',
     }
     exec { 'remove-six':
       command     => 'yum remove -y python-six',
@@ -36,12 +31,19 @@ class profile::python {
       refreshonly => true,
       notify  => Package['python-six-1.9.0-1.el7.noarch.rpm'],
     }
-    package {'python-six-1.9.0-1.el7.noarch.rpm':
-      ensure   => 'present',
-      provider => 'rpm',
-      source   => 'http://cbs.centos.org/kojifiles/packages/python-six/1.9.0/1.el7/noarch/python-six-1.9.0-1.el7.noarch.rpm',
-      notify   => Exec['install jsonpath-rw']
+
+    # Ensure to only try and install a single time, otherwise
+    # Skip over to ensure no failures trying to reinstall
+    if ! $::six_upgrade_20151012 {
+      package {'python-six-1.9.0-1.el7.noarch.rpm':
+        ensure    => 'present',
+        provider  => 'rpm',
+        source    => 'http://cbs.centos.org/kojifiles/packages/python-six/1.9.0/1.el7/noarch/python-six-1.9.0-1.el7.noarch.rpm',
+        subscribe => Exec['remove-six'],
+        notify    => Exec['install jsonpath-rw']
+      }
     }
+
     exec { 'install jsonpath-rw':
       command     => 'pip install -y jsonpath-rw',
       path        => '/usr/sbin:/usr/bin:/sbin:/bin',
