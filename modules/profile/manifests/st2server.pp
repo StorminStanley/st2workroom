@@ -251,12 +251,6 @@ class profile::st2server {
 
   anchor { 'st2::pre_reqs': }
 
-  class { '::st2':
-    use_ssl  => true,
-    ssl_cert => $_ssl_cert,
-    ssl_key  => $_ssl_key,
-  }
-
   class { '::st2::profile::client':
     username             => $_root_cli_username,
     password             => $_root_cli_password,
@@ -694,21 +688,6 @@ class profile::st2server {
     ],
   }
 
-  # Note 1: We don't need an if block since more_set_headers only sets header if
-  # already set so duplicate headers are ot a problem.
-  # Note 2: This module requires nginx-extras to be installed.
-  # Note 3: We use MoreSetHeaders module since old version of nginx we use
-  # doesn't support overriding / setting headers on non-succesful responses.
-
-  # NOTE: @kami: here is the issue. more_set_headers is not allowed on RHEL, because
-  #              nginx is not compiled on it. Same issue that we had with PAM.
-  #              What can be done here... we don't have this module.
-  $_st2auth_cors_custom_options = '
-    more_set_headers "Access-Control-Allow-Origin: *";
-    more_set_headers "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS";
-    more_set_headers "Access-Control-Allow-Credentials: true";
-'
-
   ## This creates the init script to start the
   ## st2auth service via uwsgi
   adapter::st2_uwsgi_init { 'st2auth': }
@@ -750,11 +729,7 @@ class profile::st2server {
       'X-Real-IP $remote_addr',
       'X-Forwarded-For $proxy_add_x_forwarded_for',
     ],
-    raw_append => [
-        $_st2auth_custom_401_error_handler,
-    ],
     location_raw_append => [
-      $_st2auth_cors_custom_options,
       'proxy_pass_header Authorization;',
       'uwsgi_param  REMOTE_USER        $remote_user;',
       $_st2auth_custom_options,
