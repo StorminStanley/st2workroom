@@ -4,11 +4,13 @@ class profile::rsyslog {
   file_line{'$ModLoad imudp':
     path   => '/etc/rsyslog.conf',
     line   => '$ModLoad imudp',
+    match  => '$ModLoad imudp',
     notify => Service['rsyslog']
   }
   file_line{'$UDPServerRun 514':
-    path => '/etc/rsyslog.conf',
-    line => '$UDPServerRun 514',
+    path   => '/etc/rsyslog.conf',
+    line   => '$UDPServerRun 514',
+    match  => '$UDPServerRun',
     notify => Service['rsyslog']
   }
 
@@ -16,11 +18,13 @@ class profile::rsyslog {
   file_line{'$ModLoad imtcp':
     path   => '/etc/rsyslog.conf',
     line   => '$ModLoad imtcp',
+    match  => '$ModLoad imtcp',
     notify => Service['rsyslog']
   }
   file_line{'$InputTCPServerRun 515':
-    path => '/etc/rsyslog.conf',
-    line => '$InputTCPServerRun 515',
+    path   => '/etc/rsyslog.conf',
+    match  => '$InputTCPServerRun',
+    line   => '$InputTCPServerRun 515',
     notify => Service['rsyslog']
   }
 
