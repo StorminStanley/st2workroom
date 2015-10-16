@@ -720,6 +720,9 @@ class profile::st2server {
       'X-Real-IP $remote_addr',
       'X-Forwarded-For $proxy_add_x_forwarded_for',
     ],
+    location_raw_prepend => [
+      $_cors_custom_options,
+    ],
     location_raw_append => [
       'proxy_pass_header Authorization;',
       'uwsgi_param  REMOTE_USER        $remote_user;',
