@@ -241,17 +241,22 @@ class profile::st2server {
   # meta gross, but it's the cleanest way without knowing what environment
   # this installer will pop up in.
 
-  if ! $_installer_run {
-    users { $_root_cli_username:
-      uid        => $_root_cli_uid,
-      gid        => $_root_cli_gid,
-      shell      => '/bin/false',
-      password   => $_root_cli_password,
-      managehome => false,
-    }
+  users { $_root_cli_username:
+    uid        => $_root_cli_uid,
+    gid        => $_root_cli_gid,
+    shell      => '/bin/false',
+    password   => $_root_cli_password,
+    managehome => false,
   }
 
   anchor { 'st2::pre_reqs': }
+
+  class { '::st2':
+    use_ssl  => true,
+    ssl_cert => $_ssl_cert,
+    ssl_key  => $_ssl_key,
+  }
+
   class { '::st2::profile::client':
     username             => $_root_cli_username,
     password             => $_root_cli_password,
