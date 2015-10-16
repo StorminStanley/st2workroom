@@ -380,6 +380,7 @@ class profile::st2server {
       content => template('profile/st2server/openssl.ca.cnf.erb'),
       notify  => Exec['remove old self-signed certs'],
       before  => Exec['create root CA'],
+      require => Class['::nginx'],
     }
     file { $_openssl_cert_config:
       ensure  => file,
@@ -388,6 +389,7 @@ class profile::st2server {
       content => template('profile/st2server/openssl.cert.cnf.erb'),
       notify  => Exec['remove old self-signed certs'],
       before  => Exec['create root CA'],
+      require => Class['::nginx'],
     }
 
     # In the event that the configuration is refreshed, clean
@@ -504,7 +506,10 @@ class profile::st2server {
       owner   => $_nginx_daemon_user,
       group   => $_nginx_daemon_user,
       mode    => '0755',
-      require => Class['::st2::profile::web'],
+      require => [
+        Class['::st2::profile::web'],
+        Class['::nginx'],
+      ],
     }
     file { "${_ssl_web_root}/st2_root_ca.cer":
       ensure  => file,
@@ -512,7 +517,10 @@ class profile::st2server {
       group   => $_nginx_daemon_user,
       mode    => '0444',
       source  => $_ca_cert,
-      require => File[$_ca_cert],
+      require => [
+        Class['::nginx'],
+        File[$_ca_cert],
+      ]
     }
     file { "${_ssl_web_root}/index.html":
       ensure  => file,
@@ -520,6 +528,7 @@ class profile::st2server {
       group   => $_nginx_daemon_user,
       mode    => '0444',
       source  => 'puppet:///modules/profile/st2server/ssl_index.html',
+      require => Class['::nginx'],
     }
     file { "${_ssl_web_root}/StackStorm-logo.png":
       ensure  => file,
@@ -527,6 +536,7 @@ class profile::st2server {
       group   => $_nginx_daemon_user,
       mode    => '0444',
       source  => 'puppet:///modules/profile/st2server/StackStorm-logo.png',
+      require => Class['::nginx'],
     }
   }
 
@@ -537,6 +547,7 @@ class profile::st2server {
     owner  => $_nginx_daemon_user,
     group  => $_nginx_daemon_user,
     mode   => '0755',
+    require => Class['::nginx'],
   }
 
   # Note: This is BAD BAD BAD
@@ -648,6 +659,7 @@ class profile::st2server {
     threads => $_st2api_threads,
     user    => $_nginx_daemon_user,
     group   => $_nginx_daemon_user,
+    require => Class['::nginx'],
   }
 
   nginx::resource::vhost { 'st2api':
@@ -680,7 +692,8 @@ class profile::st2server {
 
   # File permissions to allow uWSGI process to write logs
   File<| title == '/var/log/st2/st2auth.log' |> {
-    owner  => $_nginx_daemon_user,
+    owner   => $_nginx_daemon_user,
+    require => Class['::nginx'],
   }
   group {'shadow':
     ensure => 'present'
@@ -757,7 +770,10 @@ class profile::st2server {
     owner   => $_nginx_daemon_user,
     group   => $_nginx_daemon_user,
     mode    => '0664',
-    require => Class['::st2::profile::server'],
+    require => [
+      Class['::st2::profile::server'],
+      Class['::nginx'],
+    ],
     before  => [
       Adapter::St2_uwsgi_init['st2auth'],
     ],
@@ -789,7 +805,10 @@ class profile::st2server {
       owner   => $_nginx_daemon_user,
       group   => $_nginx_daemon_user,
       mode    => '0440',
-      require => Httpauth[$_installer_username],
+      require => [
+        Httpauth[$_installer_username],
+        Class['::nginx'],
+      ],
     }
   } else {
     $_st2installer_auth_basic = undef
@@ -802,6 +821,7 @@ class profile::st2server {
     provider => 'git',
     source   => 'https://github.com/stackstorm/st2installer',
     revision => $_st2installer_branch,
+    require  => Class['::nginx'],
     before   => Uwsgi::App['st2installer'],
     notify   => Service['st2installer'],
   }
@@ -827,7 +847,10 @@ class profile::st2server {
     owner   => $_nginx_daemon_user,
     group   => $_nginx_daemon_user,
     mode    => '0664',
-    require => Class['::st2::profile::server'],
+    require => [
+      Class['::st2::profile::server'],
+      Class['::nginx'],
+    ],
     before  => Service['st2installer'],
   }
 
@@ -868,7 +891,8 @@ class profile::st2server {
     owner   => $_nginx_daemon_user,
     group   => $_nginx_daemon_user,
     mode    => $_installer_workroom_mode,
-    content => '{}'
+    content => '{}',
+    require => Class['::nginx'],
   }
 
   file { '/tmp/st2installer.log':
@@ -877,6 +901,7 @@ class profile::st2server {
     group  => $_nginx_daemon_user,
     mode   => $_installer_workroom_mode,
     before => Service['st2installer'],
+    require => Class['::nginx'],
   }
 
   ### st2installer needs access to run a few commands post-install.
