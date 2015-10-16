@@ -42,5 +42,6 @@ class profile::mongodb {
     require => [
       Docker::Image['mongo'],
     ],
+    before  => Docker::Run['mongo'],
   }
 }
