@@ -689,6 +689,16 @@ class profile::st2server {
     ],
   }
 
+  # ### Nginx needs access to make calls to PAM, and by
+  # ### extension, needs access to /etc/shadow to validate users.
+  # ### Let's at least try to do this safely and consistently
+
+  $_st2auth_custom_options = 'limit_except OPTIONS {
+    auth_pam "Restricted";
+    auth_pam_service_name "nginx";
+    }'
+
+
   # ## Authentication
   # Note: We need to return a custom 401 error since nginx pam module intercepts
   # 401 and there is no other way to do it :/
@@ -712,6 +722,38 @@ class profile::st2server {
     more_set_headers "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS";
     more_set_headers "Access-Control-Allow-Credentials: true";
 '
+  # Let's add our nginx user to the `shadow` group, but do
+  # it after the package manager has installed and setup
+  # the user
+
+  group {'shadow':
+    ensure => 'present'
+  }
+
+  user { $_nginx_daemon_user:
+    groups  => ['shadow'],
+    require => Group['shadow']
+  }
+
+  # RHEL needs shadow-utils and some perms finagling to make PAM work
+  if $osfamily == 'RedHat' {
+    package {'shadow-utils':
+      ensure => 'present',
+      require => Group['shadow'],
+      before => User["$_nginx_daemon_user"]
+    }
+
+    file {'/etc/shadow':
+      ensure => 'present',
+      group  => 'shadow',
+      require => Group['shadow'],
+      before => User["$_nginx_daemon_user"]
+    }
+  }
+
+  pam::service { 'nginx':
+    content => '@include common-auth',
+  }
 
   ## This creates the init script to start the
   ## st2auth service via uwsgi
@@ -761,6 +803,7 @@ class profile::st2server {
       $_st2auth_cors_custom_options,
       'proxy_pass_header Authorization;',
       'uwsgi_param  REMOTE_USER        $remote_user;',
+      $_st2auth_custom_options,
     ],
   }
 
