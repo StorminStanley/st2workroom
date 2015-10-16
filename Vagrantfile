@@ -191,6 +191,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |vagrant|
           local_mount ||= [DIR, 'mounts', vm_mount.gsub(/\//, '_')].join('/')
           FileUtils.mkdir_p local_mount
           n.vm.synced_folder local_mount, vm_mount, type: config['sync_type']
+          if Vagrant.has_plugin?('vagrant-bindfs')
+            n.bindfs.bind_folder vm_mount, vm_mount
+          end
         end
       end
 
