@@ -9,12 +9,11 @@ class role::st2express {
 
   # This is not the proper place for this. Need to find a profile
   # for these classes to live in
-  # class { '::st2::helper::auth_manager':
-  #   auth_mode     => 'standalone',
-  #   auth_backend  => 'pam',
-  #   debug         => false,
-  # }
-  include ::st2::auth::proxy
+  class { '::st2::helper::auth_manager':
+    auth_mode     => 'standalone',
+    auth_backend  => 'pam',
+    debug         => false,
+  }
 
   if $_enable_hubot {
     include ::profile::hubot
