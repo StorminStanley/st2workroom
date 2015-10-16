@@ -37,7 +37,6 @@ class profile::python {
         source    => 'http://cbs.centos.org/kojifiles/packages/python-six/1.9.0/1.el7/noarch/python-six-1.9.0-1.el7.noarch.rpm',
         subscribe => Exec['remove-six'],
         before    => Facter::Fact['six_upgrade_20151012'],
-        notify    => Exec['install jsonpath-rw']
       }
     }
 
