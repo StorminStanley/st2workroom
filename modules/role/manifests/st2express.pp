@@ -13,6 +13,7 @@ class role::st2express {
     auth_mode     => 'standalone',
     auth_backend  => 'pam',
     debug         => false,
+    syslog        => true,
   }
 
   if $_enable_hubot {
