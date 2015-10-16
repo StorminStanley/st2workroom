@@ -736,6 +736,7 @@ class profile::st2server {
       'chmod-socket' => '644',
     },
     notify             => Service['st2auth'],
+    require            => Class['::nginx'],
   }
 
   nginx::resource::vhost { 'st2auth':
@@ -863,6 +864,7 @@ class profile::st2server {
       'chmod-socket' => '644',
     },
     notify           => Service['st2installer'],
+    require          => Class['::nginx'],
   }
 
   nginx::resource::location { 'st2installer':
