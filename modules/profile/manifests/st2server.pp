@@ -553,28 +553,24 @@ class profile::st2server {
     owner   => 'root',
     mode    => '0444',
     content => $_ca_cert_content,
-    notify  => Class['::nginx::service'],
   }
   file { $_ca_key:
     ensure  => file,
     owner   => 'root',
     mode    => '0440',
     content => $_ca_key_content,
-    notify  => Class['::nginx::service'],
   }
   file { $_ssl_cert:
     ensure  => file,
     owner   => 'root',
     mode    => '0444',
     content => $_ssl_cert_content,
-    notify  => Class['::nginx::service'],
   }
   file { $_ssl_key:
     ensure  => file,
     owner   => 'root',
     mode    => '0440',
     content => $_ssl_key_content,
-    notify  => Class['::nginx::service'],
   }
 
   if $_ca_cert {
@@ -725,7 +721,6 @@ class profile::st2server {
       'chmod-socket' => '644',
     },
     notify             => Service['st2auth'],
-    require            => Class['::nginx'],
   }
 
   nginx::resource::vhost { 'st2auth':
@@ -852,7 +847,6 @@ class profile::st2server {
       'chmod-socket' => '644',
     },
     notify           => Service['st2installer'],
-    require          => Class['::nginx'],
   }
 
   nginx::resource::location { 'st2installer':
