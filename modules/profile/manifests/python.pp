@@ -22,6 +22,12 @@ class profile::python {
   Class['::st2::profile::repos'] -> Class['::st2::profile::python']
 
   if $osfamily == 'RedHat' and $::operatingsystemmajrelease == '7' {
+    # Set a breadcrumb for future Puppet runs
+    facter::fact { 'six_upgrade_20151012':
+      value  => 'true',
+      notify => Exec['remove-six'],
+    }
+
     exec { 'remove-six':
       command     => 'yum remove -y python-six',
       path        => '/usr/sbin:/usr/bin:/sbin:/bin',
@@ -32,17 +38,11 @@ class profile::python {
     # Skip over to ensure no failures trying to reinstall
     if ! $::six_upgrade_20151012 {
       package {'python-six-1.9.0-1.el7.noarch.rpm':
-        ensure    => 'present',
-        provider  => 'rpm',
-        source    => 'http://cbs.centos.org/kojifiles/packages/python-six/1.9.0/1.el7/noarch/python-six-1.9.0-1.el7.noarch.rpm',
-        subscribe => Exec['remove-six'],
-        before    => Facter::Fact['six_upgrade_20151012'],
+        ensure   => 'present',
+        provider => 'rpm',
+        source   => 'http://cbs.centos.org/kojifiles/packages/python-six/1.9.0/1.el7/noarch/python-six-1.9.0-1.el7.noarch.rpm',
+        require  => Exec['remove-six'],
       }
-    }
-
-    # Set a breadcrumb for future Puppet runs
-    facter::fact { 'six_upgrade_20151012':
-      value => 'true',
     }
   }
 
