@@ -34,9 +34,6 @@ class profile::mongodb {
     ports   => [
       '27017:27017',
     ],
-    depends => [
-      'mongodata'
-    ],
     require => [
       Docker::Image['mongo'],
       Exec['create mongodb data container'],
