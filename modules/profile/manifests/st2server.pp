@@ -706,10 +706,11 @@ class profile::st2server {
     }
 
     file {'/etc/shadow':
-      ensure => 'present',
-      group  => 'shadow',
+      ensure  => 'present',
+      group   => 'shadow',
+      mode    => '0640',
       require => Group['shadow'],
-      before => User["$_nginx_daemon_user"]
+      before  => User["$_nginx_daemon_user"]
     }
   }
 
