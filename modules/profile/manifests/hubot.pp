@@ -5,7 +5,9 @@ class profile::hubot(
   class { '::hubot':
     install_nodejs => false,
   }
-  class { '::nodejs': }
+  class { '::nodejs': 
+    repo_url_suffix => 'node_0.12',
+  }
 
   $_hubot_bin_dir = '/opt/hubot/hubot'
   $_hubot_user    = 'hubot'
