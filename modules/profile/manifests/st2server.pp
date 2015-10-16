@@ -928,6 +928,5 @@ class profile::st2server {
     mode    => '0775',
     owner   => 'root',
     group   => $syslog_user,
-    recurse => true,
   }
 }
