@@ -22,7 +22,7 @@ class profile::st2server {
   $_st2auth_uwsgi_processes = hiera('st2::auth_uwsgi_processes', 1)
   $_st2api_threads = hiera('st2::api_uwsgi_threads', 10)
   $_st2api_processes = hiera('st2::api_uwsgi_processes', 1)
-  $_st2installer_branch = hiera('st2::installer_branch', 'stable')
+  $_st2installer_branch = hiera('st2::installer_branch', 'master')
   $_mistral_uwsgi_threads = hiera('st2::mistral_uwsgi_threads', 25)
   $_mistral_uwsgi_processes = hiera('st2::mistral_uwsgi_processes', 1)
   $_installer_lockdown = hiera('st2::installer::lockdown', false)
