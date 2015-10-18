@@ -339,6 +339,9 @@ class profile::st2server {
   # a user provides a key, we pass that content down through to the resource.
   # Otherwise, the cert is generated. Either way, the resources below ensure
   # proper permissioning for the webserver to read/access.
+
+  $_openssl_root = '/etc/ssl/st2'
+
   if ! $_self_signed_cert {
     $_ssl_cert_content = $_user_ssl_cert
     $_ssl_key_content = $_user_ssl_key
@@ -359,7 +362,6 @@ class profile::st2server {
     $_ca_key_content = undef
     $_ca_expiration = '1825'
     $_ssl_expiration = '730'
-    $_openssl_root = '/etc/ssl/st2'
     $_openssl_ca_config = "${_openssl_root}/ca.cnf"
     $_openssl_cert_config = "${_openssl_root}/cert.cnf"
 
