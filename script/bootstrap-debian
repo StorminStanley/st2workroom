@@ -13,12 +13,11 @@ if [ "$CODENAME" = "wheezy" ]; then
 elif [ "$CODENAME" = "precise" ]; then
     BUILD_RUBY=true
     GEM_BUNDLER=true
-    # Note: pkg-config, libaugeas-dev and augeas-tools are needed to build 
-    # ruby-augeas gem
-    PACKAGES="$PACKAGES pkg-config libaugeas-dev augeas-tools"
     unset RUBY_PACKAGES
 else
-    PACKAGES="ruby-bundler $PACKAGES"
+    # Note: pkg-config, libaugeas-dev and augeas-tools are needed to build
+    # ruby-augeas gem
+    PACKAGES="ruby-bundler pkg-config libaugeas-dev augeas-tools $PACKAGES"
 fi
 
 apt-get update
