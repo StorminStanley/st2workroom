@@ -15,9 +15,9 @@ elif [ "$CODENAME" = "precise" ]; then
     GEM_BUNDLER=true
     unset RUBY_PACKAGES
 else
-    # Note: pkg-config, libaugeas-dev and augeas-tools are needed to build
-    # ruby-augeas gem
-    PACKAGES="ruby-bundler pkg-config libaugeas-dev augeas-tools $PACKAGES"
+    # Note: Those packages are needed to build ruby-augeas gem
+    AUGEAS_PACKAGES="pkg-config libaugeas-dev augeas-tools"
+    PACKAGES="ruby-bundler $PACKAGES $AUGEAS_PACKAGES"
 fi
 
 apt-get update
