@@ -24,9 +24,18 @@ class profile::uwsgi {
     manage_service_file => false,
   }
 
-  python::pip { 'uwsgi':
-    ensure => present,
-    before => Class['::uwsgi'],
+  # Ensure uwgsi is installed correctly
+  if $::osfamily == 'RedHat' and $::operatingsystemmajrelease == '6' {
+    ensure_resource('exec', 'pip2.7 install uwgsi', {
+      'path'    => '/usr/sbin:/usr/bin:/sbin:/bin',
+      'creates' => '/usr/bin/uwgsi',
+      'before'  => Class['::uwsgi'],
+    })
+  } else {
+    ensure_resource('python::pip', 'uwgsi', {
+      'ensure' => 'present',
+      'before' => Class['::uwsgi'],
+    })
   }
 
   ## Upstream module only managed upstart/systemd, but there is no

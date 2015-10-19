@@ -324,12 +324,6 @@ class profile::st2server {
   # $_python_pack needs to be loaded here due to load-order
   $_python_pack = $::st2::profile::server::_python_pack
 
-  include ::profile::uwsgi
-
-  python::pip { 'gunicorn':
-    ensure => present,
-  }
-
   # ### Application Configuration
   # ### Install any and all packs defined in Hiera.
   include ::st2::packs
