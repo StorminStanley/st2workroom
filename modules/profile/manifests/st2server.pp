@@ -87,9 +87,16 @@ class profile::st2server {
     $_host_ip,
   ]
 
+  file { '/var/sockets':
+    ensure => 'directory',
+    owner  => 'root',
+    group  => 'root',
+    mode   => '0777'
+  }
+
   # Ports that uwsgi advertises on 127.0.0.1
-  $_st2auth_socket = '/tmp/st2auth.sock'
-  $_st2api_socket = '/tmp/st2api.sock'
+  $_st2auth_socket = '/var/sockets/st2auth.sock'
+  $_st2api_socket = '/var/sockets/st2api.sock'
   $_st2installer_socket = '/tmp/st2installer.sock'
   $_mistral_socket = '/tmp/mistral.sock'
   $_mistral_port = '8989'
@@ -655,6 +662,7 @@ class profile::st2server {
     threads => $_st2api_threads,
     user    => $_nginx_daemon_user,
     group   => $_nginx_daemon_user,
+    require => File['/var/sockets']
   }
 
   nginx::resource::vhost { 'st2api':
@@ -730,6 +738,7 @@ class profile::st2server {
       'chmod-socket' => '644',
     },
     notify             => Service['st2auth'],
+    require            => File['/var/sockets']
   }
 
   nginx::resource::vhost { 'st2auth':

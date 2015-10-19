@@ -34,7 +34,7 @@ class profile::vagrant {
 
   file_line { 'disable_tty':
     path  => '/etc/sudoers',
-    match => 'Defaults requiretty',
-    line  => '## Defaults requiretty',
+    match => 'Defaults    requiretty',
+    line  => '## Defaults    requiretty',
   }
 }
