@@ -49,6 +49,7 @@ class profile::uwsgi {
         group   => 'root',
         mode    => '0755',
         content => "#!/bin/sh\ntrue",
+        before  => Class['::uwsgi'],
       }
     }
     'upstart': {
@@ -58,6 +59,7 @@ class profile::uwsgi {
         group   => 'root',
         mode    => '0444',
         content => "script\n  exec /bin/true\nend script",
+        before  => Class['::uwsgi'],
       }
     }
     'systemd': {
@@ -68,6 +70,7 @@ class profile::uwsgi {
         group   => 'root',
         mode    => '0444',
         content => $_systemd_content,
+        before  => Class['::uwsgi'],
       }
     }
   }
