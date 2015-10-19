@@ -97,8 +97,8 @@ class profile::st2server {
   # Ports that uwsgi advertises on 127.0.0.1
   $_st2auth_socket = '/var/sockets/st2auth.sock'
   $_st2api_socket = '/var/sockets/st2api.sock'
-  $_st2installer_socket = '/tmp/st2installer.sock'
-  $_mistral_socket = '/tmp/mistral.sock'
+  $_st2installer_socket = '/var/sockets/st2installer.sock'
+  $_mistral_socket = '/var/sockets/mistral.sock'
   $_mistral_port = '8989'
   $_st2auth_port = '9100'
   $_st2api_port = '9101'
@@ -685,7 +685,9 @@ class profile::st2server {
 
   ## This creates the init script to start the
   ## st2auth service via uwsgi
-  adapter::st2_uwsgi_init { 'st2auth': }
+  adapter::st2_uwsgi_init { 'st2auth':
+    require => File['/var/sockets'],
+  }
 
   # File permissions to allow uWSGI process to write logs
   File<| title == '/var/log/st2/st2auth.log' |> {
@@ -835,7 +837,9 @@ class profile::st2server {
 
   ## This creates the init script to start the
   ## st2installer service via uwsgi
-  adapter::st2_uwsgi_init { 'st2installer': }
+  adapter::st2_uwsgi_init { 'st2installer':
+    require => File['/var/sockets'],
+  }
 
   # File permissions to allow uWSGI process to write logs
   file { $_st2installer_logfile:
@@ -865,6 +869,7 @@ class profile::st2server {
       'chmod-socket' => '644',
     },
     notify           => Service['st2installer'],
+    require          => Class['/var/sockets'],
   }
 
   nginx::resource::location { 'st2installer':
