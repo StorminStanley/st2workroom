@@ -869,7 +869,7 @@ class profile::st2server {
       'chmod-socket' => '644',
     },
     notify           => Service['st2installer'],
-    require          => Class['/var/sockets'],
+    require          => File['/var/sockets'],
   }
 
   nginx::resource::location { 'st2installer':
