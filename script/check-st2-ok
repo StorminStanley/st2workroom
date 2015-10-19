@@ -12,7 +12,11 @@ retry_message() {
     if [ "$ST2_DATACENTER" = "vagrant" ]; then
         KICK_COMMAND="vagrant provision st2enterprise"
     else
-        KICK_COMMAND="update-system"
+        if [ -e /usr/bin/update-system ]; then
+          KICK_COMMAND="update-system"
+        else
+          KICK_COMMAND="curl -sSL http://stackstorm.com/install.sh"
+        fi
     fi
 
     echo ""
@@ -66,7 +70,7 @@ ok_message() {
 }
 
 # Only run the check for StackStorm in the event that it actually exists
-if [ -f /usr/bin/st2 ]; then
+if [ -e /usr/bin/st2 ]; then
   sudo st2 run core.local date > /dev/null 2>&1
   ACTIONEXIT=$?
   if [ ! "${ACTIONEXIT}" = 0 ]; then
