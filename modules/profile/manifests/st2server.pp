@@ -87,11 +87,18 @@ class profile::st2server {
     $_host_ip,
   ]
 
+  file { '/var/sockets':
+    ensure => 'directory',
+    owner  => 'root',
+    group  => 'root',
+    mode   => '0777'
+  }
+
   # Ports that uwsgi advertises on 127.0.0.1
-  $_st2auth_socket = '/tmp/st2auth.sock'
-  $_st2api_socket = '/tmp/st2api.sock'
-  $_st2installer_socket = '/tmp/st2installer.sock'
-  $_mistral_socket = '/tmp/mistral.sock'
+  $_st2auth_socket = '/var/sockets/st2auth.sock'
+  $_st2api_socket = '/var/sockets/st2api.sock'
+  $_st2installer_socket = '/var/sockets/st2installer.sock'
+  $_mistral_socket = '/var/sockets/mistral.sock'
   $_mistral_port = '8989'
   $_st2auth_port = '9100'
   $_st2api_port = '9101'
@@ -241,17 +248,16 @@ class profile::st2server {
   # meta gross, but it's the cleanest way without knowing what environment
   # this installer will pop up in.
 
-  if ! $_installer_run {
-    users { $_root_cli_username:
-      uid        => $_root_cli_uid,
-      gid        => $_root_cli_gid,
-      shell      => '/bin/false',
-      password   => $_root_cli_password,
-      managehome => false,
-    }
+  users { $_root_cli_username:
+    uid        => $_root_cli_uid,
+    gid        => $_root_cli_gid,
+    shell      => '/bin/false',
+    password   => $_root_cli_password,
+    managehome => false,
   }
 
   anchor { 'st2::pre_reqs': }
+
   class { '::st2::profile::client':
     username             => $_root_cli_username,
     password             => $_root_cli_password,
@@ -270,6 +276,8 @@ class profile::st2server {
     manage_st2auth_service => false,
     manage_st2web_service  => false,
     syslog                 => true,
+    syslog_protocol        => 'tcp',
+    syslog_port            => '515',
     before                 => Anchor['st2::pre_reqs'],
   }
   class { '::st2::profile::web':
@@ -279,18 +287,7 @@ class profile::st2server {
     require  => Class['::st2::profile::server'],
   }
 
-  # Only manage the ::st2::stanley admin account
-  # when the installer has either not run (managed in workroom.yaml)
-  # or when the installer is or has ran (managed in answers.json)
-  #
-  # Answers.json is deleted by the st2installer after run to prevent
-  # credential leakage. To that end, if this class still is being managed
-  # and no hiera data exists, SSH keys and the admint account will be
-  # overwritten with default values, and this is undesirable.
-  if ! $_installer_run {
-    include ::st2::stanley
-  }
-
+  include ::st2::stanley
   include ::st2::logging::rsyslog
 
   # Hubot Hack
@@ -327,12 +324,6 @@ class profile::st2server {
   # $_python_pack needs to be loaded here due to load-order
   $_python_pack = $::st2::profile::server::_python_pack
 
-  include ::profile::uwsgi
-
-  python::pip { 'gunicorn':
-    ensure => present,
-  }
-
   # ### Application Configuration
   # ### Install any and all packs defined in Hiera.
   include ::st2::packs
@@ -349,6 +340,9 @@ class profile::st2server {
   # a user provides a key, we pass that content down through to the resource.
   # Otherwise, the cert is generated. Either way, the resources below ensure
   # proper permissioning for the webserver to read/access.
+
+  $_openssl_root = '/etc/ssl/st2'
+
   if ! $_self_signed_cert {
     $_ssl_cert_content = $_user_ssl_cert
     $_ssl_key_content = $_user_ssl_key
@@ -369,7 +363,6 @@ class profile::st2server {
     $_ca_key_content = undef
     $_ca_expiration = '1825'
     $_ssl_expiration = '730'
-    $_openssl_root = '/etc/ssl/st2'
     $_openssl_ca_config = "${_openssl_root}/ca.cnf"
     $_openssl_cert_config = "${_openssl_root}/cert.cnf"
 
@@ -492,7 +485,6 @@ class profile::st2server {
       path      => '/usr/sbin:/usr/bin:/sbin:/bin',
       logoutput => true,
       require   => File["${_openssl_root}/.rnd"],
-      notify    => Service['nginx'],
     }
     ## CA Certificate END ##
 
@@ -515,7 +507,9 @@ class profile::st2server {
       owner   => $_nginx_daemon_user,
       group   => $_nginx_daemon_user,
       mode    => '0755',
-      require => Class['::st2::profile::web'],
+      require => [
+        Class['::st2::profile::web'],
+      ],
     }
     file { "${_ssl_web_root}/st2_root_ca.cer":
       ensure  => file,
@@ -523,7 +517,6 @@ class profile::st2server {
       group   => $_nginx_daemon_user,
       mode    => '0444',
       source  => $_ca_cert,
-      require => File[$_ca_cert],
     }
     file { "${_ssl_web_root}/index.html":
       ensure  => file,
@@ -663,6 +656,7 @@ class profile::st2server {
     threads => $_st2api_threads,
     user    => $_nginx_daemon_user,
     group   => $_nginx_daemon_user,
+    require => File['/var/sockets']
   }
 
   nginx::resource::vhost { 'st2api':
@@ -689,42 +683,16 @@ class profile::st2server {
     ],
   }
 
-  # ### Nginx needs access to make calls to PAM, and by
-  # ### extension, needs access to /etc/shadow to validate users.
-  # ### Let's at least try to do this safely and consistently
+  ## This creates the init script to start the
+  ## st2auth service via uwsgi
+  adapter::st2_uwsgi_init { 'st2auth':
+    require => File['/var/sockets'],
+  }
 
-  $_st2auth_custom_options = 'limit_except OPTIONS {
-    auth_pam "Restricted";
-    auth_pam_service_name "nginx";
-    }'
-
-
-  # ## Authentication
-  # Note: We need to return a custom 401 error since nginx pam module intercepts
-  # 401 and there is no other way to do it :/
-  $_st2auth_custom_401_error_handler = '
-  error_page 401 =401 @401_response;
-
-  location @401_response {
-    more_set_headers "Access-Control-Allow-Origin: *";
-    more_set_headers "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS";
-    more_set_headers "Access-Control-Allow-Credentials: true";
-    return 401 "Invalid or missing credentials";
-  }'
-
-  # Note 1: We don't need an if block since more_set_headers only sets header if
-  # already set so duplicate headers are ot a problem.
-  # Note 2: This module requires nginx-extras to be installed.
-  # Note 3: We use MoreSetHeaders module since old version of nginx we use
-  # doesn't support overriding / setting headers on non-succesful responses.
-  $_st2auth_cors_custom_options = '
-    more_set_headers "Access-Control-Allow-Origin: *";
-    more_set_headers "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS";
-    more_set_headers "Access-Control-Allow-Credentials: true";
-'
-  # Let's add our nginx user to the `shadow` group, but do
-  # it after the package manager has installed and setup
-  # the user
+  # File permissions to allow uWSGI process to write logs
+  File<| title == '/var/log/st2/st2auth.log' |> {
+    owner   => $_nginx_daemon_user,
+  }
 
   group {'shadow':
     ensure => 'present'
@@ -744,24 +712,12 @@ class profile::st2server {
     }
 
     file {'/etc/shadow':
-      ensure => 'present',
-      group  => 'shadow',
+      ensure  => 'present',
+      group   => 'shadow',
+      mode    => '0640',
       require => Group['shadow'],
-      before => User["$_nginx_daemon_user"]
+      before  => User["$_nginx_daemon_user"]
     }
-  }
-
-  pam::service { 'nginx':
-    content => '@include common-auth',
-  }
-
-  ## This creates the init script to start the
-  ## st2auth service via uwsgi
-  adapter::st2_uwsgi_init { 'st2auth': }
-
-  # File permissions to allow uWSGI process to write logs
-  File<| title == '/var/log/st2/st2auth.log' |> {
-    owner  => $_nginx_daemon_user,
   }
 
   uwsgi::app { 'st2auth':
@@ -778,6 +734,7 @@ class profile::st2server {
       'chmod-socket' => '644',
     },
     notify             => Service['st2auth'],
+    require            => File['/var/sockets']
   }
 
   nginx::resource::vhost { 'st2auth':
@@ -796,14 +753,12 @@ class profile::st2server {
       'X-Real-IP $remote_addr',
       'X-Forwarded-For $proxy_add_x_forwarded_for',
     ],
-    raw_append => [
-        $_st2auth_custom_401_error_handler,
+    location_raw_prepend => [
+      $_cors_custom_options,
     ],
     location_raw_append => [
-      $_st2auth_cors_custom_options,
       'proxy_pass_header Authorization;',
       'uwsgi_param  REMOTE_USER        $remote_user;',
-      $_st2auth_custom_options,
     ],
   }
 
@@ -816,7 +771,9 @@ class profile::st2server {
     owner   => $_nginx_daemon_user,
     group   => $_nginx_daemon_user,
     mode    => '0664',
-    require => Class['::st2::profile::server'],
+    require => [
+      Class['::st2::profile::server'],
+    ],
     before  => [
       Adapter::St2_uwsgi_init['st2auth'],
     ],
@@ -848,7 +805,9 @@ class profile::st2server {
       owner   => $_nginx_daemon_user,
       group   => $_nginx_daemon_user,
       mode    => '0440',
-      require => Httpauth[$_installer_username],
+      require => [
+        Httpauth[$_installer_username],
+      ],
     }
   } else {
     $_st2installer_auth_basic = undef
@@ -878,7 +837,9 @@ class profile::st2server {
 
   ## This creates the init script to start the
   ## st2installer service via uwsgi
-  adapter::st2_uwsgi_init { 'st2installer': }
+  adapter::st2_uwsgi_init { 'st2installer':
+    require => File['/var/sockets'],
+  }
 
   # File permissions to allow uWSGI process to write logs
   file { $_st2installer_logfile:
@@ -886,7 +847,9 @@ class profile::st2server {
     owner   => $_nginx_daemon_user,
     group   => $_nginx_daemon_user,
     mode    => '0664',
-    require => Class['::st2::profile::server'],
+    require => [
+      Class['::st2::profile::server'],
+    ],
     before  => Service['st2installer'],
   }
 
@@ -906,6 +869,7 @@ class profile::st2server {
       'chmod-socket' => '644',
     },
     notify           => Service['st2installer'],
+    require          => File['/var/sockets'],
   }
 
   nginx::resource::location { 'st2installer':
@@ -927,7 +891,7 @@ class profile::st2server {
     owner   => $_nginx_daemon_user,
     group   => $_nginx_daemon_user,
     mode    => $_installer_workroom_mode,
-    content => '{}'
+    content => '{}',
   }
 
   file { '/tmp/st2installer.log':
@@ -1002,25 +966,6 @@ class profile::st2server {
     require => Class['::st2::profile::server'],
   }
 
-  # Configure st2 services to use TCP syslog transport
-  ini_setting { 'configure_st2_to_use_tcp_syslog_transport':
-    ensure => present,
-    path   => '/etc/st2/st2.conf',
-    section => 'syslog',
-    setting => 'protocol',
-    value   => 'tcp',
-    require => Class['::st2::profile::server'],
-  }
-
-  ini_setting { 'configure_st2_to_use_tcp_515_syslog_transport_port':
-    ensure => present,
-    path   => '/etc/st2/st2.conf',
-    section => 'syslog',
-    setting => 'port',
-    value   => '515',
-    require => Class['::st2::profile::server'],
-  }
-
   ## Perms fix for /var/log/st2.  Needs to be added to mainline puppet module
   file { '/var/log/st2':
     ensure  => 'directory',
@@ -1029,5 +974,4 @@ class profile::st2server {
     group   => $syslog_user,
     recurse => true,
   }
-
 }

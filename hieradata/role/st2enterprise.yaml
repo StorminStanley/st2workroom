@@ -3,7 +3,7 @@ classes:
   - 'role::st2enterprise'
 
 st2::version: 0.14dev
-st2::revision: 183
+st2::revision: 184
 st2::autoupdate: false
 st2::mistral_git_branch: st2-1.1.0
 

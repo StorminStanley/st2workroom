@@ -24,9 +24,18 @@ class profile::uwsgi {
     manage_service_file => false,
   }
 
-  python::pip { 'uwsgi':
-    ensure => present,
-    before => Class['::uwsgi'],
+  # Ensure uwsgi is installed correctly
+  if $::osfamily == 'RedHat' and $::operatingsystemmajrelease == '6' {
+    ensure_resource('exec', 'pip2.7 install uwsgi', {
+      'path'    => '/usr/sbin:/usr/bin:/sbin:/bin',
+      'creates' => '/usr/bin/uwsgi',
+      'before'  => Class['::uwsgi'],
+    })
+  } else {
+    ensure_resource('python::pip', 'uwsgi', {
+      'ensure' => 'present',
+      'before' => Class['::uwsgi'],
+    })
   }
 
   ## Upstream module only managed upstart/systemd, but there is no
@@ -40,6 +49,7 @@ class profile::uwsgi {
         group   => 'root',
         mode    => '0755',
         content => "#!/bin/sh\ntrue",
+        before  => Class['::uwsgi'],
       }
     }
     'upstart': {
@@ -49,6 +59,7 @@ class profile::uwsgi {
         group   => 'root',
         mode    => '0444',
         content => "script\n  exec /bin/true\nend script",
+        before  => Class['::uwsgi'],
       }
     }
     'systemd': {
@@ -59,6 +70,7 @@ class profile::uwsgi {
         group   => 'root',
         mode    => '0444',
         content => $_systemd_content,
+        before  => Class['::uwsgi'],
       }
     }
   }

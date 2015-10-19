@@ -55,4 +55,9 @@ class profile::infrastructure {
     value => $_offline_mode,
   }
 
+  file_line { 'disable_tty':
+    path  => '/etc/sudoers',
+    match => '^Defaults\s+requiretty',
+    line  => '## Defaults    requiretty',
+  }
 }
