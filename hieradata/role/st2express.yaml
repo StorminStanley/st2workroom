@@ -1,7 +1,0 @@
----
-classes:
-  - 'role::st2express'
-
-npm::proxy: false
-puppet::masterless::cron: disable
-
