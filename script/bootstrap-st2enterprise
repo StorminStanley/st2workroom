@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 # This stand-alone script should be able to be used to kickstart a new node
 
 PROJECT_ROOT=/opt/puppet
