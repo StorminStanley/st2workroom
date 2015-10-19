@@ -24,15 +24,15 @@ class profile::uwsgi {
     manage_service_file => false,
   }
 
-  # Ensure uwgsi is installed correctly
+  # Ensure uwsgi is installed correctly
   if $::osfamily == 'RedHat' and $::operatingsystemmajrelease == '6' {
-    ensure_resource('exec', 'pip2.7 install uwgsi', {
+    ensure_resource('exec', 'pip2.7 install uwsgi', {
       'path'    => '/usr/sbin:/usr/bin:/sbin:/bin',
-      'creates' => '/usr/bin/uwgsi',
+      'creates' => '/usr/bin/uwsgi',
       'before'  => Class['::uwsgi'],
     })
   } else {
-    ensure_resource('python::pip', 'uwgsi', {
+    ensure_resource('python::pip', 'uwsgi', {
       'ensure' => 'present',
       'before' => Class['::uwsgi'],
     })
