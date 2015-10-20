@@ -34,7 +34,7 @@ class profile::auth_backend_pam(
     destination => "/tmp/st2_auth_backend_pam-${version}-py2.7.egg"
   }
 
-  exec { 'install auth backend':
+  exec { 'install pam auth backend':
     command => "easy_install-2.7 /tmp/st2_auth_backend_pam-${version}-py2.7.egg",
     path    => '/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin',
     require => Wget::Fetch["Download auth pam backend"],
