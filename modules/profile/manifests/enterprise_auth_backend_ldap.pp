@@ -38,7 +38,7 @@ class profile::enterprise_auth_backend_ldap(
     }
   
     exec { 'install auth backend':
-      command => "easy_install /tmp/st2_enterprise_auth_backend_ldap-${version}-py2.7.egg",
+      command => "easy_install-2.7 /tmp/st2_enterprise_auth_backend_ldap-${version}-py2.7.egg",
       path    => '/usr/bin:/usr/sbin:/bin:/sbin',
       require => Wget::Fetch["Download enterprise auth ldap backend"]
     }
