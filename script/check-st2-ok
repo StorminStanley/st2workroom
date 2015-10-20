@@ -67,14 +67,15 @@ ok_message() {
 
 # Only run the check for StackStorm in the event that it actually exists
 if [ -f /usr/bin/st2 ]; then
+  # Restart StackStorm for good measure
+  sudo st2ctl restart > /dev/null 2>&1
   sudo st2 run core.local date &> /dev/null
-  ACTIONEXIT=$?
-  if [ ! "${ACTIONEXIT}" = 0 ]; then
-    retry_message
-    exit 1 # Failure with the self-check
-  else
+  if [ $? -eq 0 ]; then
     ok_message
     exit 0
+  else
+    retry_message
+    exit 1 # Failure with the self-check
   fi
 else
   retry_message
