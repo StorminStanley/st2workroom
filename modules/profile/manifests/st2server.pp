@@ -261,8 +261,8 @@ class profile::st2server {
   class { '::st2::profile::client':
     username             => $_root_cli_username,
     password             => $_root_cli_password,
-    api_url              => $_api_url,
-    auth_url             => $_auth_url,
+    api_url              => $_public_api_url,
+    auth_url             => $_public_auth_url,
     cache_token          => false,
     silence_ssl_warnings => true,
     global_env           => true,
@@ -955,16 +955,6 @@ class profile::st2server {
   # that we converge all of the content on the machine. This is needed to reduce shipping size
   # of the final asset, so databases are sent un-populated.
   Class['::profile::mongodb'] -> Exec<| title == 'register st2 content' |>
-
-  # Configure public url to the API endpoint.
-  ini_setting { 'configure_api_public_url':
-    ensure => present,
-    path   => '/etc/st2/st2.conf',
-    section => 'auth',
-    setting => 'api_url',
-    value   => $_public_api_url,
-    require => Class['::st2::profile::server'],
-  }
 
   ## Perms fix for /var/log/st2.  Needs to be added to mainline puppet module
   file { '/var/log/st2':
