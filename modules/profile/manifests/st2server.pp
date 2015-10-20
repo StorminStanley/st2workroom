@@ -276,8 +276,8 @@ class profile::st2server {
     manage_st2auth_service => false,
     manage_st2web_service  => false,
     syslog                 => true,
-    syslog_protocol        => 'tcp',
-    syslog_port            => '515',
+    syslog_protocol        => 'udp',
+    syslog_port            => '514',
     before                 => Anchor['st2::pre_reqs'],
   }
   class { '::st2::profile::web':
