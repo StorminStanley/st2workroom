@@ -39,7 +39,7 @@ class profile::rsyslog {
   file_line { 'rsync global emergency logging for > 7.x':
     path   => '/etc/rsyslog.conf',
     match  => '^\*\.emerg',
-    line   => '*. emerg     :omusrmsg:*',
+    line   => '*.emerg     :omusrmsg:*',
     notify => Service['rsyslog'],
   }
 
@@ -47,7 +47,7 @@ class profile::rsyslog {
   file_line { 'rsync local client emergency logging for > 7.x':
     path   => '/etc/rsyslog.d/client.conf',
     match  => '^\*\.emerg',
-    line   => '*. emerg     :omusrmsg:*',
+    line   => '*.emerg     :omusrmsg:*',
     notify => Service['rsyslog'],
   }
 
