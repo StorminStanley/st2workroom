@@ -31,6 +31,8 @@ class role::st2 {
   # Authentication Configuration
   if $_enable_ldap and $_enterprise_token {
     include ::profile::enterprise_auth_backend_ldap
+  } elsif $_enable_ldap and ! $_enterprise_token {
+    fail('[role::st2] Unable to enable LDAP without Enterprise Token. Please drop us a line at support@stackstorm.com if you are seeing this error incorrectly.')
   } else {
     include ::profile::auth_backend_pam
   }
