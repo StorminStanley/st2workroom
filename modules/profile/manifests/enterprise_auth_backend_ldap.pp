@@ -100,6 +100,6 @@ class profile::enterprise_auth_backend_ldap(
     debug          => false,
     syslog         => true,
     backend_kwargs => $_ldap_kwargs,
-    require        => Exec['install enterprise auth backend'],
+    require        => Exec['install enterprise ldap auth backend'],
   }
 }
