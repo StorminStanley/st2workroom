@@ -15,7 +15,7 @@ retry_message() {
         if [ -e /usr/bin/update-system ]; then
           KICK_COMMAND="update-system"
         else
-          KICK_COMMAND="curl -sSL http://stackstorm.com/install.sh"
+          KICK_COMMAND="curl -sSL http://stackstorm.com/install.sh | sudo sh"
         fi
     fi
 
