@@ -95,11 +95,11 @@ class profile::enterprise_auth_backend_ldap(
   $_ldap_kwargs = merge($_ldap_connection_args, $_ldap_ssl_args)
 
   class { '::st2::helper::auth_manager':
-    auth_mode    => 'standalone',
-    auth_backend => 'ldap',
-    debug        => false,
-    syslog       => true,
-    kwargs       => $_ldap_kwargs,
-    require      => Exec['install enterprise auth backend'],
+    auth_mode      => 'standalone',
+    auth_backend   => 'ldap',
+    debug          => false,
+    syslog         => true,
+    backend_kwargs => $_ldap_kwargs,
+    require        => Exec['install enterprise auth backend'],
   }
 }
