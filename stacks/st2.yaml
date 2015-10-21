@@ -21,7 +21,7 @@ st2dev:
 st2:
   <<: *defaults
   hostname: st2
-  box: stackstorm/st2
+  box: stackstorm/st2express
   ansible:
     playbook: playbooks/st2express.yaml
   puppet:
