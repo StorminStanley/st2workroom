@@ -3,6 +3,8 @@ class profile::infrastructure {
   $_offline_mode = hiera('system::offline_mode', false)
   $_fqdn = hiera('system::hostname', $::fqdn)
   $_host_ip = hiera('system::ipaddress', $::ipaddress_eth0)
+  $_http_proxy = hiera('system::http_proxy', undef)
+  $_https_proxy = hiera('system::https_proxy', undef)
 
   include ::ntp
   include ::profile::rsyslog
@@ -65,6 +67,22 @@ class profile::infrastructure {
   if $::osfamily == 'RedHat' {
     class { '::selinux':
       mode => 'permissive',
+    }
+  }
+
+  # Setup HTTP / HTTPS proxies
+  if $_http_proxy {
+    file_line { 'System HTTP Proxy':
+      path  => '/etc/environment',
+      match => '^HTTP_PROXY=',
+      line  => "HTTP_PROXY=${_http_proxy}",
+    }
+  }
+  if $_https_proxy {
+    file_line { 'System HTTPS Proxy':
+      path  => '/etc/environment',
+      match => '^HTTPS_PROXY=',
+      line  => "HTTPS_PROXY=${_https_proxy}",
     }
   }
 }
