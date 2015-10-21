@@ -1,6 +1,9 @@
 ---
 classes:
-  - 'role::st2enterprise'
+  - 'role::st2'
+
+npm::proxy: false
+puppet::masterless::cron: disable
 
 st2::version: 0.14dev
 st2::revision: 194
@@ -8,7 +11,6 @@ st2::autoupdate: false
 st2::mistral_git_branch: st2-1.1.0
 
 profile::enterprise_auth_backend::version: 0.1.0
-
 hubot::external_scripts:
   - "hubot-stackstorm"
 

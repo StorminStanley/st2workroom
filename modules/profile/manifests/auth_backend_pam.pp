@@ -40,4 +40,11 @@ class profile::auth_backend_pam(
     require => Wget::Fetch["Download auth pam backend"],
     before  => Class['::st2::profile::server'],
   }
+
+  class { '::st2::helper::auth_manager':
+    auth_mode     => 'standalone',
+    auth_backend  => 'pam',
+    debug         => false,
+    syslog        => true,
+  }
 }

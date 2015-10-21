@@ -25,8 +25,8 @@ There are several ways to run workroom, and as such you will need to know how to
 ### Vagrant
 
 ```
-vagrant rsync st2express
-vagrant provision st2express
+vagrant rsync st2
+vagrant provision st2
 ```
 
 ### BYOBox
