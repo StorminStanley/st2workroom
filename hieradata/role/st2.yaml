@@ -4,6 +4,7 @@ classes:
 
 npm::proxy: false
 puppet::masterless::cron: disable
+
 st2::version: 0.14dev
 st2::revision: 194
 st2::autoupdate: false
