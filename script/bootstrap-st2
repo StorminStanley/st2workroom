@@ -29,6 +29,10 @@ while :; do
         -a|--answers)
             if [ -n "$2" ]; then
                 ANSWER_FILE=$2
+                if [ ! -f ${ANSWER_FILE} ]; then
+                    printf "ERROR: Answers file ${ANSWER_FILE} doesn't exist\n" >&2
+                    exit 2
+                fi
                 shift 2
                 continue
             else
