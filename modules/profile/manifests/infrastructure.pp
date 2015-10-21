@@ -60,4 +60,11 @@ class profile::infrastructure {
     match => '^Defaults\s+requiretty',
     line  => '## Defaults    requiretty',
   }
+
+  # Disable SELinux on RedHat Hosts
+  if $::osfamily == 'RedHat' {
+    class { '::selinux':
+      mode => 'permissive',
+    }
+  }
 }

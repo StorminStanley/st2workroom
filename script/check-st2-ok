@@ -37,11 +37,35 @@ retry_message() {
     echo
 }
 
+
+
+
+
+prompt_for_credentials() {
+    echo ""
+    echo "Things are looking promising! We've installed all the things, and need to"
+    echo "run a bit of a self-diagnostic to make sure everything is setup properly"
+    echo ""
+    echo "Looks like you've installed via sudo, and not as the root user (Good for you!)"
+    echo "You will need to enter the password for the user ${USER} below. This will run:"
+    echo ""
+    echo "st2 auth ${USER} -t"
+    echo ""
+    echo "This command generates a token for you. This command will use the configured"
+    echo "authentication integration (Typically PAM or LDAP auth). This depends on how"
+    echo "on how you have installed/configured the system. You can learn more about these"
+    echo "topics at:"
+    echo ""
+    echo "  * Tokens - http://docs.stackstorm.com/cli.html"
+    echo "  * Authentication - http://docs.stackstorm.com/config/authentication.html"
+    echo ""
+    echo "Otherwise, please enter your password now..."
+}
+
 ok_message() {
     ST2_IP=`facter st2_ip`
     ST2_FQDN=`facter fqdn`
 
-    echo ""
     echo ""
     echo ""
     echo "███████╗████████╗██████╗      ██████╗ ██╗  ██╗";
@@ -64,21 +88,33 @@ ok_message() {
     echo ""
     echo ". /etc/profile.d/st2.sh"
     echo ""
+    echo "Don't forget to dive into our documentation! You can find the docs"
+    echo "at http://docs.stackstorm.com"
+    echo ""
     echo "Thanks for installing StackStorm! Come visit us in our Slack Channel"
     echo "and tell us how it's going. We'd love to hear from you!"
     echo "http://stackstorm.com/community-signup"
 }
 
 # Only run the check for StackStorm in the event that it actually exists
-if [ -e /usr/bin/st2 ]; then
-  sudo st2 run core.local date > /dev/null 2>&1
-  ACTIONEXIT=$?
-  if [ ! "${ACTIONEXIT}" = 0 ]; then
-    retry_message
-    exit 1 # Failure with the self-check
-  else
+if [ -f /usr/bin/st2 ]; then
+  # Restart StackStorm for good measure
+  sudo st2ctl restart > /dev/null 2>&1
+
+  # Check to see if the current user is root, and if not, have them authenticate
+  if [ "${USER}" != 'root' ] || [ ! -n $ST2_AUTH_TOKEN ]; then
+    prompt_for_credentials
+    export ST2_AUTH_TOKEN=$(st2 auth $USER -t)
+  fi
+
+  # Run the actual check
+  st2 run core.local date -a &> /dev/null
+  if [ $? -eq 0 ]; then
     ok_message
     exit 0
+  else
+    retry_message
+    exit 1 # Failure with the self-check
   fi
 else
   retry_message
