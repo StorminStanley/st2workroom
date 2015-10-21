@@ -10,7 +10,7 @@ fi
 retry_message() {
     ST2_DATACENTER=`facter datacenter`
     if [ "$ST2_DATACENTER" = "vagrant" ]; then
-        KICK_COMMAND="vagrant provision st2enterprise"
+        KICK_COMMAND="vagrant provision st2"
     else
         if [ -e /usr/bin/update-system ]; then
           KICK_COMMAND="update-system"
