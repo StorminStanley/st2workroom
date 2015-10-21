@@ -31,8 +31,6 @@ class profile::st2server {
   $_enterprise_token = hiera('st2enterprise::token', undef)
   $_root_cli_username = 'root_cli'
   $_root_cli_password = fqdn_rand_string(32)
-  $_root_cli_uid = 2000
-  $_root_cli_gid = 2000
 
   $_init_type = $::st2::params::init_type
 
@@ -249,8 +247,6 @@ class profile::st2server {
   # this installer will pop up in.
 
   users { $_root_cli_username:
-    uid        => $_root_cli_uid,
-    gid        => $_root_cli_gid,
     shell      => '/bin/false',
     password   => $_root_cli_password,
     managehome => false,
