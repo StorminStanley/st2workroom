@@ -21,6 +21,7 @@ class profile::auth_backend_pam(
   $version = '0.1.0',
 ) inherits st2 {
 
+  # TODO: This belongs in a package
   $distro_path = $osfamily ? {
     'Debian' => "apt/${lsbdistcodename}",
     'Ubuntu' => "apt/${lsbdistcodename}",
@@ -33,10 +34,17 @@ class profile::auth_backend_pam(
     destination => "/tmp/st2_auth_backend_pam-${version}-py2.7.egg"
   }
 
-  exec { 'install auth backend':
-    command => "easy_install /tmp/st2_auth_backend_pam-${version}-py2.7.egg",
-    path    => '/usr/bin:/usr/sbin:/bin:/sbin',
-    require => Wget::Fetch["Download auth pam backend"]
+  exec { 'install pam auth backend':
+    command => "easy_install-2.7 /tmp/st2_auth_backend_pam-${version}-py2.7.egg",
+    path    => '/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin',
+    require => Wget::Fetch["Download auth pam backend"],
+    before  => Class['::st2::profile::server'],
   }
 
+  class { '::st2::helper::auth_manager':
+    auth_mode     => 'standalone',
+    auth_backend  => 'pam',
+    debug         => false,
+    syslog        => true,
+  }
 }

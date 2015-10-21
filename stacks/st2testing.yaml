@@ -19,7 +19,7 @@ centos6:
   box: puppetlabs/centos-6.6-64-nocm
   puppet:
     facts:
-      role: st2express
+      role: st2
   ssh:
     pty: true
   private_networks:
@@ -30,7 +30,7 @@ centos7:
   box: puppetlabs/centos-7.0-64-nocm
   puppet:
     facts:
-      role: st2express
+      role: st2
   ssh:
     pty: true
   private_networks:

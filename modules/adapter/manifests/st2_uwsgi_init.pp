@@ -9,6 +9,8 @@ define adapter::st2_uwsgi_init (
   $subsystem = $name,
 ) {
   include ::st2::params
+  include ::profile::uwsgi
+
   $_init_type = $::st2::params::init_type
 
   if ! defined(Class['uwsgi']) and ! defined(Class['::st2::profile::server']) {
@@ -70,7 +72,10 @@ define adapter::st2_uwsgi_init (
     enable     => true,
     hasstatus  => true,
     hasrestart => true,
-    require    => Class['st2::profile::server'],
+    require    => [
+      Class['st2::profile::server'],
+      Class['::profile::uwsgi'],
+    ],
   }
 
   # Subscribe to Uwsgi Apps of the same name.

@@ -18,32 +18,15 @@ st2dev:
   private_networks:
     - 172.168.60.10
   sync_type: nfs
-st2express:
+st2:
   <<: *defaults
-  hostname: st2express
+  hostname: st2
   box: stackstorm/st2express
   ansible:
     playbook: playbooks/st2express.yaml
   puppet:
     facts:
-      role: st2express
+      role: st2
   private_networks:
     - 172.168.50.11
   self-check: true
-st2enterprise:
-  <<: *defaults
-  hostname: st2enterprise
-  puppet:
-    facts:
-      role: st2enterprise
-  private_networks:
-    - 172.168.50.11
-  self-check: true
-st2factory:
-  <<: *defaults
-  hostname: st2factory
-  puppet:
-    facts:
-      role: st2factory
-  private_networks:
-    - 172.168.50.12

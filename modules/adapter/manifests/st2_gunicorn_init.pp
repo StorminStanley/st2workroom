@@ -14,6 +14,7 @@ define adapter::st2_gunicorn_init (
   $group,
   ) {
   include ::st2::params
+  include ::profile::gunicorn
   $_init_type = $::st2::params::init_type
   $_python_pack = $::st2::profile::server::_python_pack
 
@@ -27,6 +28,7 @@ define adapter::st2_gunicorn_init (
     'mistral'      => 'mistral-api',
   }
   $_subsystem = $_subsystem_map[$subsystem]
+
 
   case $_init_type {
     'upstart': {
@@ -54,7 +56,7 @@ define adapter::st2_gunicorn_init (
       }
     }
     default: {
-      fail("[adapter::st2_uwsgi_init] Unable to setup adapter for Init System ${_init_type}. Not supported")
+      fail("[adapter::st2_gunicorn_init] Unable to setup adapter for Init System ${_init_type}. Not supported")
     }
   }
 
@@ -73,8 +75,8 @@ define adapter::st2_gunicorn_init (
     hasstatus  => true,
     hasrestart => true,
     require    => [
-      Python::Pip['gunicorn'],
       Class['st2::profile::server'],
+      Class['::profile::gunicorn'],
     ],
   }
 

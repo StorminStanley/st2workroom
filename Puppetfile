@@ -35,6 +35,7 @@ mod 'treydock-gpg_key',              '0.0.3'
 mod 'pcfens-ca_cert',                '1.1.1'
 mod 'adrien-alternatives',           '0.3.0'
 mod 'rodjek-logrotate',              '1.1.1'
+mod 'jfryman-selinux',               '0.2.6'
 
 mod 'jfryman-hubot',
   :git => 'https://github.com/jfryman/evenup-hubot',
@@ -48,6 +49,6 @@ mod 'maestrodev-wget',
   :git => 'https://github.com/maestrodev/puppet-wget',
   :ref => 'master'
 
-mod 'stackstorm-st2',                '0.10.0'
+mod 'stackstorm-st2',                '0.10.7'
 
 mod 'ilanco-s3cmd', '0.2.1'
