@@ -268,6 +268,7 @@ class profile::st2server {
   class { '::st2::profile::server':
     auth                   => true,
     st2api_listen_ip       => '127.0.0.1',
+    api_url              => $_public_api_url,
     manage_st2api_service  => false,
     manage_st2auth_service => false,
     manage_st2web_service  => false,
