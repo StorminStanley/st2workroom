@@ -1,6 +1,7 @@
 class role::st2 {
   $_enable_hubot = hiera('hubot', true)
-  $_enterprise_token = hiera('st2enterprise::token', undef)
+  $_enterprise_token = hiera('st2enterprise::token', false)
+  $_enable_ldap = hiera('st2::ldap', false)
 
   include ::profile::infrastructure
   include ::profile::st2enterprise
@@ -21,9 +22,14 @@ class role::st2 {
     }
   }
 
+  # Enable Enterprise Features
   if $_enterprise_token {
     include ::profile::st2flow
     include ::profile::st2rbac
+  }
+
+  # Authentication Configuration
+  if $_enable_ldap and $_enterprise_token {
     include ::profile::enterprise_auth_backend_ldap
   } else {
     include ::profile::auth_backend_pam
