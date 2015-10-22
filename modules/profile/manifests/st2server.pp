@@ -206,6 +206,12 @@ class profile::st2server {
   # see how far it gets us.
   $_nginx_daemon_user = $::nginx::config::daemon_user
 
+  # Ensure user belongs to the st2packs group
+  User <| title == $_nginx_daemon_user |> {
+    groups  +> 'st2packs',
+    require => Class['::st2::profile::server'],
+  }
+
   # De-dup code compression without future-parser
   $_st2_classes = [
     '::profile::python',
