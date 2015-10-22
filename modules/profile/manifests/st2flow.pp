@@ -41,10 +41,11 @@ class profile::st2flow(
     }
 
     wget::fetch { 'Download Flow artifact':
-      source      => "https://${_enterprise_token}:@downloads.stackstorm.net/st2enterprise/${distro_path}/st2flow/flow-${st2::version}.tar.gz",
-      cache_dir   => '/var/cache/wget',
-      destination => '/tmp/flow.tar.gz',
-      before      => Exec['extract flow'],
+      source             => "https://${_enterprise_token}:@downloads.stackstorm.net/st2enterprise/${distro_path}/st2flow/flow-${st2::version}.tar.gz",
+      cache_dir          => '/var/cache/wget',
+      destination        => '/tmp/flow.tar.gz',
+      nocheckcertificate => true,
+      before             => Exec['extract flow'],
     }
 
     exec { 'extract flow':
