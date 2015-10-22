@@ -79,11 +79,21 @@ class profile::st2server {
     $_self_signed_cert = true
   }
 
-  $_server_names = [
+  # Assemble the list of all
+  $_dns_names = [
     $_hostname,
     $_fqdn,
-    $_host_ip,
   ]
+
+  # For now, we'll do some ugly in Puppet. This is here because masterless
+  # installations do not have Pluginsync, and the scaffolding has not
+  # properly setup a LIBDIR for Puppet/Facter yet. Until then, we'll have
+  # to do some nasty type management in Puppet to make this work.
+  #
+  # Forgive me, for I have sinned.
+  $_interfaces = split($::interfaces, ',')
+  $_ip_addresses = inline_template('<%= @_interfaces.collect { |i| scope["::ipaddress_#{i}"] }.join(",") %>')
+  $_server_names = $_dns_names + split($_ip_addresses, ',')
 
   file { '/var/sockets':
     ensure => 'directory',
