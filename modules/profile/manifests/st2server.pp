@@ -205,11 +205,11 @@ class profile::st2server {
   # the daemon user to the same named group. Let's roll with it and
   # see how far it gets us.
   $_nginx_daemon_user = $::nginx::config::daemon_user
+  $_st2_packs_group = $::st2::params::packs_group_name
 
   # Ensure user belongs to the st2packs group
   User <| title == $_nginx_daemon_user |> {
-    groups  +> 'st2packs',
-    require => Class['::st2::profile::server'],
+    groups  +> $_st2_packs_group,
   }
 
   # De-dup code compression without future-parser
