@@ -5,8 +5,7 @@ classes:
 rsyslog::client::log_local: true
 
 sudo::purge: false
-st2::version: 0.14dev
-st2::revision: 206
+
 st2::autoupdate: false
 st2::packs:
   hubot:
