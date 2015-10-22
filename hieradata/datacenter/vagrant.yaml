@@ -4,7 +4,6 @@ classes:
 
 puppet::masterless::cron: false
 
-## phool did this
-#system::ipaddress: '%{::ipaddress_eth1}'
+system::ipaddress: '%{::ipaddress_eth1}'
 st2::installer_workroom_mode: "0666"
 st2::autoupdate: true
