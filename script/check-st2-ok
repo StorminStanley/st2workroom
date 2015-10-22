@@ -98,10 +98,6 @@ ok_message() {
 
 # Only run the check for StackStorm in the event that it actually exists
 if [ -f /usr/bin/st2 ]; then
-  # Restart StackStorm for good measure
-  sudo st2ctl restart > /dev/null 2>&1
-  sleep 10
-
   # Check to see if the current user is root, and if not, have them authenticate
   if [ "${USER}" != 'root' ] || [ ! -n $ST2_AUTH_TOKEN ]; then
     prompt_for_credentials
