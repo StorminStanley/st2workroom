@@ -1,7 +1,7 @@
 require 'resolv'
 
 module Puppet::Parser::Functions
-  newfunction(:all_host_ipv4, :type => :rvalue) do
+  newfunction(:all_host_ipv4, :type => :rvalue) do |args|
     interfaces = lookupvar('interfaces').split(',')
     ipaddresses = []
     interfaces.each do |interface|
