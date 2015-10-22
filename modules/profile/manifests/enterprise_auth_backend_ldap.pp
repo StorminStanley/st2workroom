@@ -37,6 +37,10 @@ class profile::enterprise_auth_backend_ldap(
   $_id_attr = hiera('st2::ldap::id_attr', 'uid')
   $_scope = hiera('st2::ldap::scope', 'subtree')
 
+  $_host_ip = hiera('system::ipaddress', $::ipaddress)
+  $_st2api_port = '9101'
+  $_api_url = "https://${_host_ip}:${_st2api_port}"
+
   # Validations
   validate_bool($_ldap_use_ssl)
   validate_bool($_ldap_use_tls)
@@ -101,6 +105,7 @@ class profile::enterprise_auth_backend_ldap(
     debug          => false,
     syslog         => true,
     backend_kwargs => $_ldap_kwargs,
+    api_url        => $_api_url,
     require        => Exec['install enterprise ldap auth backend'],
   }
 }
