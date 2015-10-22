@@ -59,10 +59,10 @@ class profile::enterprise_auth_backend_ldap(
 
   if $_enterprise_token {
     wget::fetch { "Download enterprise auth ldap backend":
-      source      => "https://${_enterprise_token}:@downloads.stackstorm.net/st2enterprise/${distro_path}/auth_backends/st2_enterprise_auth_backend_ldap-${version}-py2.7.egg",
-      cache_dir   => '/var/cache/wget',
+      source             => "https://${_enterprise_token}:@downloads.stackstorm.net/st2enterprise/${distro_path}/auth_backends/st2_enterprise_auth_backend_ldap-${version}-py2.7.egg",
+      cache_dir          => '/var/cache/wget',
       nocheckcertificate => true,
-      destination => "/tmp/st2_enterprise_auth_backend_ldap-${version}-py2.7.egg"
+      destination        => "/tmp/st2_enterprise_auth_backend_ldap-${version}-py2.7.egg"
     }
 
     exec { 'install enterprise ldap auth backend':
