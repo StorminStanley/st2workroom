@@ -20,6 +20,9 @@
 class profile::auth_backend_pam(
   $version = '0.1.0',
 ) inherits st2 {
+  $_host_ip = hiera('system::ipaddress', $::ipaddress)
+  $_st2api_port = '9101'
+  $_api_url = "https://${_host_ip}:${_st2api_port}"
 
   # TODO: This belongs in a package
   $distro_path = $osfamily ? {
@@ -43,9 +46,10 @@ class profile::auth_backend_pam(
   }
 
   class { '::st2::helper::auth_manager':
-    auth_mode     => 'standalone',
-    auth_backend  => 'pam',
-    debug         => false,
-    syslog        => true,
+    auth_mode    => 'standalone',
+    auth_backend => 'pam',
+    debug        => false,
+    syslog       => true,
+    api_url      => $_api_url,
   }
 }
