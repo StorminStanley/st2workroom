@@ -3,7 +3,7 @@ st2workroom
 
 A full fledged development environment for working with StackStorm. This project allows you to:
 
-* Spin up a test environment to play with StackStorm (`st2express`)
+* Spin up a test environment to play with StackStorm (`st2`)
 * Spin up a development environment to work with StackStorm (`st2dev`)
 * Begin building infrastructure patterns using pre-configured Config Management tools
 
@@ -29,12 +29,12 @@ Additional workrooms will be created for the following languages:
 * Salt
 
 ## Usage
-### st2express
+### st2
 
 st2express is used to spin up a test StackStorm instance. To start, simply type the following command:
 
 ```
-  vagrant up st2express
+  vagrant up st2
 ```
 
 This will automatically provision a new StackStorm server. If you have Bonjour/Zeroconf enabled on your
@@ -43,7 +43,7 @@ machine, the WebUI will be available at https://st2express.local/
 To SSH into the machine, simply type the following command:
 
 ```
-  vagrant ssh st2express
+  vagrant ssh st2
 ```
 
 NOTE: In the event you receive an error related to IP conflict, Edit the `private_neworks` address in `stacks/st2.yaml`, and adjust the third octet to a non-conflicting value. For example:
@@ -80,42 +80,6 @@ the `st2dev` environment, you should consider setting up a SparseBundle and stor
 
 Instructions on how to do this can be found at https://plog.logston.me/Vagrant-development-environment-on-OSX/
 
-### st2factory
-
-st2factory is used as a clean image to build artifacts for distribution (vagrant and docker). This
-machine will download docker and packer in the VM for rapid development.
-
-_Build Docker Containers for Local Usage/Testing_
-
-```
-  script/build-st2-containers
-```
-
-_Publish Docker Containers to Docker Hub_
-
-```
-  export DOCKER_LOGIN_USERNAME=XXX
-  export DOCKER_LOGIN_PASSWORD=XXX
-  export DOCKER_LOGIN_EMAIL=XXX
-  script/publish-st2-containers
-```
-
-
-This script will automatically boot the `st2factory` image, and begin building artifacts. In addition,
-you may need to set some environment variables. You can do this using `dotenv`, or within your shell.
-
-Environment variables:
-* `role` - Puppet role to build in a container (required)
-* `environment` - Puppet environment to build in a container (default: `current_working_directory`)
-* `debug` - Set this to any value to enable debug (default: `false`)
-* `docker_repository` - Name of repository to upload (e.g.: stackstorm/base. required)
-* `docker_image` - Name of image used as baseline for containers (default: `ubuntu:14.04`)
-* `docker_tag` - Version to tag `docker_repository`. (required)
-* `docker_login_email` - email address associated with Docker Registry account (required)
-* `docker_login_username` - username associated with Docker Registry account (required)
-* `docker_login_password` - password associated with Docker Registry account (required)
-* `docker_login_server` - Docker Registry to connect to (default: Docker Hub)
-
 ## Configuration
 ### Virtual Machine configuration
 In the event you would like to develop or test a different target machine, or need to change the
@@ -131,7 +95,7 @@ For Ansible provision, the path to the playbook in `stacks/st2.yaml` is relative
 
 ### ChatOps
 
-By default, both `st2express` and `st2dev` come with installed copies of Hubot. This is to allow
+By default, both `st2` and `st2dev` come with installed copies of Hubot. This is to allow
 local testing of ChatOps. To configure Hubot, simply take a look at the file `hieradata/workroom.yaml`.
 You will see all of the configuration commented out. To setup Hubot to automatically connect to an
 IRC room, for example, simply set the following values in `hieradata/workroom.yaml`
