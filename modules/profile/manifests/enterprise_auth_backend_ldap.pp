@@ -32,7 +32,7 @@ class profile::enterprise_auth_backend_ldap(
   $_ldap_host = hiera('st2::ldap::host', undef)
   $_ldap_port = hiera('st2::ldap::port', '389')
   $_ldap_use_ssl = hiera('st2::ldap::use_ssl', false)
-  $_ldap_use_tls = hiera('st2::ldap::cacert', false)
+  $_ldap_use_tls = hiera('st2::ldap::use_tls', false)
   $_users_ou = hiera('st2::ldap::base_dn', undef)
   $_id_attr = hiera('st2::ldap::id_attr', 'uid')
   $_scope = hiera('st2::ldap::scope', 'subtree')
