@@ -79,11 +79,13 @@ class profile::st2server {
     $_self_signed_cert = true
   }
 
-  $_server_names = [
+  # Assemble the list of all
+  $_dns_names = [
     $_hostname,
     $_fqdn,
-    $_host_ip,
   ]
+  $_ip_addressess = all_host_ipv4()
+  $_server_names = flatten($_dns_names, $_ip_addresses)
 
   file { '/var/sockets':
     ensure => 'directory',
