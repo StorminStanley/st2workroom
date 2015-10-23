@@ -21,17 +21,12 @@ class profile::st2flow(
   $version = $::st2::version
 ) inherits st2 {
   $_enterprise_token = hiera('st2enterprise::token', undef)
-  if $_enterprise_token {
+  if $_enterprise_token and $::st2flow_version != $version {
     file { '/opt/stackstorm/static/webui/flow':
       ensure => directory,
       owner  => 'root',
       group  => 'root',
       mode   => '0755',
-    }
-
-    $_bootstrapped = $::st2flow_bootstrapped ? {
-      undef   => false,
-      default => str2bool($::st2flow_bootstrapped),
     }
 
     $distro_path = $osfamily ? {
@@ -54,14 +49,9 @@ class profile::st2flow(
       path    => '/usr/bin:/usr/sbin:/bin:/sbin',
       require => File['/opt/stackstorm/static/webui/flow'],
     }
+  }
 
-    file { '/etc/facter/facts.d/st2flow_bootstrapped.txt':
-      ensure  => file,
-      owner   => 'root',
-      group   => 'root',
-      mode    => '0444',
-      require => Exec['extract flow'],
-      content => 'st2flow_bootstrapped=true',
-    }
+  facter::fact { 'st2flow_bootstrapped':
+    value => $version,
   }
 }
