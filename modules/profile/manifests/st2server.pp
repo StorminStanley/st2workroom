@@ -667,7 +667,7 @@ class profile::st2server {
     workers => $_st2api_workers,
     threads => $_st2api_threads,
     user    => $_nginx_daemon_user,
-    group   => $_nginx_daemon_user,
+    group   => $_st2_packs_group,
     require => File['/var/sockets']
   }
 
