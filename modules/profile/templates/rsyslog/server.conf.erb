@@ -1,0 +1,75 @@
+# This file is managed by Puppet, changes may be overwritten
+# File is managed by puppet
+
+# Load UDP module
+$ModLoad imudp
+
+# Load TCP module
+$ModLoad imtcp
+
+# Load RELP module
+$ModLoad imrelp
+
+
+#
+# Use traditional timestamp format.
+#
+$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+
+
+# Switch to remote ruleset
+$RuleSet remote
+
+
+# Log files are stored in directories matching the short hostname, excluding numbers
+# i.e. web01 web02 and web03 will all log to a the web directory
+
+# Templates
+$Template dynAuditLog,"/srv/log/%source:R,ERE,1,DFLT:([A-Za-z-]*)--end%/audit.log"
+$Template dynAuthLog,"/srv/log/%source:R,ERE,1,DFLT:([A-Za-z-]*)--end%/auth.log"
+$Template dynSyslog,"/srv/log/%source:R,ERE,1,DFLT:([A-Za-z-]*)--end%/syslog"
+$Template dynCronLog,"/srv/log/%source:R,ERE,1,DFLT:([A-Za-z-]*)--end%/cron.log"
+$Template dynDaemonLog,"/srv/log/%source:R,ERE,1,DFLT:([A-Za-z-]*)--end%/daemon.log"
+$Template dynKernLog,"/srv/log/%source:R,ERE,1,DFLT:([A-Za-z-]*)--end%/kern.log"
+$Template dynUserLog,"/srv/log/%source:R,ERE,1,DFLT:([A-Za-z-]*)--end%/user.log"
+$Template dynMailLog,"/srv/log/%source:R,ERE,1,DFLT:([A-Za-z-]*)--end%/mail.log"
+$Template dynDebug,"/srv/log/%source:R,ERE,1,DFLT:([A-Za-z-]*)--end%/debug"
+$Template dynMessages,"/srv/log/%source:R,ERE,1,DFLT:([A-Za-z-]*)--end%/messages"
+
+# Rules
+auth,authpriv.*         ?dynAuthLog
+*.*;auth,authpriv.none,mail.none,cron.none      -?dynSyslog
+cron.*              ?dynCronLog
+daemon.*            -?dynDaemonLog
+kern.*              -?dynKernLog
+mail.*              -?dynMailLog
+user.*              -?dynUserLog
+*.=info;*.=notice;*.=warn;\
+    auth.none,authpriv.none;\
+    cron.none,daemon.none;\
+    mail.none,news.none     -?dynMessages
+
+# Special format to keep audit logs as sent.
+$Template auditFormat,"%msg%\n"
+
+# Catch messages from audispd and send to audit log.
+:programname,   isequal,        "audispd"       -?dynAuditLog;auditFormat
+:programname,   isequal,        "audispd"       stop
+
+
+
+# Switch back to default ruleset
+$RuleSet RSYSLOG_DefaultRuleset
+
+$InputUDPServerBindRuleset remote
+$UDPServerRun 514
+$UDPServerAddress *
+
+$InputTCPServerBindRuleset remote
+$InputTCPServerRun 514
+
+$InputRELPServerBindRuleset remote
+$InputRELPServerRun 20514
+
+$SystemLogRateLimitInterval 0
+$SystemLogRateLimitBurst 0

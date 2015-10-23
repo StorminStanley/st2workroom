@@ -1,6 +1,7 @@
 class profile::rsyslog {
-  class { '::rsyslog::server': }
-
+  class { '::rsyslog::server':
+    custom_config => 'profile/rsyslog/server.conf.erb',
+  }
   class { '::rsyslog::client':
     custom_config => 'profile/rsyslog/client.conf.erb',
   }
