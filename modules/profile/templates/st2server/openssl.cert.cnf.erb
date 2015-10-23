@@ -59,13 +59,11 @@ keyUsage = digitalSignature, keyEncipherment
 subjectAltName = @alt_names
 
 [ alt_names ]
-<%- dns = 0 -%>
-<%- ip = 0 -%>
-<%- @altnames.sort.each do |name| -%>
+<%- @altnames.sort.each_with_index do |name, index| -%>
   <%- next if name == @_fqdn -%>
   <%- if IPAddress.valid?(name) then -%>
-IP.<%= ip =+ 1 %> = <%= name %>
+IP.<%= index %> = <%= name %>
   <%- else -%>
-DNS.<%= dns += 1 %> = <%= name %>
+DNS.<%= index %> = <%= name %>
   <%- end -%>
 <%- end -%>
