@@ -31,18 +31,24 @@ class profile::auth_backend_pam(
     'RedHat' => "yum/el/${operatingsystemmajrelease}"
   }
 
-  wget::fetch { "Download auth pam backend":
-    source             => "https://downloads.stackstorm.net/st2community/${distro_path}/auth_backends/st2_auth_backend_pam-${version}-py2.7.egg",
-    cache_dir          => '/var/cache/wget',
-    nocheckcertificate => true,
-    destination        => "/tmp/st2_auth_backend_pam-${version}-py2.7.egg"
+  if $::st2_pam_backend_version != $version {
+    wget::fetch { "Download auth pam backend":
+      source             => "https://downloads.stackstorm.net/st2community/${distro_path}/auth_backends/st2_auth_backend_pam-${version}-py2.7.egg",
+      cache_dir          => '/var/cache/wget',
+      nocheckcertificate => true,
+      destination        => "/tmp/st2_auth_backend_pam-${version}-py2.7.egg"
+    }
+
+    exec { 'install pam auth backend':
+      command     => "easy_install-2.7 /tmp/st2_auth_backend_pam-${version}-py2.7.egg",
+      path        => '/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin',
+      require     => Wget::Fetch["Download auth pam backend"],
+      before      => Class['::st2::helper::auth_manager'],
+    }
   }
 
-  exec { 'install pam auth backend':
-    command => "easy_install-2.7 /tmp/st2_auth_backend_pam-${version}-py2.7.egg",
-    path    => '/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin',
-    require => Wget::Fetch["Download auth pam backend"],
-    before  => Class['::st2::profile::server'],
+  facter::fact { 'st2_pam_backend_version':
+    value => $version,
   }
 
   class { '::st2::helper::auth_manager':

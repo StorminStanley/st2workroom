@@ -61,7 +61,8 @@ class profile::enterprise_auth_backend_ldap(
     'RedHat' => "yum/el/${operatingsystemmajrelease}"
   }
 
-  if $_enterprise_token {
+  # Only attempt to download new versions of the file, and if I have an enterprise token.
+  if $_enterprise_token and $::st2_ldap_backend_version != $version {
     wget::fetch { "Download enterprise auth ldap backend":
       source             => "https://${_enterprise_token}:@downloads.stackstorm.net/st2enterprise/${distro_path}/auth_backends/st2_enterprise_auth_backend_ldap-${version}-py2.7.egg",
       cache_dir          => '/var/cache/wget',
@@ -73,7 +74,12 @@ class profile::enterprise_auth_backend_ldap(
       command => "easy_install-2.7 /tmp/st2_enterprise_auth_backend_ldap-${version}-py2.7.egg",
       path    => '/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin',
       require => Wget::Fetch["Download enterprise auth ldap backend"]
+      before  => Class['::st2::helper::auth_manager'],
     }
+  }
+
+  facter::fact { 'st2_ldap_backend_version':
+    value => $version,
   }
 
   # Assemble kwargs
@@ -106,6 +112,5 @@ class profile::enterprise_auth_backend_ldap(
     syslog         => true,
     backend_kwargs => $_ldap_kwargs,
     api_url        => $_api_url,
-    require        => Exec['install enterprise ldap auth backend'],
   }
 }

@@ -1,11 +1,12 @@
 class profile::hubot(
   $bot_name = 'hubot',
+  $version  = '0.1.0',
 ) {
   ## Common
   class { '::hubot':
     install_nodejs => false,
   }
-  class { '::nodejs': 
+  class { '::nodejs':
     repo_url_suffix => 'node_0.12',
   }
 
@@ -85,9 +86,20 @@ class profile::hubot(
   Exec<| tag == 'nodejs::npm' |> {
     environment => 'HOME=/opt/hubot',
   }
-  nodejs::npm { $_npm_packages:
-    ensure => latest,
-    target => $_hubot_bin_dir,
-    user   => $_hubot_user,
+
+  # Only attempt to install the adapters a single time. Hubot
+  # will attempt to refresh on boot, so we do not need to look
+  # on every convergence attempt.
+  if $::hubot_adapters_version != $version {
+    nodejs::npm { $_npm_packages:
+      ensure => latest,
+      target => $_hubot_bin_dir,
+      user   => $_hubot_user,
+      before => Facter::Fact['hubot_adapters_version'],
+    }
+  }
+
+  facter::fact { 'hubot_adapters_version':
+    value => $version,
   }
 }
