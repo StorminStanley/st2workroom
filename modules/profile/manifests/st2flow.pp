@@ -51,7 +51,7 @@ class profile::st2flow(
     }
   }
 
-  facter::fact { 'st2flow_bootstrapped':
+  facter::fact { 'st2flow_version':
     value => $version,
   }
 }
