@@ -3,6 +3,7 @@ $stdout.sync = true
 # Path to the answers.yaml file which is expected by puppet (place where
 # the bootstrap script moves it to)
 BOOTSTRAP_ANSWERS_FILE_PATH = "/opt/puppet/hieradata/answers.yaml"
+INSTALLER_ANSWERS_FILE_PATH = "/opt/puppet/hieradata/answers.json"
 
 namespace :environments do
   desc "Update one or more branches "
@@ -84,6 +85,9 @@ namespace :environments do
 
       if File.exists?(BOOTSTRAP_ANSWERS_FILE_PATH)
           FileUtils.copy BOOTSTRAP_ANSWERS_FILE_PATH, "#{env_checkout}/hieradata/answers.yaml"
+      end
+      if File.exists?(INSTALLER_ANSWERS_FILE_PATH)
+          FileUtils.copy INSTALLER_ANSWERS_FILE_PATH, "#{env_checkout}/hieradata/answers.json"
       end
     end
   end
