@@ -100,12 +100,12 @@ ok_message() {
 if [ -f /usr/bin/st2 ]; then
   # Check to see if the current user is root, and if not, have them authenticate
   if [ "${USER}" != 'root' ] || [ ! -n $ST2_AUTH_TOKEN ]; then
-    prompt_for_credentials
-    export ST2_AUTH_TOKEN=$(st2 auth $USER -t)
+    sudo su -c "st2 run core.local date" > /dev/null 2>&1
+  else
+    st2 run core.local date > /dev/null 2>&1
   fi
 
   # Run the actual check
-  st2 run core.local date &> /dev/null
   if [ $? -eq 0 ]; then
     ok_message
     exit 0
