@@ -14,6 +14,7 @@ if [ -n "$1" ]; then
     rm -f /etc/facter/facts.d/st2flow_bootstrapped.txt
     rm -f /etc/facter/facts.d/st2server_bootstrapped.txt
     rm -f /etc/facter/facts.d/st2web_bootstrapped.txt
+    rm -f /etc/facter/facts.d/facts.txt
   fi
 fi
 
@@ -78,7 +79,7 @@ if [ "$PUPPET_ENV" = "current_working_directory" ]; then
     echo "Setting up 'current_working_directory'..."
 
     ## Install Puppet libs
-    librarian-puppet install
+    librarian-puppet install > $LOG_FILE 2>&1
 
     ## Setup an environment for this project
     rsync $RSYNC_DEBUG_ARGS -arh --delete --exclude "environments" \
@@ -86,7 +87,8 @@ if [ "$PUPPET_ENV" = "current_working_directory" ]; then
           --exclude "packer" --exclude "script" --exclude ".git" \
           $PROJECT_ROOT/ $PROJECT_ROOT/environments/current_working_directory/
 else
-    rake environments:update
+    echo "Setting up Puppet environments..."
+    rake environments:update > $LOG_FILE 2>&1
 fi
 
 ## Attempt to detect if the environment even exists... if not,
