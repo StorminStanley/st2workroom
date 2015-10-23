@@ -31,6 +31,7 @@ class profile::st2server {
   $_enterprise_token = hiera('st2enterprise::token', undef)
   $_root_cli_username = 'root_cli'
   $_root_cli_password = fqdn_rand_string(32)
+  $_st2_packs_group = $::st2::params::packs_group_name
 
   $_init_type = $::st2::params::init_type
 
@@ -667,7 +668,7 @@ class profile::st2server {
     workers => $_st2api_workers,
     threads => $_st2api_threads,
     user    => $_nginx_daemon_user,
-    group   => $_nginx_daemon_user,
+    group   => $_st2_packs_group,
     require => File['/var/sockets']
   }
 
