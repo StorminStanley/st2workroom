@@ -35,9 +35,12 @@ if [ -n "$CACHE_LIBRARIES" ]; then
         echo $PUPPET_CURRENT_SHA > .puppetfile
     fi
 else
-    $BUNDLE_PATH install --path vendor/bundle $BUNDLER_ARGS
+    echo "Ensuring pre-flight libraries are setup..."
+    $BUNDLE_PATH install --path vendor/bundle $BUNDLER_ARGS > $LOG_FILE 2>&1
+
+    echo "Installing vendored puppet modules..."
     $BUNDLE_PATH exec librarian-puppet install --path shared \
-           $LIBRARIAN_DEBUG_ARGS
+           $LIBRARIAN_DEBUG_ARGS > $LOG_FILE 2>&1
 fi
 
 
