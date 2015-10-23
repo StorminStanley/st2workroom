@@ -5,6 +5,7 @@ classes:
 rsyslog::client::log_local: true
 
 sudo::purge: false
+sudo::config_file_replace: false
 
 st2::autoupdate: false
 st2::packs:

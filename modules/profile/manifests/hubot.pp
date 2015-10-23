@@ -87,6 +87,9 @@ class profile::hubot(
     environment => 'HOME=/opt/hubot',
   }
 
+  # Only attempt to install the adapters a single time. Hubot
+  # will attempt to refresh on boot, so we do not need to look
+  # on every convergence attempt.
   if $::hubot_adapters_version != $version {
     nodejs::npm { $_npm_packages:
       ensure => latest,
