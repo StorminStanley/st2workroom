@@ -38,11 +38,15 @@ class profile::infrastructure {
     ip           => '127.0.0.1',
     host_aliases => 'localhost',
   }
-  host { 'default hostname v4':
-    ensure       => present,
-    name         => $_fqdn,
-    ip           => $_host_ip,
-    host_aliases => $::hostname,
+
+  # Set the Hostname for the system
+  if $_fqdn != 'localhost.localdomain' {
+    host { 'default hostname v4':
+      ensure       => present,
+      name         => $_fqdn,
+      ip           => $_host_ip,
+      host_aliases => $::hostname,
+    }
   }
 
   # Set offline State
