@@ -62,8 +62,8 @@ subjectAltName = @alt_names
 <%- @altnames.sort.each_with_index do |name, index| -%>
   <%- next if name == @_fqdn -%>
   <%- if IPAddress.valid?(name) then -%>
-IP.<%= index %> = <%= name %>
+IP.<%= index+1 %> = <%= name %>
   <%- else -%>
-DNS.<%= index %> = <%= name %>
+DNS.<%= index+1 %> = <%= name %>
   <%- end -%>
 <%- end -%>
