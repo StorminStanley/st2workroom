@@ -10,6 +10,9 @@ $ModLoad imtcp
 # Load RELP module
 $ModLoad imrelp
 
+# Load Unix Socket connection
+$ModLoad imuxsock
+
 
 #
 # Use traditional timestamp format.
@@ -70,6 +73,7 @@ $InputTCPServerRun 514
 
 $InputRELPServerBindRuleset remote
 $InputRELPServerRun 20514
+
 
 $SystemLogRateLimitInterval 0
 $SystemLogRateLimitBurst 0
