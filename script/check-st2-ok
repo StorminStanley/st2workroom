@@ -73,7 +73,7 @@ ok_message() {
 
 # Only run the check for StackStorm in the event that it actually exists
 if [ -f /usr/bin/st2 ]; then
-  sudo st2 run core.local date > /dev/null 2>%1
+  sudo st2 run core.local date > /dev/null 2>&1
   # Run the actual check
   if [ $? -eq 0 ]; then
     ok_message
