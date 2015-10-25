@@ -76,10 +76,10 @@ class profile::enterprise_auth_backend_ldap(
       require => Wget::Fetch["Download enterprise auth ldap backend"],
       before  => Class['::st2::helper::auth_manager'],
     }
-  }
 
-  facter::fact { 'st2_ldap_backend_version':
-    value => $version,
+    facter::fact { 'st2_ldap_backend_version':
+      value => $version,
+    }
   }
 
   # Assemble kwargs
