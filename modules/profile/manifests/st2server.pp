@@ -226,7 +226,7 @@ class profile::st2server {
     ensure  => 'directory',
     owner   => 'root',
     group   => $_st2_packs_group,
-    mode    => 0775,
+    mode    => '0775',
     recurse => true
   }
   
