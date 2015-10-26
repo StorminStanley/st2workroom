@@ -37,6 +37,7 @@ mod 'adrien-alternatives',           '0.3.0'
 mod 'rodjek-logrotate',              '1.1.1'
 mod 'jfryman-selinux',               '0.2.6'
 mod 'puppetlabs-firewall',           '1.7.1'
+mod 'jethrocarr-hostname',           '1.0.2'
 
 mod 'jfryman-hubot',
   :git => 'https://github.com/jfryman/evenup-hubot',
@@ -50,6 +51,6 @@ mod 'maestrodev-wget',
   :git => 'https://github.com/maestrodev/puppet-wget',
   :ref => 'master'
 
-mod 'stackstorm-st2',                '0.10.13'
+mod 'stackstorm-st2',                '0.10.14'
 
 mod 'ilanco-s3cmd', '0.2.1'
