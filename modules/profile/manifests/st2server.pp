@@ -844,9 +844,14 @@ class profile::st2server {
     notify   => Service['st2installer'],
   }
 
+  if $::osfamily == 'RedHat' and $::operatingsystemmajrelease == '6' {
+    $_st2installer_python_ver = '2.7'
+  } else {
+    $_st2installer_python_ver = 'system'
+  }
   python::virtualenv { $_st2installer_root:
     ensure       => present,
-    version      => '2.7',
+    version      => $_st2installer_python_ver,
     systempkgs   => false,
     venv_dir     => "${_st2installer_root}/.venv",
     cwd          => $_st2installer_root,
