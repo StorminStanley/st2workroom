@@ -230,14 +230,6 @@ class profile::st2server {
     groups  +> $_st2_packs_group,
   }
 
-  file { '/opt/stackstorm/packs':
-    ensure  => 'directory',
-    owner   => 'root',
-    group   => $_st2_packs_group,
-    mode    => '0775',
-    recurse => true
-  }
-  
   # De-dup code compression without future-parser
   $_st2_classes = [
     '::profile::python',

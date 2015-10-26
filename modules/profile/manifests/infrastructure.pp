@@ -9,6 +9,14 @@ class profile::infrastructure {
   include ::ntp
   include ::profile::rsyslog
 
+
+  # Ensure sudoers is declared to allow us to use the defined types,
+  # but do not overwrite any of the existing configs on a system.
+  class { '::sudo':
+    purge               => false,
+    config_file_replace => false,
+  }
+
   package { $_packages:
     ensure => present,
   }

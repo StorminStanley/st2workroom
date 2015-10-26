@@ -72,7 +72,6 @@ define users(
   }
 
   if $admin {
-    include ::sudo
     sudo::conf { "${username}-admin":
       ensure   => $ensure,
       priority => 10,
