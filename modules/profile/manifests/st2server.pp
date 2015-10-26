@@ -846,7 +846,7 @@ class profile::st2server {
 
   python::virtualenv { $_st2installer_root:
     ensure       => present,
-    version      => 'system',
+    version      => '2.7',
     systempkgs   => false,
     venv_dir     => "${_st2installer_root}/.venv",
     cwd          => $_st2installer_root,
