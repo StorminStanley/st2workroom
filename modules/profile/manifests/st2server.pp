@@ -210,6 +210,14 @@ class profile::st2server {
     configtest_enable => $_nginx_configtest,
   }
 
+  # Ensure that IPTables has access rules to alloww
+  # access to StackStorm ports as necessary.
+  firewall { '100 allow HTTP/HTTPS/ST2 Access':
+    dport  => ['80', '443', $_st2auth_port, $_st2api_port],
+    proto  => tcp,
+    action => accept,
+  }
+
   # We need to grab the group nginx belongs to in order to provide
   # ancillary permissions to specific files. The OS in most cases assigns
   # the daemon user to the same named group. Let's roll with it and
