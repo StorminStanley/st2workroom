@@ -25,10 +25,33 @@ class profile::infrastructure {
   ## This is a bit of a Snake eating its own tail here, but
   ## Allows us to set up a random hostname (say, with a cloud provider),
   ## and then let the user come around and configure it with st2installer
-
-  class { '::hostname':
-    hostname => $_fqdn,
+  file { '/etc/hostname':
+    ensure => file,
+    content => "${_fqdn}\n",
+    notify  => Exec['apply hostname'],
   }
+  exec { "apply hostname":
+    command => "/bin/hostname -F /etc/hostname",
+    unless  => "/usr/bin/test `hostname` = `/bin/cat /etc/hostname`",
+  }
+
+  host { 'default v4 localhost':
+    ensure       => present,
+    name         => 'localhost.localdomain',
+    ip           => '127.0.0.1',
+    host_aliases => 'localhost',
+  }
+
+  # Set the Hostname for the system
+  if $_fqdn != 'localhost.localdomain' {
+    host { 'default hostname v4':
+      ensure       => present,
+      name         => $_fqdn,
+      ip           => $_host_ip,
+      host_aliases => $::hostname,
+    }
+  }
+
 
   # Set offline State
   ## Various helper applications to the workroom require
