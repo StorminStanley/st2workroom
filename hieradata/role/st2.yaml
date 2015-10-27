@@ -5,8 +5,8 @@ classes:
 npm::proxy: false
 puppet::masterless::cron: disable
 
-st2::version: 0.14dev
-st2::revision: 235
+st2::version: 1.1.0
+st2::revision: 5
 st2::autoupdate: false
 st2::mistral_git_branch: st2-1.1.0
 
