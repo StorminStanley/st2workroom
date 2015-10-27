@@ -30,15 +30,6 @@ class puppet::masterless(
 
   File<| tag == 'puppet::masterless' |> -> Facter::Fact<||>
 
-  if $cron {
-    cron { 'puppet-periodic':
-      ensure  => present,
-      user    => 'root',
-      minute  => $offset,
-      command => "${::settings::confdir}/script/puppet-apply",
-    }
-  }
-
   if $run_at_boot {
     cron { 'puppet-boot':
       ensure  => present,
