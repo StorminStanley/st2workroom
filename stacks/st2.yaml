@@ -30,9 +30,3 @@ st2:
   private_networks:
     - 172.168.50.11
   self-check: true
-deb8:
-  <<: *defaults
-  hostname: deb8
-  puppet:
-    facts:
-      role: st2
