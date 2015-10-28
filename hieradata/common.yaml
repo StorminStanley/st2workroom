@@ -12,3 +12,6 @@ st2::packs:
       endpoint: "http://localhost:8081"
   st2:
     ensure: present
+
+facter::manage_package: false
+facter::path_to_facter: "%{::settings::confdir}/bin/facter"
