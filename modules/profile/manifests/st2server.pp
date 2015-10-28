@@ -40,6 +40,16 @@ class profile::st2server {
     'RedHat'  => 'root'
   }
 
+  case $::osfamily {
+    'RedHat': { $syslog_user = 'root' }
+    'Debian': {
+      $syslog_user = $::lsbdistcodename ? {
+        jessie  => 'root',
+        default => 'syslog',
+      }
+    }
+  }
+
   # StackStorm Flow Setup. Only enable if there is a supplied token
   $_flow_url = $_enterprise_token ? {
     undef   => undef,
