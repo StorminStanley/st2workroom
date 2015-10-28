@@ -4,7 +4,7 @@ defaults: &defaults
   domain: stackstorm.net
   memory: 2048
   cpus: 1
-  box: debian/jessie64
+  box: puppetlabs/ubuntu-14.04-64-puppet
   puppet:
     facts:
       datacenter: vagrant
