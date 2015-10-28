@@ -4,7 +4,7 @@ defaults: &defaults
   domain: stackstorm.net
   memory: 2048
   cpus: 1
-  box: puppetlabs/ubuntu-14.04-64-puppet
+  box: debian/jessie64
   puppet:
     facts:
       datacenter: vagrant
@@ -30,3 +30,9 @@ st2:
   private_networks:
     - 172.168.50.11
   self-check: true
+deb8:
+  <<: *defaults
+  hostname: deb8
+  puppet:
+    facts:
+      role: st2

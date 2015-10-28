@@ -35,17 +35,12 @@ class profile::st2server {
   $_init_type = $::st2::params::init_type
 
   # Syslog user differs based on distro
-  $syslog_user = $::osfamily ? {
-    'Debian'  => 'syslog',
-    'RedHat'  => 'root'
-  }
-
   case $::osfamily {
     'RedHat': { $syslog_user = 'root' }
     'Debian': {
       $syslog_user = $::lsbdistcodename ? {
-        jessie  => 'root',
-        default => 'syslog',
+        'jessie' => 'root',
+        default  => 'syslog',
       }
     }
   }
