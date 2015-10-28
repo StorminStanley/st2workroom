@@ -9,10 +9,7 @@ class puppet::masterless(
     include $_load_role
   }
 
-  class { '::facter':
-    manage_package => false,
-    path_to_facter => "${::settings::confdir}/bin/facter",
-  }
+  include ::facter
 
   file { '/etc/facter/facts.d/facts.txt':
     ensure => file,

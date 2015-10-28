@@ -9,8 +9,8 @@ PACKAGES="unzip wget ruby ruby-dev git unzip wget gnupg2"
 RUBY_PACKAGES="ruby ruby-dev"
 AUGEAS_PACKAGES="libaugeas-dev pkg-config"
 
-if [ "$CODENAME" = "wheezy" ]; then
-    PACKAGES="bundler $PACKAGES"
+if [ "$CODENAME" = "wheezy" ] || [ "$CODENAME" = "jessie" ]; then
+    PACKAGES="bundler apt-transport-https $PACKAGES"
 elif [ "$CODENAME" = "precise" ]; then
     BUILD_RUBY=true
     GEM_BUNDLER=true
