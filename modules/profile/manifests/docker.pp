@@ -1,6 +1,8 @@
 class profile::docker {
   $_compose_version = hiera('docker-compose::version', '1.4.0')
-  include ::docker
+  class { '::docker':
+    dm_basesize => '20G',
+  }
 
   $_url = 'https://github.com/docker/compose/releases/download/1.4.0/docker-compose-`uname -s`-`uname -m`'
   $_output_file = '/usr/bin/docker-compose'
