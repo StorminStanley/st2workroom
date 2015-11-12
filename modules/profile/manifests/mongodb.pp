@@ -1,6 +1,6 @@
 class profile::mongodb {
+  include ::docker
   $_version = hiera('mongodb::version', '2.4.14')
-  include ::profile::docker
 
   if $::osfamily == 'Debian' {
     # Needed to build mongoengine
