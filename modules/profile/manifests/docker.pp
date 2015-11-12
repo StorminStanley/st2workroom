@@ -1,4 +1,6 @@
 class profile::docker {
+  include ::st2::params
+  $_init_type = $::st2::params::init_type
   $_compose_version = hiera('docker-compose::version', '1.4.0')
 
   class { '::docker': }
@@ -17,5 +19,39 @@ class profile::docker {
     owner  => 'root',
     group  => 'root',
     mode   => '0755',
+  }
+
+  # This block disables timeouts for docker on systemd. Specifically,
+  # an issue arises while waiting for the base storage image to be
+  # provisioned when slow disk is involved.
+  #
+  # Ref: https://github.com/docker/docker/issues/16653
+  #
+  # This adds a local override to the systemd definion, allowing
+  # safe and sound execution.
+  #
+  # See http://www.freedesktop.org/software/systemd/man/systemd.unit.html
+  # for additional details on implementation
+  if $_init_type == 'systemd' {
+    $_docker_override_dir = '/etc/systemd/system/docker.service.d'
+    $_docker_override = @("EOF")
+    [Unit]
+    TimeoutSec=0
+    | EOF
+
+    file { $_docker_override_dir:
+      ensure => directory,
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0755',
+    }
+    file { "${_docker_override_dir}/local.conf":
+      ensure  => file,
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0444',
+      content => $_docker_override,
+      before  => Class['::docker'],
+    }
   }
 }
