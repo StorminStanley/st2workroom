@@ -1,6 +1,6 @@
 class profile::rabbitmq {
   $_version = hiera('rabbitmq::version', '3.5.4')
-  include ::profile::docker
+  include ::docker
 
   docker::image { 'rabbitmq':
     ensure => present,
