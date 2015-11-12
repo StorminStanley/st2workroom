@@ -1,9 +1,7 @@
 class profile::docker {
   $_compose_version = hiera('docker-compose::version', '1.4.0')
 
-  class { '::docker':
-    extra_parameters => ['--storage-opt dm.basesize=20G'],
-  }
+  class { '::docker': }
 
   $_url = 'https://github.com/docker/compose/releases/download/1.4.0/docker-compose-`uname -s`-`uname -m`'
   $_output_file = '/usr/bin/docker-compose'
