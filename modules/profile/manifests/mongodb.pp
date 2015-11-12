@@ -1,5 +1,5 @@
 class profile::mongodb {
-  include ::docker
+  include ::profile::docker
   $_version = hiera('mongodb::version', '2.4.14')
 
   if $::osfamily == 'Debian' {
