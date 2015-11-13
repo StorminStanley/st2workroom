@@ -46,7 +46,7 @@ fi
 
 # Do not attempt to upload from upstream git
 if [ -z "$DISABLE_GIT" ]; then
-    git pull origin -q $GIT_DEBUG_ARGS
+    git pull origin -q $GIT_DEBUG_ARGS || true
 fi
 
 ## Run any pre-flight commands
