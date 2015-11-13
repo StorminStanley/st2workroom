@@ -1,6 +1,6 @@
 class profile::hubot(
   $bot_name = 'hubot',
-  $version  = '0.1.0',
+  $version  = '0.1.1',
 ) {
   ## Common
   class { '::hubot':
@@ -15,15 +15,15 @@ class profile::hubot(
 
   # These packages are used to pre-download a ton of chat
   # adapters and their dependencies for offline usage.
-  $_npm_packages  = [
-    'hubot-scripts',
-    'hubot-stackstorm',
-    'hubot-irc',
-    'hubot-flowdock',
-    'hubot-slack',
-    'hubot-xmpp',
-    'hubot-hipchat',
-  ]
+  $_npm_packages  = {
+    'hubot-scripts' => latest,
+    'hubot-stackstorm' => '^0.2.5',
+    'hubot-irc' => latest,
+    'hubot-flowdock' => latest,
+    'hubot-slack' => latest,
+    'hubot-xmpp' => latest,
+    'hubot-hipchat' => latest,
+  }
 
   if $::osfamily == 'RedHat' {
     package { 'libicu-devel':
@@ -91,11 +91,13 @@ class profile::hubot(
   # will attempt to refresh on boot, so we do not need to look
   # on every convergence attempt.
   if $::hubot_adapters_version != $version {
-    nodejs::npm { $_npm_packages:
-      ensure => latest,
-      target => $_hubot_bin_dir,
-      user   => $_hubot_user,
-      before => Facter::Fact['hubot_adapters_version'],
+    $_npm_packages.each |String $name, String $value| {
+      nodejs::npm { $name:
+        ensure => $value,
+        target => $_hubot_bin_dir,
+        user   => $_hubot_user,
+        before => Facter::Fact['hubot_adapters_version'],
+      }
     }
   }
 
