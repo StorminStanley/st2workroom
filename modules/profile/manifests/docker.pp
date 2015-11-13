@@ -51,7 +51,11 @@ class profile::docker {
       group   => 'root',
       mode    => '0444',
       content => $_docker_override,
-      before  => Class['::docker'],
     }
+
+    Package['docker']
+    -> File["${_docker_override_dir}/local.conf"]
+    ~> Exec['systemctl-daemon-reload']
+    -> Service['docker']
   }
 }
