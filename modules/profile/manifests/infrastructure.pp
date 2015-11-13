@@ -1,10 +1,13 @@
 class profile::infrastructure {
+  include ::st2::params
+
   $_packages = hiera('system::packages', [])
   $_offline_mode = hiera('system::offline_mode', false)
   $_fqdn = hiera('system::hostname', $::fqdn)
   $_host_ip = hiera('system::ipaddress', $::ipaddress_eth0)
   $_http_proxy = hiera('system::http_proxy', undef)
   $_https_proxy = hiera('system::https_proxy', undef)
+  $_init_type = $::st2::params::init_type
 
   include ::ntp
   include ::profile::rsyslog
@@ -69,5 +72,10 @@ class profile::infrastructure {
       match => '^HTTPS_PROXY=',
       line  => "HTTPS_PROXY=${_https_proxy}",
     }
+  }
+
+  # Load systemd helpers if needed
+  if $_init_type == 'systemd' {
+    include ::systemd
   }
 }

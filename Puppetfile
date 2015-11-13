@@ -54,3 +54,4 @@ mod 'maestrodev-wget',
 mod 'stackstorm-st2',                '0.10.18'
 
 mod 'ilanco-s3cmd', '0.2.1'
+mod 'camptocamp-systemd', '0.2.2'
