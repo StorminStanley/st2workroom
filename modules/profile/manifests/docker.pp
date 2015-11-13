@@ -35,8 +35,8 @@ class profile::docker {
   if $_init_type == 'systemd' {
     $_docker_override_dir = '/etc/systemd/system/docker.service.d'
     $_docker_override = @("EOF")
-    [Unit]
-    TimeoutSec=0
+    [Service]
+    TimeoutStartSec=0
     | EOF
 
     file { $_docker_override_dir:
