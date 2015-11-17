@@ -35,6 +35,17 @@ class profile::st2rbac {
         }
     }
 
+    # Create default admin role assignment for system (stanley) user
+    # Note: stanley is the effective user for RBAC purposes for executions which are triggered via
+    # rules
+    $_system_user_username = hiera('st2::stanley::username', 'stanley');
+    st2::rbac { $_system_user_username:
+      description  => 'Default admin role assignment created by the installer',
+      roles        => [
+          'admin'
+      ]
+    }
+
     # Create default system_admin role assignment for admin user created during installation
     # Note: Assignment is only created once the installer has completed.
     $_users = hiera_hash('users', {}).keys()
