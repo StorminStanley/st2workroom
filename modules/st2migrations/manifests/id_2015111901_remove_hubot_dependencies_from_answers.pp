@@ -29,5 +29,6 @@ class st2migrations::id_2015111901_remove_hubot_dependencies_from_answers {
     id      => '2015111901',
     version => '1',
     script  => $_shell_script,
+    before  => Class['::profile::st2server'],
   }
 }

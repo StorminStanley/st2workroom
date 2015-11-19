@@ -99,6 +99,7 @@ class profile::hubot(
         target => $_hubot_bin_dir,
         user   => $_hubot_user,
         before => Facter::Fact["hubot_dependency_${_name}"],
+        notify => Service['hubot'],
       }
       facter::fact { "hubot_dependency_${_name}":
         value => $_value,
