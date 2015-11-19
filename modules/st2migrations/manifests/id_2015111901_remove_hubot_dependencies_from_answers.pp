@@ -17,11 +17,12 @@ class st2migrations::id_2015111901_remove_hubot_dependencies_from_answers {
   if [ -f \$FILE ]; then
     cat \$FILE | python -c '
       import json,sys;
-      obj = json.load(sys.stdin)
-      obj.pop("hubot::dependencies", None)
-      print json.dumps(obj)' > \$FILE.new
+      obj = json.load(sys.stdin);
+      obj.pop("hubot::dependencies", None);
+      print json.dumps(obj);' > \$FILE.new
 
     mv \$FILE.new \$FILE
+  fi
   | EOT
 
   ::st2migrations::definition { 'remove_hubot_dependencies_from_answers':
