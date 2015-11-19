@@ -2,8 +2,11 @@ class profile::docker {
   include ::st2::params
   $_init_type = $::st2::params::init_type
   $_compose_version = hiera('docker-compose::version', '1.4.0')
+  $_http_proxy = hiera('system::http_proxy', undef)
 
-  class { '::docker': }
+  class { '::docker':
+    proxy => $_http_proxy,
+  }
 
   $_url = 'https://github.com/docker/compose/releases/download/1.4.0/docker-compose-`uname -s`-`uname -m`'
   $_output_file = '/usr/bin/docker-compose'
