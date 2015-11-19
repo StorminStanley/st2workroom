@@ -16,13 +16,14 @@ class profile::hubot(
   # These packages are used to pre-download a ton of chat
   # adapters and their dependencies for offline usage.
   $_npm_packages  = {
-    'hubot-scripts' => latest,
-    'hubot-stackstorm' => '^0.2.5',
-    'hubot-irc' => latest,
-    'hubot-flowdock' => latest,
-    'hubot-slack' => latest,
-    'hubot-xmpp' => latest,
-    'hubot-hipchat' => latest,
+    'hubot'            => '2.17.0',
+    'hubot-scripts'    => '2.16.2',
+    'hubot-stackstorm' => '0.2.5',
+    'hubot-irc'        => '0.2.8',
+    'hubot-flowdock'   => '0.7.6',
+    'hubot-slack'      => '3.4.2',
+    'hubot-xmpp'       => '0.1.18',
+    'hubot-hipchat'    => '2.12.0-5',
   }
 
   if $::osfamily == 'RedHat' {
@@ -74,8 +75,8 @@ class profile::hubot(
     }
   }
 
-  #  Some hubot adapters are flakey, and randomly die. This is a workaround until
-  #  upstream PRs are merged.
+  # Some hubot adapters are flakey, and randomly die.
+  # This is a workaround until upstream PRs are merged.
   cron { 'restart hubot':
     command => 'service hubot restart',
     user    => 'root',
@@ -90,18 +91,18 @@ class profile::hubot(
   # Only attempt to install the adapters a single time. Hubot
   # will attempt to refresh on boot, so we do not need to look
   # on every convergence attempt.
-  if $::hubot_adapters_version != $version {
-    $_npm_packages.each |String $name, String $value| {
-      nodejs::npm { $name:
-        ensure => $value,
+  $_npm_packages.each |String $_name, String $_value| {
+    $_installed_version = $facts["hubot_dependency_${_name}"]
+    if $_installed_version != $_value {
+      nodejs::npm { $_name:
+        ensure => $_value,
         target => $_hubot_bin_dir,
         user   => $_hubot_user,
-        before => Facter::Fact['hubot_adapters_version'],
+        before => Facter::Fact["hubot_dependency_${_name}"],
+      }
+      facter::fact { "hubot_dependency_${_name}":
+        value => $_value,
       }
     }
-  }
-
-  facter::fact { 'hubot_adapters_version':
-    value => $version,
   }
 }
