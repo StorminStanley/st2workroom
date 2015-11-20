@@ -9,11 +9,13 @@ class profile::debian {
   ## This section parses the proxy and prepares it for usage in
   ## the puppetlabs/puppetlabs-apt module.
   if $_http_proxy {
-    $_parse_url = @("EOF"/)
+    $_parser = @("EOF"/)
     require 'uri'
     uri = URI.parse(@_http_proxy)
     [uri.host, uri.port]
     | EOF
+
+    $_parse_url = inline_template('<%= @_parser %>')
 
     $_proxy = {
       ensure => file,
