@@ -708,6 +708,27 @@ class profile::st2server {
     ],
   }
 
+  nginx::resource::location { 'st2api':
+    vhost                => 'st2webui',
+    ssl_only             => true,
+    location             => '/api/',
+    proxy                => "http://unix:${_st2api_socket}",
+    rewrite_rules        => [
+      '^/api/(.*)  /$1 break',
+    ],
+    raw_prepend          => [
+      $_cors_custom_options,
+    ],
+    raw_append => [
+      "proxy_set_header Connection '';",
+      'proxy_http_version 1.1;',
+      'chunked_transfer_encoding off;',
+      'proxy_buffering off;',
+      'proxy_cache off;',
+      'proxy_set_header Host $host;',
+    ],
+  }
+
   ## This creates the init script to start the
   ## st2auth service via uwsgi
   adapter::st2_uwsgi_init { 'st2auth':
@@ -782,6 +803,28 @@ class profile::st2server {
       $_cors_custom_options,
     ],
     location_raw_append => [
+      'proxy_pass_header Authorization;',
+      'uwsgi_param  REMOTE_USER        $remote_user;',
+    ],
+  }
+
+  nginx::resource::location { 'st2auth':
+    vhost                => 'st2webui',
+    ssl_only             => true,
+    location             => '/auth/',
+    uwsgi                => "unix://${_st2auth_socket}",
+    rewrite_rules        => [
+      '^/auth/(.*)  /$1 break',
+    ],
+    proxy_set_header     => [
+      'Host $host',
+      'X-Real-IP $remote_addr',
+      'X-Forwarded-For $proxy_add_x_forwarded_for',
+    ],
+    raw_prepend          => [
+      $_cors_custom_options,
+    ],
+    raw_append           => [
       'proxy_pass_header Authorization;',
       'uwsgi_param  REMOTE_USER        $remote_user;',
     ],
