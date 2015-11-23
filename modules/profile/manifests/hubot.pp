@@ -1,109 +1,85 @@
 class profile::hubot(
-  $bot_name = 'hubot',
-  $version  = '0.1.1',
-) {
-  ## Common
-  class { '::hubot':
-    install_nodejs => false,
-  }
-  class { '::nodejs':
-    repo_url_suffix => 'node_0.12',
-  }
+  $enable         = true,
+  $bot_name       = 'hubot',
+  $version        = undef,
+  $docker_image   = 'stackstorm/hubot',
+  $data_container = "st2-hubot-${bot_name}",
+  $http_port      = '8081',
+  ) {
 
-  $_hubot_bin_dir = '/opt/hubot/hubot'
-  $_hubot_user    = 'hubot'
+  include ::profile::redis
 
-  # These packages are used to pre-download a ton of chat
-  # adapters and their dependencies for offline usage.
-  $_npm_packages  = {
-    'hubot'            => '2.17.0',
-    'hubot-scripts'    => '2.16.2',
-    'hubot-stackstorm' => '0.2.5',
-    'hubot-irc'        => '0.2.8',
-    'hubot-flowdock'   => '0.7.6',
-    'hubot-slack'      => '3.4.2',
-    'hubot-xmpp'       => '0.1.18',
-    'hubot-hipchat'    => '2.12.0-5',
+  # Get ENV vars hash from Hiera, and map to an array for Docker
+  $_adapter        = hiera('hubot::adapter', 'shell')
+  $_alias          = hiera('hubot::chat_alias', '!')
+  $_hiera_env_vars = hiera_hash('hubot::env_export', {})
+  $_env_vars       = $_hiera_env_vars.map |$_key, $_value| {
+    "${_key}=${_value}"
   }
 
-  if $::osfamily == 'RedHat' {
-    package { 'libicu-devel':
-      ensure => 'present'
-    }
-
-    # Needed for XMPP and HipChat adapters
-    if $::operatingsystemmajversion == '6' {
-      package { 'nodejs-node-expat':
-        ensure => present,
-      }
-    }
+  if ! defined(Class['docker']) {
+    fail('[profile::hubot]: Docker is not enabled on this host.')
   }
 
-  Exec<| title == 'Hubot init' |> {
-    path => '/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin',
-  }
-
-  # Accomidate a custom hubot install vs default
-  if $::hubot::git_source != undef {
-    $hiera_env_vars = hiera_hash('hubot::env_export', {})
-    $stackstorm_env_vars = {
-      'EXPRESS_PORT' => '8081',
-    }
-    $env_vars = merge($hiera_env_vars, $stackstorm_env_vars)
-
-    $hubot_home     = "${::hubot::root_dir}/${bot_name}"
-    $adapter        = $::hubot::adapter
-    $chat_alias     = $::hubot::chat_alias
-
-    file { '/etc/init/hubot.conf':
-      ensure  => file,
-      owner   => 'root',
-      group   => 'root',
-      mode    => '0444',
-      content => template('profile/hubot/upstart_init.erb'),
-      before  => Service['hubot'],
+  if $enable {
+    ## Download main docker image for Hubot
+    docker::image { $docker_image:
+      ensure => present,
+      tag    => $version,
+      notify => Exec["create st2-hubot-${name} data container"],
     }
 
-    ## Non-ideal hacks, but prevents the need for forking
-    ## upstream module
-    Service<| title == 'hubot' |> {
-      provider => upstart,
+    exec { "create st2-hubot-${name} data container":
+      command     => join([
+        'docker',
+        'create',
+        '-v',
+        '/app',
+        '-name',
+        $data_container,
+        $docker_image,
+        '/bin/true',
+      ], ' '),
+      path        => [
+        '/bin',
+        '/sbin',
+        '/usr/bin',
+        '/usr/sbin',
+      ],
+      refreshonly => true,
     }
-    File<| tag == 'hubot::config' |> ->
-    Vcsrepo<| title == $_hubot_bin_dir |> {
-      revision => undef,
+
+    docker::run { "st2-hubot-${name}":
+      image            => $docker_image,
+      command          => join([
+        '/app/bin/hubot',
+        '-a',
+        $_adapter,
+        '--name',
+        $bot_name,
+        '--alias',
+        $_alias,
+      ], ' '),
+      volumes_from     => [
+        $data_container,
+      ],
+      env              => $_env_vars,
+      ports            => [
+        "${http_port}:8080",
+      ],
+      extra_parameters => ['--restart=always'],
+      require          => [
+        Docker::Image[$docker_image],
+        Exec["create st2-hubot-${name} data container"],
+      ],
     }
   }
 
   # Some hubot adapters are flakey, and randomly die.
   # This is a workaround until upstream PRs are merged.
   cron { 'restart hubot':
-    command => 'service hubot restart',
+    command => "service st2-hubot-${name} restart",
     user    => 'root',
     hour    => '*/12',
-  }
-
-  # Pre-install all the necessary adapters for offline use
-  Exec<| tag == 'nodejs::npm' |> {
-    environment => 'HOME=/opt/hubot',
-  }
-
-  # Only attempt to install the adapters a single time. Hubot
-  # will attempt to refresh on boot, so we do not need to look
-  # on every convergence attempt.
-  $_npm_packages.each |String $_name, String $_value| {
-    $_installed_version = $facts["hubot_dependency_${_name}"]
-    if $_installed_version != $_value {
-      nodejs::npm { $_name:
-        ensure => $_value,
-        target => $_hubot_bin_dir,
-        user   => $_hubot_user,
-        before => Facter::Fact["hubot_dependency_${_name}"],
-        notify => Service['hubot'],
-      }
-      facter::fact { "hubot_dependency_${_name}":
-        value => $_value,
-      }
-    }
   }
 }
