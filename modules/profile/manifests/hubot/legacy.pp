@@ -1,3 +1,9 @@
+## Class: profile::hubot::legacy
+#
+#  Note: This class is being deprecated. If you need to make changes,
+#  make effort to getting the new code running. (profile::hubot::docker)
+#
+#  No more fixes here.
 class profile::hubot::legacy (
   $bot_name = 'hubot',
   $version  = '0.1.1',
