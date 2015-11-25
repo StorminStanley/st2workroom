@@ -1,8 +1,8 @@
 class profile::redis(
   $enable         = true,
-  $version        = undef,
-  $docker_image   = 'tenstartups/alpine-redis',
-  $data_container = 'redis-data',
+  $version        = '3.0.5',
+  $docker_image   = 'redis',
+  $data_container = 'redisdata',
   $listen_port    = '6379',
   ) {
 
@@ -10,12 +10,17 @@ class profile::redis(
     fail('[profile::redis]: Docker is not enabled on this host.')
   }
 
+  $_run_image = $version ? {
+    undef   => $docker_image,
+    default => "${docker_image}:${version}",
+  }
+
   if $enable {
     ## Download main docker image for Redis
     docker::image { $docker_image:
-      ensure => present,
-      tag    => $version,
-      notify => Exec['create redis data container'],
+      ensure    => present,
+      image_tag => $version,
+      notify    => Exec['create redis data container'],
     }
 
     exec { 'create redis data container':
@@ -24,7 +29,7 @@ class profile::redis(
         'create',
         '-v',
         '/data',
-        '-name',
+        '--name',
         $data_container,
         $docker_image,
         '/bin/true',
@@ -38,8 +43,8 @@ class profile::redis(
       refreshonly => true,
     }
 
-    docker::run { "st2-redis-${name}":
-      image            => $docker_image,
+    docker::run { 'redis':
+      image            => $_run_image,
       volumes_from     => [
         $data_container,
       ],
