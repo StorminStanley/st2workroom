@@ -34,7 +34,6 @@ class profile::hubot(
     docker::image { $docker_image:
       ensure    => present,
       image_tag => $version,
-      notify    => Exec['create hubot data container'],
     }
 
     docker::run { 'hubot':
@@ -46,7 +45,6 @@ class profile::hubot(
       extra_parameters => ['--restart=always'],
       require          => [
         Docker::Image[$docker_image],
-        Exec['create hubot data container'],
       ],
     }
   }
