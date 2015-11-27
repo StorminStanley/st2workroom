@@ -609,9 +609,9 @@ class profile::st2server {
   if $_ca_cert {
     ## Add the certificate to the trusted root store to get rid
     ## of annoying issues related to self-signed or trusted
-    ca_cert::ca { 'StackStorm Auto-Generated Trusted CA':
+    ca_cert::ca { 'stackstorm-ca':
       ensure => 'trusted',
-      source => "file:${_ca_cer}",
+      source => "file://${_ca_cer}",
     }
   }
 
