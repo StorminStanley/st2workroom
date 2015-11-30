@@ -15,11 +15,7 @@ class role::st2 {
   Class['::profile::st2server'] -> Class['::profile::bootstrap']
 
   if $_enable_hubot {
-    if $::osfamily == 'RedHat' and $::operatingsystemmajrelease == '6' {
-      notify { 'Hubot is not supported on this platform': }
-    } else {
-      include ::profile::hubot
-    }
+    include ::profile::hubot
   }
 
   # Enable Enterprise Features
