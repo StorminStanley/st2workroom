@@ -611,7 +611,7 @@ class profile::st2server {
     ## of annoying issues related to self-signed or trusted
     ca_cert::ca { 'stackstorm-ca':
       ensure => 'trusted',
-      source => "file://${_ca_cer}",
+      source => "file://${_ca_cert}",
     }
   }
 
