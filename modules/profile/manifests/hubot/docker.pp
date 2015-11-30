@@ -48,13 +48,4 @@ class profile::hubot::docker (
       ],
     }
   }
-
-  # Some hubot adapters are flakey, and randomly die.
-  # This is a workaround until upstream PRs are merged.
-  cron { 'restart hubot':
-    command => "service docker-hubot restart",
-    user    => 'root',
-    hour    => '*/12',
-    require => Docker::Run['hubot'],
-  }
 }
