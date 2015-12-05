@@ -16,7 +16,7 @@ st2dev:
     facts:
       role: st2dev
   private_networks:
-    - 172.168.60.10
+    - 172.16.50.12
   sync_type: nfs
 st2:
   <<: *defaults
@@ -28,5 +28,5 @@ st2:
     facts:
       role: st2
   private_networks:
-    - 172.168.50.11
+    - 172.16.50.11
   self-check: true
