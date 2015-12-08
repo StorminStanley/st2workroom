@@ -42,7 +42,10 @@ class profile::hubot::docker (
       ports            => [
         "${http_port}:8080",
       ],
-      extra_parameters => ['--restart=always'],
+      extra_parameters => [
+        '--restart=always',
+        '--add-host "${_hostname}":172.17.0.1'
+      ],
       require          => [
         Docker::Image[$docker_image],
       ],
