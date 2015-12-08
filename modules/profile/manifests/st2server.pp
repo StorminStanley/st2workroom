@@ -1001,6 +1001,11 @@ class profile::st2server {
     priority => '5',
     content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/sbin/service hubot restart",
   }
+  ### Installer also to be able to tell Hubot to refresh its alias list
+  sudo::conf { "docker-hubot-refresh-aliases":
+    priority => '5',
+    content  => "${_nginx_daemon_user} ALL=(root) NOPASSWD: /usr/sbin/service docker-hubot restart",
+  }
   ### Installer also to be able to restart nginx
   sudo::conf { "restart-nginx":
     priority => '5',
