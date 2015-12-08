@@ -6,10 +6,6 @@ rsyslog::client::log_local: true
 
 st2::autoupdate: false
 st2::packs:
-  hubot:
-    ensure: present
-    config:
-      endpoint: "http://localhost:8081"
   st2:
     ensure: present
 
