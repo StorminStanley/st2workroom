@@ -16,7 +16,8 @@ if [ $MAJORVER = "6" ]; then
     SCL="centos-release-SCL"
 elif [ $MAJORVER = "7" ]; then
     EPEL="https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
-    PACKAGES="ruby ruby-devel rubygem-bundler unzip curl git-core augeas augeas-devel"
+    PACKAGES="ruby ruby-devel rubygem-bundler unzip curl git-core augeas augeas-devel gperftools-libs"
+    CR=true
 fi
 
 # Install EPEL on RHEL boxen
@@ -37,4 +38,14 @@ yum clean all
 yum clean dbcache
 yum groupinstall -y "Development Tools"
 
+if [ "$CR" = true ] ; then
+    yum -y update
+    yum -y install yum-utils
+    yum-config-manager --enable cr
+fi
+
 yum install -y $PACKAGES
+
+if [ "$CR" = true ] ; then
+    yum-config-manager --disable cr
+fi
