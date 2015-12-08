@@ -118,8 +118,8 @@ class profile::st2server {
   $_st2installer_port = '9102'
   $_api_url = "https://${_hostname}:${_st2api_port}"
   $_auth_url = "https://${_hostname}:${_st2auth_port}"
-  $_public_api_url = "https://${_host_ip}:${_st2api_port}"
-  $_public_auth_url = "https://${_host_ip}:${_st2auth_port}"
+  $_public_api_url = "https://${_host_ip}/api"
+  $_public_auth_url = "https://${_host_ip}/auth"
   $_mistral_url = '127.0.0.1'
 
   $_st2installer_root = '/etc/st2installer'
@@ -306,8 +306,8 @@ class profile::st2server {
     before                 => Anchor['st2::pre_reqs'],
   }
   class { '::st2::profile::web':
-    api_url  => "https://:${_st2api_port}",
-    auth_url => "https://:${_st2auth_port}",
+    api_url  => "https://:443/api",
+    auth_url => "https://:443/auth",
     flow_url => $_flow_url,
     require  => Class['::st2::profile::server'],
   }
