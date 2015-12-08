@@ -25,6 +25,7 @@ class profile::hubot::docker (
     default => "${docker_image}:${version}",
   }
   $_hostname = hiera('system::hostname', $::hostname)
+  $_host_ip = hiera('system::ipaddress', $::ipaddress)
 
   if ! defined(Class['docker']) {
     fail('[profile::hubot]: Docker is not enabled on this host.')
@@ -45,7 +46,7 @@ class profile::hubot::docker (
       ],
       extra_parameters => [
         '--restart=always',
-        "--add-host ${_hostname}:172.17.0.1"
+        "--add-host ${_hostname}:${_host_ip}"
       ],
       require          => [
         Docker::Image[$docker_image],
