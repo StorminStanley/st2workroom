@@ -39,7 +39,7 @@ yum clean dbcache
 yum groupinstall -y "Development Tools"
 
 if [ "$CR" = true ] ; then
-    yum update
+    yum -y update
     yum -y install yum-utils
     yum-config-manager --enable cr
 fi
