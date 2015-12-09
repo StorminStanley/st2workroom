@@ -36,7 +36,7 @@ incompatable_os() {
     echo ""
     echo "Email: support@stackstorm.com"
     echo "IRC: irc.freenode.net/#stackstorm"
-    echo "Slack: http://stackstorm.com/community-signup"
+    echo "Slack: https://stackstorm.com/community-signup"
     echo ""
     exit 1
 }
