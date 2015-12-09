@@ -60,6 +60,6 @@ elif [ "$DIST" = "Debian" ]; then
         ;;
     esac
 else
-    not_compatable
+    incompatable_os
 fi
 
