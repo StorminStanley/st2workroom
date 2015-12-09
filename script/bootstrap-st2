@@ -113,6 +113,9 @@ fi
 
 echo "role=st2" > /etc/facter/facts.d/role.txt
 
+# Ensure that we're installing on a supported OS version
+${PROJECT_ROOT}/script/check-os-compat
+
 # Start up the st2 bootstrap
 ${PROJECT_ROOT}/script/bootstrap-os
 
