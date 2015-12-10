@@ -1,6 +1,6 @@
 class profile::hubot{
   $_hubot_docker = hiera('hubot::docker', false)
-  $_adapter_defined = hiera('hubot::adapter' undef)
+  $_adapter_defined = hiera('hubot::adapter', undef)
 
   if $_hubot_docker and $_adapter_defined {
     include ::profile::hubot::docker
