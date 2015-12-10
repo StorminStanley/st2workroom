@@ -7,6 +7,6 @@ class profile::hubot{
   } elsif not $_hubot_docker and $_adapter_defined {
     include ::profile::hubot::legacy
   } else {
-    notify { 'Hubot has not been fully configured on this host yet. Please see installation instructions': }
+    notify { 'ST2 Hubot is not configured for this host. Please see installation instructions': }
   }
 }
