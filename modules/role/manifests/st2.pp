@@ -7,7 +7,6 @@ class role::st2 {
   include ::profile::st2enterprise
   include ::profile::st2server
   include ::profile::users
-  include ::profile::examples
   include ::st2migrations
   include ::profile::bootstrap
 
