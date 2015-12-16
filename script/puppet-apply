@@ -1,8 +1,19 @@
 #!/usr/bin/env sh
 set -e
 
-SCRIPT_ENTRY=$0
-FALLBACK_ENV='production'
+show_help() {
+    echo "StackStorm All-in-one Installer - System Update"
+    echo "Usage: $0 [OPTION]..."
+    echo
+    echo "  -e,  --environment,      Set the st2workroom environment"
+    echo "  -s,  --st2-puppet-branch Set the upstream puppet-st2 branch"
+    echo "  -h,  --help              This help screen"
+    echo ""
+    echo "Environment Variables:"
+    echo "  ENV=                     Set the st2workroom environment"
+    echo "  ST2_PUPPET_BRANCH=       Set the upstream puppet-st2 branch"
+    exit 1
+}
 
 # Note to the user that a requested environment is not around.
 # Maybe a little intrusive, but at least it's not obfuscated
@@ -12,140 +23,290 @@ warn_requested_env_missing() {
     REQUESTED_ENV=$2
     ACTUAL_ENV=$3
 
-    if [ -z $ST2_SILENCE ]; then
-      echo ""
-      echo "********************************************************"
-      echo " Heads up friend! Just want let you know...  "
-      echo ""
-      echo " Once upon a time, as recently as 5 seconds ago, this machine"
-      echo " was asked to run ${COMMAND} in the ${REQUESTED_ENV}"
-      echo " environment. Alas, as much as it try, it was not possible"
-      echo ""
-      echo " But, as the machine came to learn, it was not all doom and"
-      echo " gloom! This could happen for any number of reasons, and all it had to"
-      echo " do is figure out which one!? Can you help?!"
-      echo ""
-      echo " * Is the branch name spelled correctly?"
-      echo " * If you personally or someone you know has been working"
-      echo "   on a feature, and you merged and/or deleted the branch"
-      echo ""
-      echo " In the end, machine realized there was another path to take"
-      echo " and instead continued on using the **${ACTUAL_ENV}** branch"
-      echo ""
-      echo " TL;DR: The machine could not find the requested branch ${REQUESTED_ENV}"
-      echo "        Falling back to ${ACTUAL_ENV}"
-      echo ""
-      echo " Maybe none of this applies to you, consider getting ahold of us"
-      echo " and letting us know. We'd like to fix it."
-      echo "  - https://stackstorm.com/community/"
-      echo "********************************************************"
-      echo ""
-      echo "Processing of ${COMMAND} will begin automatically in ${SLEEP} seconds..."
-      sleep $SLEEP
+    info "********************************************************"
+    info " Heads up friend! Just want let you know...  "
+    info ""
+    info " Once upon a time, as recently as 5 seconds ago, this machine"
+    info " was asked to run ${COMMAND} in the ${REQUESTED_ENV}"
+    info " environment. Alas, as much as it try, it was not possible"
+    info ""
+    info " But, as the machine came to learn, it was not all doom and"
+    info " gloom! This could happen for any number of reasons, and all it had to"
+    info " do is figure out which one!? Can you help?!"
+    info ""
+    info " * Is the branch name spelled correctly?"
+    info " * If you personally or someone you know has been working"
+    info "   on a feature, and you merged and/or deleted the branch"
+    info ""
+    info " In the end, machine realized there was another path to take"
+    info " and instead continued on using the **${ACTUAL_ENV}** branch"
+    info ""
+    info " TL;DR: The machine could not find the requested branch ${REQUESTED_ENV}"
+    info "        Falling back to ${ACTUAL_ENV}"
+    info ""
+    info " Maybe none of this applies to you, consider getting ahold of us"
+    info " and letting us know. We'd like to fix it."
+    info "  - https://stackstorm.com/community/"
+    info "********************************************************"
+    info "Processing of ${COMMAND} will begin automatically in ${SLEEP} seconds..."
+    sleep $SLEEP
+}
+
+update_from_upstream() {
+    LOG_FILE=$1; shift;
+    DEBUG=$1; shift;
+    DEBUG_ARGS=`bash_tuple $DEBUG "--verbose" ""`
+
+    git pull origin -q $DEBUG_ARGS || true | tee -a $LOG_FILE
+}
+
+# This function takes the contents of the work directory, and rsyncs
+# them to the target directory. This function ensures a bunch of
+# garbage doesn't get copied in the meantime.
+#
+# rsync_puppet_dir /opt/puppet /opt/puppet/environment/current_working_directory /var/log/puppet.log false
+rsync_puppet_dir() {
+    SRC_DIR=$1; shift;
+    DST_DIR=$1; shift;
+    LOG_FILE=$1; shift
+    DEBUG=$1; shift;
+
+    DEFAULT_ARGS="-arh --delete"
+    DEBUG_ARGS=`bash_tuple $DEBUG "-v" ""`
+
+    EXCLUDES="environments vendor artifacts graphs packer script .git"
+    EXCLUDE_ARGS=$(assemble_rsync_excludes $EXCLUDES)
+    ARGS="$DEFAULT_ARGS $DEBUG_ARGS $EXCLUDE_ARGS"
+
+    # Perform the rsync
+    if [ "$DEBUG" = "true" ]; then
+        rsync $ARGS $SRC_DIR $DST_DIR 2>&1 | tee -a $LOG_FILE
+    else
+        rsync $ARGS $SRC_DIR $DST_DIR >> $LOG_FILE 2>&1
     fi
 }
 
-if [ $(id -u) -ne 0 ]; then
-    echo "Please run with root privileges"
-    exit 1
-fi
+assemble_rsync_excludes() {
+    FILES=$@
+    BLOB=
 
-if [ -n "$1" ]; then
-  if [ "$1" = "clean" ]; then
-    echo "Removing bootstrap lock files..."
-    rm -f /etc/facter/facts.d/mistral_bootstrapped.txt
-    rm -f /etc/facter/facts.d/st2client_bootstrapped.txt
-    rm -f /etc/facter/facts.d/st2flow_bootstrapped.txt
-    rm -f /etc/facter/facts.d/st2server_bootstrapped.txt
-    rm -f /etc/facter/facts.d/st2web_bootstrapped.txt
-    rm -f /etc/facter/facts.d/facts.txt
-  fi
-fi
+    for FILE in $FILES; do
+        eval BLOB="\$BLOB --exclude $FILE"
+    done
 
-DIR=$( dirname "$(readlink -f "$0")" )
-. $DIR/shared-functions
+    echo $BLOB
+}
 
-cd $PROJECT_ROOT
-echo "Configuring system..."
+install_puppet_libraries() {
+    WORK_DIR=$1; shift;
+    LOG_FILE=$1; shift;
+    DEBUG=$1; shift;
 
-if [ -n "$DEBUG" ]; then
-    echo "Enabling Debug..."
+    DEBUG_ARGS=`bash_tuple $DEBUG "--verbose" ""`
 
-    PUPPET_GRAPH_ARGS="--graph --graphdir $PROJECT_ROOT/graphs/$NODE"
-    PUPPET_DEBUG_ARGS="--debug --verbose $PUPPET_GRAPH_ARGS"
-    LIBRARIAN_DEBUG_AGRS="--verbose"
-    GIT_DEBUG_ARGS="--verbose"
-    RSYNC_DEBUG_ARGS="-v"
-
-    ## Make graph directory for output and debug
-    if [ ! -d $PROJECT_ROOT/graphs/${NODE} ]; then
-        mkdir -p $PROJECT_ROOT/graphs/${NODE}
-    fi
-fi
-
-# Disable color output from different tools
-if [ -n "$NOCOLOR" ]; then
-    PUPPET_COLOR_ARGS="--color=false"
-fi
-
-# Do not attempt to upload from upstream git
-if [ -z "$DISABLE_GIT" ]; then
-    git pull origin -q $GIT_DEBUG_ARGS || true
-fi
-
-## Run any pre-flight commands
-$PROJECT_ROOT/script/preflight-os
-
-# Set the environment. This should be done *after* librarian-puppet
-## has done its thing to determine if it is needed to switch back
-## to production if the branch has been deleted.
-##
-## `puppet_environment` is set in Class[puppet::masterless]
-CURRENT_ENV=`$PROJECT_ROOT/bin/facter puppet_environment`
-PUPPET_ENV=""
-
-if [ -z "$ENV" ]; then
-    if [ -n "$CURRENT_ENV" ]; then
-        PUPPET_ENV=$CURRENT_ENV
+    if [ "$DEBUG" = "true" ]; then
+        librarian-puppet install 2>&1 | tee -a $LOG_FILE
     else
-        PUPPET_ENV=$FALLBACK_ENV
+        librarian-puppet install >> $LOG_FILE 2>&1
     fi
-else
-    PUPPET_ENV=$ENV
-fi
+}
+
+# Removes all special characters that causes puppet to fail parsing
+sanitize_puppet_env() {
+    echo $PUPPET_ENV | sed 's/[-\/.]/_/g'
+}
 
 # Setup Puppet environments
-mkdir -p $PROJECT_ROOT/environments
-if [ "$PUPPET_ENV" = "current_working_directory" ]; then
-    # Make sure the current working directory is an environment too!
-    # This is sort of a hack to support environments while developing
-    # on the currently active branch in Vagrant or other environments
-    echo "Setting up 'current_working_directory'..."
+bootstrap_st2workroom() {
+    ENVIRONMENT=$1; shift;
+    WORK_DIR=$1; shift;
+    LOG_FILE=$1; shift;
+    DEBUG=$1; shift;
 
-    ## Install Puppet libs
-    librarian-puppet install >> $LOG_FILE 2>&1
+    SANITIZED_ENV=`sanitize_puppet_env $ENVIRONMENT`
+    ENVIRONMENT_DIR="$WORK_DIR/environments/$SANITIZED_ENV"
+    ensure_directory_exists $WORK_DIR/environments
 
-    ## Setup an environment for this project
-    rsync $RSYNC_DEBUG_ARGS -arh --delete --exclude "environments" \
-          --exclude "vendor" --exclude "artifacts" --exclude "graphs" \
-          --exclude "packer" --exclude "script" --exclude ".git" \
-          $PROJECT_ROOT/ $PROJECT_ROOT/environments/current_working_directory/
-else
-    echo "Setting up Puppet environments..."
-    rake environments:update >> $LOG_FILE 2>&1
-fi
+    echo "Setting up st2workroom in environment $ENVIRONMENT"
 
-## Attempt to detect if the environment even exists... if not,
-## roll back to the production environment.
-### Make sure our environment conforms to Puppet environment naming
-PUPPET_ENV=$(echo $PUPPET_ENV | sed 's/[-\/.]/_/g')
-if [ ! -d $PROJECT_ROOT/environments/$PUPPET_ENV ]; then
-    warn_requested_env_missing $SCRIPT_ENTRY $PUPPET_ENV $FALLBACK_ENV
-    PUPPET_ENV=$FALLBACK_ENV
-fi
+    if [ "$ENVIRONMENT" = "current_working_directory" ]; then
+        install_puppet_libraries $WORK_DIR $LOG_FILE $DEBUG
+        rsync_puppet_dir $WORK_DIR/ $ENVIRONMENT_DIR $DEBUG
+    else
+        rake environments:update[$SANITIZED_ENV] >> $LOG_FILE 2>&1
+        install_puppet_libraries $ENVIRONMENT_DIR $LOG_FILE $DEBUG
+    fi
+}
 
-## Run Puppet
-puppet apply $PUPPET_DEBUG_ARGS --environment $PUPPET_ENV    \
-    --config $PROJECT_ROOT/puppet.conf $PUPPET_COLOR_ARGS    \
-    $PROJECT_ROOT/environments/$PUPPET_ENV/manifests $@ 2>&1 \
-      | tee -a $LOG_FILE
+# is_puppet_env_available
+#
+# Based on passed values, determines the appropriate Puppet branch
+# to apply to a system. The goal here is to ensure that once a user
+# changes from the mainline branch (`production`) to another branch,
+# subsequent runs of Puppet will automatically honor the previously
+# applied branch.
+#
+# This should be the case until either: a branch does not exist anymore
+# or a user manually requests an upgrade.
+#
+# Requires: new_test_env some_old_feature production /opt/puppet
+is_puppet_env_available() {
+    REQUESTED_ENV=$1; shift;
+    CURRENT_ENV=$1; shift;
+    FALLBACK_ENV=$1; shift;
+    WORK_DIR=$1; shift;
+
+    SANITIZED_ENV=`sanitize_puppet_env $REQUESTED_ENV`
+    ENVIRONMENT_DIR="$WORK_DIR/environments/$SANITIZED_ENV"
+
+    if [ ! -d $PROJECT_ROOT/environments/$PUPPET_ENV ]; then
+        warn_requested_env_missing $SCRIPT_ENTRY $PUPPET_ENV $FALLBACK_ENV
+        PUPPET_ENV=$FALLBACK_ENV
+    fi
+
+    # If a user has not requested a new environment, but
+    # we are already checked out to an existing environment,
+    # stay there.
+    if [ -z "$REQUESTED_ENV" ] && [ -n "$CURRENT_ENV" ]; then
+        echo $CURRENT_ENV
+    elif [ -z "$CURRENT_ENV" ]; then
+        echo $FALLBACK_ENV
+    else
+        echo $REQUESTED_ENV
+    fi
+}
+
+# gather_puppet_args
+#
+# Assembles an argument list for Puppet based on a few config settings
+#
+# gather_puppet_args host001 /opt/puppet false
+gather_puppet_args() {
+    NODE=$1; shift;
+    WORK_ROOT=$1; shift;
+    DEBUG=$1; shift;
+
+    PUPPET_GRAPH_ARGS="--graph --graphdir $WORK_ROOT/graphs/$NODE"
+    PUPPET_DEBUG_ARGS="--debug --verbose $PUPPET_GRAPH_ARGS"
+
+    if [ "$DEBUG" = "true" ]; then
+        ensure_directory_exists $WORK_ROOT/graphs/$NODE
+        echo $PUPPET_DEBUG_ARGS
+    fi
+}
+
+# run_puppet
+#
+# This command is responsible for running Puppet with a given root directory
+# and environment, while pushing any/all output to both STDOUT and a log file.
+#
+# run_puppet production /opt/puppet /var/log/puppet.log
+run_puppet() {
+    CONFIG_ROOT=$1; shift;
+    ENVIRONMENT=$1; shift;
+    LOG_FILE=$1; shift;
+    ARGS=$@
+
+    log "Running `puppet apply` with environment: $ENVIRONMENT"
+    puppet apply --environment $ENVIRONMENT \
+           --config $CONFIG_ROOT/puppet.conf \
+           $CONFIG_ROOT/environments/$ENVIRONMENT/manifests $ARGS 2>&1 \
+        | tee -a $LOG_FILE
+}
+
+# Main init
+#
+init() {
+    # Grab out any and all variables from the global environment,
+    # and use them in each function as necessary
+    DIR=$( dirname "$(readlink -f "$0")" )
+    . $DIR/shared-functions
+
+    # Enable Debug via the environment
+    if [ -n "$DEBUG" ]; then
+        debug "*******************************************************"
+        debug "          Debug mode has been enabled"
+        debug "*******************************************************"
+
+        ENABLE_DEBUG=true
+    else
+        ENABLE_DEBUG=false
+    fi
+
+    SCRIPT_NAME=$0
+    CONFIG_ROOT=$ROOT_DIR
+    LOG_FILE=/var/log/puppet.log
+    FALLBACK_ENV=production
+    NODE=$NODE
+
+    # Get together any puppet arguments to configure processing
+    SCRIPT_ARGS=$@
+    PUPPET_ARGS=`gather_puppet_args $NODE $CONFIG_ROOT $ENABLE_DEBUG`
+    ARGS="$PUPPET_ARGS $SCRIPT_ARGS"
+
+    CURRENT_ENV=`${CONFIG_ROOT}/bin/facter puppet_environment`
+
+    REQUESTED_ENV=`ensure_env_exists $ENV`
+    ENV_TO_APPLY=`determine_puppet_env $CURRENT_ENV $REQUESTED_ENV $FALLBACK_ENV`
+
+    # Ensure we have all the permissions to run the script
+    bail_if_not_root
+
+    # Ensure that code on the machine is the latest we can get!
+    update_from_upstream $ENABLE_DEBUG
+
+    # Run any pre-flight commands
+    $CONFIG_ROOT/script/preflight-os
+
+    # If the user requested it, setup the StackStorm/puppet-st2 repo with the
+    # specified tag/branch.
+    if [ -n "$PUPPET_ST2_BRANCH" ]; then
+        bootstrap_puppet_st2 $PUPPET_ST2_BRANCH
+    fi
+
+    # Ensure that the workroom is all setup properly.
+    bootstrap_st2workroom $ENV_TO_APPLY $CONFIG_ROOT $LOG_FILE $ENABLE_DEBUG
+
+    # Now, let's kick off Puppet with all the right settings!
+    run_puppet $ENV_TO_APPLY $CONFIG_ROOT $LOG_FILE $ENABLE_DEBUG $ARGS
+}
+
+# Main entry point for script
+while :; do
+    case $1 in
+        -h|-\?|--help)
+            show_help
+            exit
+            ;;
+        -e|--environment)
+            if [ -n "$2" ]; then
+                ENV=$2
+                shift 2
+                continue
+            else
+                printf 'ERROR "--environment" requires a non-empty argument.\n' >&2
+            fi
+            ;;
+        -s|--st2-puppet-branch)
+            if [ -n "$2" ]; then
+                PUPPET_ST2_BRANCH=$2
+                shift 2
+                continue
+            else
+                printf 'ERROR "--st2-puppet-branch" requires a non-empty argument.\n' >&2
+            fi
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -?*)
+            log "WARN: unknown option ($1)... ignoring" >&2
+            ;;
+        *)
+            break
+    esac
+    shift
+done
+
+init $@

@@ -1,0 +1,40 @@
+#!/usr/bin/env sh
+# This stand-alone script should be able to be used to kickstart a new node
+
+### CLI Parsing
+show_help() {
+  echo "StackStorm All-in-one uninstaller"
+  echo "Usage: $0 [OPTION]..."
+  echo
+  echo "  -h,  --help        This help screen"
+  echo "  -c,  --clean       (soft reset) Removes all customized variables"
+  echo "                     and tries to reconfigure the system"
+  echo
+}
+
+reset_installer() {
+    echo "********************************************************"
+    echo "          Removing bootstrap lock files..."
+    echo "********************************************************"
+    rm -f /etc/facter/facts.d/mistral_bootstrapped.txt
+    rm -f /etc/facter/facts.d/st2client_bootstrapped.txt
+    rm -f /etc/facter/facts.d/st2flow_bootstrapped.txt
+    rm -f /etc/facter/facts.d/st2server_bootstrapped.txt
+    rm -f /etc/facter/facts.d/st2web_bootstrapped.txt
+    rm -f /etc/facter/facts.d/facts.txt
+}
+
+init() {
+    # Grab out any and all variables from the global environment,
+    # and use them in each function as necessary
+    DIR=$( dirname "$(readlink -f "$0")" )
+    . $DIR/shared-functions
+
+   bail_if_not_root
+
+   if [ "$ST2_CLEAN" = "true" ]; then
+       reset_installer
+   fi
+}
+
+init
