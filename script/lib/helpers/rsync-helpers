@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+rsync-dir() {
+    local _args_array=($@)
+    local _arg_len=${#_args_array[@]}
+    local _src_dir="${1:?}"
+    local _dst_dir="${2:?}"
+    local _extra_args="${@:3:$_args_len}"
+    local _default_args="-arh --delete"
+    local _debug_args=
+    local _args=
+    local _log_dest=
+
+    if debug-enabled; then
+        _debug_args="-v";
+        _log_dest="$(send-output-to-file-and-stdout log-file)"
+    else
+        _log_dest="$(send-all-output-to log-file)"
+    fi
+
+    $_args="${_default_args} ${_debug_args} ${_extra_args}"
+    $_command="rsync ${_args} ${_log_dest}"
+
+    debug "rsyncing $_{src_dir} to ${_dst_dir} with arguments ${_args}"
+    execute-string $_command
+}
+

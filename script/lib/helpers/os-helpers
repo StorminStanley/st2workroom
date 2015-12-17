@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+## OS Checks
+root-permissions() {
+    if [[ $(id -u) -eq 0 ]]; then true; else false; fi
+}
+
+node-name() {
+    echo "$(hostname -s)"
+}
+
+####
+# Below this line are legacy imports. Do not rely on them,
+# they will be going away soon
+
+NODE=$(hostname -s)
+
+# From http://www.novell.com/coolsolutions/feature/11251.html
+OS=`uname -s`
+REV=`uname -r`
+MACH=`uname -m`
+
+if [ "$OS" = "OpenBSD" ]; then
+    ARCH=`arch -s`
+    BUNDLE_PATH='bundle20'
+elif [ "$OS" = "Linux" ]; then
+	KERNEL=`uname -r`
+  BUNDLE_PATH='bundle'
+	if [ -f /etc/redhat-release ]; then
+		DIST='RedHat'
+		REV=`cat /etc/redhat-release | sed s/.*release\ // | sed s/\ .*//`
+    MAJORVER=`echo $REV | cut -d '.' -f1`
+	elif [ -f /etc/SUSE-release ]; then
+		DIST=`cat /etc/SUSE-release | tr "\n" ' '| sed s/VERSION.*//`
+		REV=`cat /etc/SUSE-release | tr "\n" ' ' | sed s/.*=\ //`
+	elif [ -f /etc/debian_version ] ; then
+		DIST="Debian"
+		REV="`cat /etc/debian_version`"
+    CODENAME=`/usr/bin/lsb_release -c -s`
+	fi
+fi

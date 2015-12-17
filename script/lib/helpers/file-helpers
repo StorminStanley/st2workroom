@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+random-tmpdir() {
+    echo $(mktemp -d)
+}
+
+recursive-mkdir() {
+    local _dir="${1:?}"
+    debug "Creating directory ${_dir}"
+    mkdir -p $_dir
+}
+
+recursive-rm() {
+    local _dir="${1:?}"
+    debug "Recursively deleting ${_dir}"
+    rm -rf $_dir
+}
+
+ensure-directory-absent() {
+    local _dir="${1:?}"
+
+    if string-equals $_dir "/"; then
+        log "Will not continue... deleting / is not allowed directly"
+        exit 1
+    fi
+
+    if directory-exists $_dir; then recursive-rm $_dir; else true;
+}
+
+ensure-directory-exists() {
+    local _dir="${1:?}"
+    if ! directory_exists $_dir; then recursive-mkdir $_dir; else true; fi
+}
+
+directory-exists() {
+    if [[ -d "${1:?}" ]]; then true; else false; fi
+}
+
+recursive-copy() {
+    local _source_dir="${1:?}"
+    local _dest_dir="${2:?}"
+
+    debug "Recursively copying ${_source_dir} to ${_dest_dir}"
+    cp -R $_source_dir $_dest_dir
+}
+
+safe-copy() {
+    local _source_dir="${1:?}"
+    local _dest_dir="${2:?}"
+    local _backup_dir="${3:?}"
+
+    if directory-exists $_dest_dir; then
+        safe-copy $_dest_dir $_backup_dir random-tmpdir
+    fi
+
+    ensure-directory-absent $_dest_dir
+    recursive-copy $_source_dir $_dest_dir
+
+    debug "Cleaning up temp directory $_tmp_dir after successful copy"
+    ensure-directory-absent $_backup_dir
+}

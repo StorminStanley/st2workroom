@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+
+
+setup-environment-from-git-branch() {
+    rake environments:update[sanitized-puppet-environment]
+}
+
+sync-dir-to-puppet-environment() {
+    local _args_array=($@)
+    local _arg_len=${#_args_array[@]}
+
+    local _source_dir="${1:?}"
+    local _environment="${2:?}"
+    local _excludes="${@:3:$_args_len}"
+    local _environment_dir="$(environment-dir ${_environment})"
+
+    local _excludes_args=
+    if has-value $_excludes; then
+        _excludes_args="$(add-prefix-to-each '--excludes' $_excludes)"
+    fi
+
+    rsync-dir $_source_dir $_environment_dir $_excludes_args
+}
+
+setup-current-working-directory-environment() {
+    local _excludes="environments vendor artifacts graphs packer script .git"
+    sync-dir-to-puppet-environment project-root current_working_directory $_excludes_args
+}
+
+currently-in-an-environment() {
+    if string-does-not-equal environment production-environment; then
+        true
+    else
+        false
+    fi
+}
+
+current-environment() {
+    echo "$(project-root)/bin/facter puppet_environment"
+}
+
+environment() {
+    if variable-set $ENV; echo $ENV; else echo "$(current-environment)"
+}
+
+sanitized-puppet-environment-to-apply() {
+    echo environment-to-apply | sed 's/[-\/.]/_/g'
+}
+
+is-valid-environment() {
+    if git-ref-is-branch project-root environment ||
+            git-ref-is-tag project-root environment; then
+        true
+    else
+        warn-invalid-environment
+        false
+    fi
+}
+
+production-mode() {
+    if string-equals requested-environment production-environment; then
+        true
+    else
+        false
+    fi
+}
+
+local-development-mode() {
+    if string-equals requested-environment local-development-environment; then
+        true
+    else
+        false
+    fi
+}
+
+branch-development-mode() {
+    if ! production-mode && ! local-development-mode; then true; else false; fi
+}
+
+local-development-environment() {
+    echo "current_working_directory"
+}
+
+production-environment() {
+    echo "master"
+}
+
+environment-to-apply() {
+    if local-development-mode; then
+        echo local-development-environment
+    elif production-mode; then
+        echo production-environment
+    elif branch-development-mode && is-valid-environment; then
+        echo environment
+    else
+        echo production-environment
+    fi
+}
+
+environment-root() {
+    ensure-directory-exists $_dir
+    echo "$(project-root)/environments"
+}
+
+environment-dir() {
+    echo "$(environment-root)/$(environment-to-apply)"
+}
+
+environment-graph-dir() {
+    echo "$(environment-dir)/graphs"
+}
+
+node-graph-dir() {
+    echo "$(environment-graph-dir)/$(node-name)"
+}

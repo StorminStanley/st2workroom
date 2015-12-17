@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+send-all-output-to() {
+    echo " >> ${1:?} 2>&1"
+}
+
+send-output-to-file-and-stdout() {
+    echo " 2>&1 | tee -a ${1:?}"
+}
+
+variable-set() {
+    if [[ -n "${1:?}" ]]; then true; else false;
+}
+
+string-equals() {
+    local _a="${1:?}"
+    local _b="${1:?}"
+    debug "Evaluating if ${_a} = ${_b}"
+    if [[ "$_a" = "$_b" ]]; then true; else false; fi
+}
+
+execute-string() {
+    local _command="${1:?}"
+    debug "Executing command $_command"
+    eval $_command
+}
+
+pushd-quiet() {
+    local _dir="${1:?}"
+    pushd $_dir >> /dev/null 2>&1
+    debug "Changing directory to ${_dir}"
+}
+
+popd-quiet() {
+    popd >> /dev/null 2&>1
+    debug "Changing directory to $(current-directory)"
+}
