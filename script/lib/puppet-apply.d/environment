@@ -28,7 +28,7 @@ setup-current-working-directory-environment() {
 }
 
 currently-in-an-environment() {
-    if string-does-not-equal environment production-environment; then
+    if string-does-not-equal current-environment production-environment; then
         true
     else
         false
@@ -36,11 +36,19 @@ currently-in-an-environment() {
 }
 
 current-environment() {
-    echo "$(project-root)/bin/facter puppet_environment"
+    if facter-has-value puppet_environment; then
+        facter-value puppet_environment
+    else
+        production-environment
+    fi
 }
 
-environment() {
-    if variable-set $ENV; echo $ENV; else echo "$(current-environment)"
+requested-environment() {
+    if variable-set $ENV; then
+        echo $ENV
+    else
+        echo current-environment
+    fi
 }
 
 sanitized-puppet-environment-to-apply() {

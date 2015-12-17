@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+DIR=$( dirname "$(readlink -f "$0")" )
+. $DIR/shared-functions
+
+# Preflight Setup. Entry point to OS/Distro specific scripts
+if file-exists "${DIR}/preflight-os-$(os-family)-$(os-dist)"; then
+    debug "Running pre-flight for $(os-family)/$(os-dist)"
+    $DIR/preflight-os-$(os-family)-$(os-dist)
+fi

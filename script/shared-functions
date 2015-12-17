@@ -4,18 +4,24 @@
 #
 # DIR=$( dirname "$(readlink -f "$0")" )
 # . $DIR/shared-functions
+set -e
+set -o pipefail
 
-# On hosts that use RH Software collections, ensure that
-# the profile is up and ready to go to source ruby.
 DIR=$( dirname "$(readlink -f "$0")" )
 
-source $DIR/lib/helpers/enable-ruby-scl
 source $DIR/lib/helpers/rsync-helpers
 source $DIR/lib/helpers/string-helpers
 source $DIR/lib/helpers/file-helpers
 source $DIR/lib/helpers/git-helpers
 source $DIR/lib/helpers/logging-helpers
 source $DIR/lib/helpers/project-helpers
+source $DIR/lib/helpers/bash-helpers
+source $DIR/lib/helpers/ruby-helpers
+source $DIR/lib/helpers/os-helpers
+source $DIR/lib/helpers/puppet-helpers
 
+source $DIR/lib/environment/enable-ruby-scl
+
+# LEGACY! THESE ARE GOING AWAY
 PROJECT_ROOT=/opt/puppet
 PATH=${PROJECT_ROOT}/bin:/usr/local/bin:$PATH

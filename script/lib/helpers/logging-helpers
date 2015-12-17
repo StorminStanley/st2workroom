@@ -1,24 +1,43 @@
 #!/usr/bin/env bash
 
-## Logging
-silence-info-messages() {
-    if variable-set $ST2_SILENCE_INFO; then true; else false; fi
+#silence-info-messages() {
+#    if variable-set $ST2_SILENCE_INFO; then true; else false; fi
+#}
+
+logger() {
+    echo "[${1:?}] ${2:?}"
 }
 
-logger() { echo "[{1:?}] ${2:?}" }
-info() { if ! silence-info-messages; then logger 'info' "${1:?}"; fi }
-log() { logger 'log' "${1:?}" }
-debug() { if debug-enabled; then logger "debug" "${1:?}" }
+info() {
+    if ! silence-info-messages; then
+        logger "info" "${1:?}"
+    fi
+}
+
+log() {
+    logger "log" "${1:?}"
+}
+
+error() {
+    logger "error" "${1:?}"
+}
+
+debug() {
+    if debug-enabled; then
+        logger "debug" "${1:?}"
+    fi
+}
+
 fail-loudly() {
-    log "*******************************************************"
-    log "${1:?}"
-    log "*******************************************************"
+    error "*******************************************************"
+    error "${1:?}"
+    error "*******************************************************"
     exit 1
 }
 
 log-file() {
     local _log_file=/var/log/puppet.log
-    if variable-set $LOG_FILE; then echo $LOG_FILE; else echo $_log_file
+    if variable-set $LOG_FILE; then echo $LOG_FILE; else echo $_log_file; fi
 }
 
 debug-enabled() {

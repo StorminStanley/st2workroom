@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # This stand-alone script should be able to be used to kickstart a new node
 
 ### CLI Parsing

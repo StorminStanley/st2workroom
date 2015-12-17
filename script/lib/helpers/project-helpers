@@ -9,6 +9,6 @@ script-root() {
 }
 
 project-root() {
-    local _project_root="${$PROJECT_ROOT:-/opt/puppet}"
-    echo "${_project_root}"
+    local _project_root=$PROJECT_ROOT
+    echo $_project_root
 }

@@ -13,7 +13,6 @@ show-help() {
     echo "Environment Variables:"
     echo "  ENV=                     Set the st2workroom environment"
     echo "  ST2_PUPPET_BRANCH=       Set the upstream puppet-st2 branch"
-    exit 1
 }
 
 warn-invalid-environment() {

@@ -1,5 +1,4 @@
-#!/usr/bin/env sh
-set -e
+#!/usr/bin/env bash
 
 DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
@@ -13,9 +12,14 @@ APT_UPDATE_FREQ=30
 OFFLINE_MODE=`facter system_offline_mode`
 
 update_apt() {
-    echo "Updating Debian apt-cache..."
+    local _cmd=
+    debug "Updating Debian apt-cache"
+
+    $_cmd="apt-get update $
     apt-get update > /dev/null 2>&1
 }
+
+
 
 if [ "$OFFLINE_MODE" != "true" ]; then
   ## Only run if we haven't run APT in awhile. Speed up feedback loop

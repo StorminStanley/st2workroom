@@ -9,7 +9,11 @@ send-output-to-file-and-stdout() {
 }
 
 variable-set() {
-    if [[ -n "${1:?}" ]]; then true; else false;
+    if [[ -n "${1:-}" ]]; then
+        true
+    else
+        false
+    fi
 }
 
 string-equals() {
@@ -26,12 +30,11 @@ execute-string() {
 }
 
 pushd-quiet() {
-    local _dir="${1:?}"
+    local _dir="${1:-+1}"
     pushd $_dir >> /dev/null 2>&1
-    debug "Changing directory to ${_dir}"
+    debug "Changing directory to $(current-directory)"
 }
 
-popd-quiet() {
-    popd >> /dev/null 2&>1
-    debug "Changing directory to $(current-directory)"
+current-directory() {
+  echo $(pwd)
 }

@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -e
+
+DIR=$( dirname "$(readlink -f "$0")" )
+. $DIR/shared-functions
+
+bootstrap-os-linux-debian() {
+    local _common_packages="unzip wget ruby ruby-dev git unzip wget gnupg2"
+    local _augeas_packages="libaugeas-dev pkg-config augeas-tools"
+    local _ruby_packages=
+    local _dist_packages=
+    local _packages=
+
+    RUBY_PACKAGES="ruby ruby-dev"
+    AUGEAS_PACKAGES="libaugeas-dev pkg-config"
+
+    if os-is-debian-not-ubuntu; then
+        $_ruby_packages="ruby ruby-dev"
+        $_dist_packages="bundler apt-transport-https"
+    fi
+
+    $_packages="${_common_packages} ${_augeas_packages} ${_ruby_packages} ${_dist_packages}"
+    install-apt-packages $_packages
+    install-bundler-if-needed
+}
+
+bootstrap-os-linux-debian

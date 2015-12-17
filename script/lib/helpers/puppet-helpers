@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 install-puppet-libraries() {
+    local _work_root="${1:?}"
     local _log_dest=
     local _debug_args=
     local _args=
@@ -14,12 +15,12 @@ install-puppet-libraries() {
         $_log_dest="$(send-all-output-to log-file)"
     fi
     $_args="${_debug_args} ${_log_dest}"
-    $_cmd="librarian-puppet install ${_args}"
+    $_cmd="librarian-puppet install --shared ${_args}"
 
     debug "Running librarian-puppet in ${_work_root} with ${_args}"
     execute-string $_cmd
 
-    popd-quiet
+    pushd-quiet +1
 }
 
 run-puppet() {
@@ -51,3 +52,10 @@ install-puppetfile() {
     run-librarian-puppet environment-dir
 }
 
+facter-has-value() {
+    variable-set facter-value "${1:?}"
+}
+
+facter-value() {
+    echo "$(project-root)/bin/facter ${1:?}"
+}

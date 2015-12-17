@@ -14,3 +14,13 @@ add-prefix-do-each() {
     echo $_blob
 }
 
+to-lowercase() {
+    while read word; do
+        case "$word" in
+            [A-Z])
+                n=$(printf "%d" "'$1")
+                n=$((n+32))
+                printf \\$(printf "%o" $n)
+        esac
+    done
+}

@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+install-bundler-if-needed() {
+    if ! executable-exists "bundler"; then
+        install-gem bundler
+    fi
+}
+
+install-ruby-if-needed() {
+    if os-is-ubuntu; then
+        install-rvm
+    fi
+}
+
+install-gem() {
+    local _gem="${1:?}"
+    local _default_args="--no-ri --no-rdoc"
+    local _log_dest=
+    local _cmd=
+
+    if debug-enabled; then
+        $_log_dest="$(send-output-to-file-and-stdout log-file)"
+    else
+        $_log_dest="$(send-all-output-to log-file)"
+    fi
+
+    $_args="${_default_args} ${log_dest}"
+    $_cmd="gem install ${_gem} ${_args}"
+
+    debug "Installing ${_gem} with args ${_args}"
+    execute-string $_cmd
+}
+
+install-bundled-gems() {
+    local _work_root="${1:?}"
+    local _log_dest=
+    local _default_args="--deployment --binstubs"
+    local _args=
+
+    pushd-quiet environment-dir
+
+    if debug-enabled; then
+        $_log_dest="$(send-output-to-file-and-stdout log-file)"
+    else
+        $_log_dest="$(send-all-output-to log-file)"
+    fi
+
+    $_args="${_default_args} ${_log_dest}"
+    $_cmd="$(bundler-command) install --path vendor/bundle ${_args}"
+
+    debug "Running bundler in ${_work_root} with ${_args}"
+    execute-string $_cmd
+
+    pushd-quiet +1
+}
+

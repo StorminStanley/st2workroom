@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 
 echo 'LANG="en_US.UTF-8"' > /etc/default/local

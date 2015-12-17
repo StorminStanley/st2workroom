@@ -24,7 +24,7 @@ ensure-directory-absent() {
         exit 1
     fi
 
-    if directory-exists $_dir; then recursive-rm $_dir; else true;
+    if directory-exists $_dir; then recursive-rm $_dir; else true; fi
 }
 
 ensure-directory-exists() {
@@ -58,4 +58,12 @@ safe-copy() {
 
     debug "Cleaning up temp directory $_tmp_dir after successful copy"
     ensure-directory-absent $_backup_dir
+}
+
+file-exists() {
+    if [[ -f "${1:?}" ]]; then
+        true
+    else
+        false
+    fi
 }

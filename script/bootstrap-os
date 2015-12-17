@@ -1,36 +1,23 @@
-#!/usr/bin/env sh
-set -e
-
-if [ $(id -u) -ne 0 ]; then
-    echo "Please run with root privileges"
-    exit 1
-fi
-
+#!/usr/bin/env bash
 DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
-# Check to see if bootstrap has been done already...
-# Bootstrap is responsible for retrieving core utilities:
-#  * git
-#  * wget
-#  * ruby
-#  * bundler
-#
-# Everything else beyond this is handled within the project
-#
-if [ ! -f /etc/st2workroom-bootstrapped ]; then
-    if [ "$OS" = "Linux" ]; then
-        if [ "$DIST" = "RedHat" ]; then
-            $DIR/bootstrap-redhat
-        elif [ "$DIST" = "Debian" ]; then
-            $DIR/bootstrap-debian
-        else
-            echo "Unsupported OS."
-            exit 1
-        fi
-    elif [ "$OS" = "OpenBSD" ]; then
-        $DIR/bootstrap-openbsd
-    fi
-fi
+init-bootstrap-os() {
+    local _preflight_script="$(project-root)/script/bootstrap-os-$(os-family)"
+    local _lock_file="/etc/st2workroom-bootstrapped"
 
-touch /etc/st2workroom-bootstrapped
+    if ! is-root; then
+        show-help
+        fail-loudly "Please run with root permissions"
+    fi
+
+    if file-exists $_preflight_script && ! file-exists $_lock_file; then
+        execute-string $_preflight_script
+    else
+        log "Lock file ${_lock_file} exists. Skipping bootstrap-os-$(os-family)"
+    fi
+
+    ensure-file-exists $_lock_file
+}
+
+init-bootstrap-os

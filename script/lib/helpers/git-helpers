@@ -72,11 +72,11 @@ git-update-and-clean() {
     local _dir="${1:?}"
     pushd-quiet $_dir
 
-    debug "Updating git root ($_{dir})"
+    debug "Updating git root ($_dir)"
     git fetch --all
     git gc --auto
 
-    popd-quiet
+    pushd-quiet
 }
 
 git-hard-reset() {
@@ -87,5 +87,5 @@ git-hard-reset() {
     debug "Hard resetting git repo ${_dir} to ${_branch}"
     git reset --hard $_branch
 
-    popd-quiet
+    pushd-quiet +1
 }
