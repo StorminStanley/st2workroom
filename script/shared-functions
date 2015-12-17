@@ -42,15 +42,19 @@ elif [ "$OS" = "Linux" ]; then
 fi
 
 git_ref_type() {
-    [ -n "$1" ] || die "Missing ref name"
+    REF=$1; shift;
+    DIR=$1;
 
-    if git show-ref -q --verify "refs/heads/$1" 2>/dev/null; then
+    [ -n "$DIR" ] || die "Missing ref name"
+    [ -n "$REF" ] || die "Missing ref name"
+
+    if git show-ref -q --verify "refs/heads/$REF" 2>/dev/null; then
         echo "branch"
-    elif git show-ref -q --verify "refs/tags/$1" 2>/dev/null; then
+    elif git show-ref -q --verify "refs/tags/$REF" 2>/dev/null; then
         echo "tag"
-    elif git show-ref -q --verify "refs/remote/$1" 2>/dev/null; then
+    elif git show-ref -q --verify "refs/remote/$REF" 2>/dev/null; then
         echo "remote"
-    elif git rev-parse --verify "$1^{commit}" >/dev/null 2>&1; then
+    elif git rev-parse --verify "$REF^{commit}" >/dev/null 2>&1; then
         echo "hash"
     else
         echo "unknown"
@@ -67,13 +71,89 @@ ensure_directory_exists() {
     fi
 }
 
-# Bail if not root
-bail_if_not_root() {
-    if [ $(id -u) -ne 0 ]; then
-        echo "********************************************************"
-        echo "          Please run with root privileges"
-        echo "********************************************************"
+ensure_directory_absent() {
+    DIR=$1
+
+    if [ "$DIR" = "/" ]; then
+        log "Not going to continue... will not delete everything"
         exit 1
+    fi
+
+    if [ -d $DIR ]; then
+        debug "Deleting directory $DIR..."
+        rm -rf $DIR
+    fi
+}
+
+safe_copy() {
+    SOURCE_DIR=$1; shift;
+    DEST_DIR=$1; shift;
+    BACKUP_DIR=$1; shift;
+    DEBUG=$1
+
+    if [ -d $DEST_DIR ]; then
+        cp -R $DEST_DIR $BACKUP_DIR
+        if [ $? -eq 0 ]; then
+            log "Success copy from $to $BACKUP_DIR"
+        else
+            log "Unable to backup $DEST_DIR to $BACKUP_DIR. Aborting"
+            exit 1
+        fi
+    fi
+
+    debug "Copying $SOURCE_DIR to $DEST_DIR"
+    ensure_directory_absent $DEST_DIR
+    cp -R $SOURCE_DIR $DEST_DIR
+
+    if [ $? -eq 0 ]; then
+        debug "Successful copy from $SOURCE_DIR to $DEST_DIR"
+        debug "Cleaning up"
+
+        if [ -d $BACKUP_DIR ]; then
+            debug "Cleaning up backup directory $BACKUP_DIR"
+            ensure_directory_absent $BACKUP_DIR
+        fi
+    else
+        debug "Something went wrong... reverting!"
+        ensure_directory_absent $DEST_DIR
+        mv $BACKUP_DIR $DEST_DIR
+    fi
+}
+
+git_setup_clean_branch() {
+    GIT_REPO=$1; shift;
+    DEST_DIR=$1; shift;
+    REF=$1;
+
+    debug "Cloning $GIT_REPO ($REF) to $DEST_DIR"
+    git clone $GIT_REPO $DEST_DIR -b $REF
+}
+
+git_clean_and_update_branch() {
+    DIR=$1; shift;
+    BRANCH=$1;
+
+    cd $DIR
+    git_clean_and_update $DIR
+
+    debug "Resetting $DIR to branch $BRANCH"
+    git reset --hard $BRANCH
+}
+
+git_clean_and_update() {
+    DIR=$1;
+
+    cd $DIR
+    debug "Updating git root..."
+    git fetch --all
+    git gc --auto
+}
+
+has_root_permissions() {
+    if [ $(id -u) -ne 0 ]; then
+        echo "false"
+    else
+        echo "true"
     fi
 }
 
@@ -89,6 +169,7 @@ bash_tuple() {
   fi
 }
 
+## Logging
 info() {
   MESSAGE=$1
   if [ -z "$ST2_SILENCE" ]; then
@@ -107,3 +188,4 @@ debug() {
     echo "[debug] $MESSAGE"
   fi
 }
+ 

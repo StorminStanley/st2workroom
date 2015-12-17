@@ -2,6 +2,7 @@
 set -e
 
 show_help() {
+    echo ""
     echo "StackStorm All-in-one Installer - System Update"
     echo "Usage: $0 [OPTION]..."
     echo
@@ -18,16 +19,15 @@ show_help() {
 # Note to the user that a requested environment is not around.
 # Maybe a little intrusive, but at least it's not obfuscated
 warn_requested_env_missing() {
+    REQUESTED_ENV=$1; shift;
+    ACTUAL_ENV=$1; shift
     SLEEP=5
-    COMMAND=$1
-    REQUESTED_ENV=$2
-    ACTUAL_ENV=$3
 
     info "********************************************************"
     info " Heads up friend! Just want let you know...  "
     info ""
     info " Once upon a time, as recently as 5 seconds ago, this machine"
-    info " was asked to run ${COMMAND} in the ${REQUESTED_ENV}"
+    info " was asked to run the AIO installer commands in the ${REQUESTED_ENV}"
     info " environment. Alas, as much as it try, it was not possible"
     info ""
     info " But, as the machine came to learn, it was not all doom and"
@@ -49,15 +49,9 @@ warn_requested_env_missing() {
     info "  - https://stackstorm.com/community/"
     info "********************************************************"
     info "Processing of ${COMMAND} will begin automatically in ${SLEEP} seconds..."
-    sleep $SLEEP
-}
 
-update_from_upstream() {
-    LOG_FILE=$1; shift;
-    DEBUG=$1; shift;
-    DEBUG_ARGS=`bash_tuple $DEBUG "--verbose" ""`
-
-    git pull origin -q $DEBUG_ARGS || true | tee -a $LOG_FILE
+    log "sleep $SLEEP"
+    #sleep $SLEEP
 }
 
 # This function takes the contents of the work directory, and rsyncs
@@ -68,8 +62,8 @@ update_from_upstream() {
 rsync_puppet_dir() {
     SRC_DIR=$1; shift;
     DST_DIR=$1; shift;
-    LOG_FILE=$1; shift
-    DEBUG=$1; shift;
+    LOG_FILE=$1; shift;
+    DEBUG=$1;
 
     DEFAULT_ARGS="-arh --delete"
     DEBUG_ARGS=`bash_tuple $DEBUG "-v" ""`
@@ -86,55 +80,120 @@ rsync_puppet_dir() {
     fi
 }
 
+# assemble_rsync_excludes
+#
+# Small helper function that assembles the `exclude` attributes passed
+# to rysnc
 assemble_rsync_excludes() {
     FILES=$@
     BLOB=
 
     for FILE in $FILES; do
-        eval BLOB="\$BLOB --exclude $FILE"
+        BLOB="$BLOB --exclude $FILE"
     done
 
     echo $BLOB
 }
 
+# install_puppet_libraries
+#
+# This function will parse and extract libraries from a Puppetfile
+# in a given WORK_DIR. Logs to LOG_FILE
+#
+# install_puppet_libraries /opt/puppet/environment/master /opt/puppet /var/log/puppet.log false
 install_puppet_libraries() {
     WORK_DIR=$1; shift;
+    CACHE_DIR=$1; shift;
     LOG_FILE=$1; shift;
-    DEBUG=$1; shift;
+    DEBUG=$1;
 
     DEBUG_ARGS=`bash_tuple $DEBUG "--verbose" ""`
 
+
+    # Ensure we take a copy of the bundled puppet libraries with us,
+    # cutting down on download time.
+    safe_copy $CACHE_DIR/vendor/puppet $WORK_DIR/vendor/puppet /tmp/puppet
+
+    cd $WORK_DIR
     if [ "$DEBUG" = "true" ]; then
-        librarian-puppet install 2>&1 | tee -a $LOG_FILE
+        librarian-puppet install $DEBUG_ARGS 2>&1 | tee -a $LOG_FILE
     else
         librarian-puppet install >> $LOG_FILE 2>&1
     fi
 }
 
+# sanitize_puppet_env
+#
 # Removes all special characters that causes puppet to fail parsing
+#
+# sanitize_puppet_env v1.1.0
 sanitize_puppet_env() {
-    echo $PUPPET_ENV | sed 's/[-\/.]/_/g'
+    ENV=$1
+    echo $ENV | sed 's/[-\/.]/_/g'
 }
 
-# Setup Puppet environments
+# bootstrap_st2workroom
+#
+# This function ensures that the necessary puppet environments are
+# generated in the WORK_DIR/environment/ENV via rsync
+# or git/rake as called for by the environment.
+#
+# bootstrap_st2workroom master /opt/puppet /var/log/puppet.log false
 bootstrap_st2workroom() {
     ENVIRONMENT=$1; shift;
     WORK_DIR=$1; shift;
     LOG_FILE=$1; shift;
-    DEBUG=$1; shift;
+    DEBUG=$1;
 
     SANITIZED_ENV=`sanitize_puppet_env $ENVIRONMENT`
     ENVIRONMENT_DIR="$WORK_DIR/environments/$SANITIZED_ENV"
+
+    log "Setting up st2workroom in environment $ENVIRONMENT"
     ensure_directory_exists $WORK_DIR/environments
 
-    echo "Setting up st2workroom in environment $ENVIRONMENT"
-
     if [ "$ENVIRONMENT" = "current_working_directory" ]; then
-        install_puppet_libraries $WORK_DIR $LOG_FILE $DEBUG
         rsync_puppet_dir $WORK_DIR/ $ENVIRONMENT_DIR $DEBUG
     else
         rake environments:update[$SANITIZED_ENV] >> $LOG_FILE 2>&1
-        install_puppet_libraries $ENVIRONMENT_DIR $LOG_FILE $DEBUG
+    fi
+
+    install_puppet_libraries $ENVIRONMENT_DIR $WORK_DIR $LOG_FILE $DEBUG
+}
+
+# bootstrap_puppet_st2
+#
+# This function downloads an updated version of StackStorm directly from
+# GitHub and sets it up such that we can run branch-deploys of the
+# upstream puppet-st2 module
+#
+# bootstrap_puppet_st2 v1.0.1 master /opt/puppet false
+bootstrap_puppet_st2() {
+    VERSION=$1; shift;
+    ENVIRONMENT=$1; shift;
+    WORK_DIR=$1; shift;
+    DEBUG=$1
+    DEBUG_ARGS=`bash_tuple $DEBUG "--verbose --debug" ""`
+    GIT_REPO="https://github.com/stackstorm/st2.git"
+    MODULE_DIR="$WORK_DIR/modules/st2"
+    MODULE_NAME=`basename $MODULE_DIR`
+    TMP_DIR="/tmp/$MODULE_NAME"
+    BACKUP_DIR="${MODULE_DIR}.old"
+
+    log "Staging download of $MODULE_NAME version $VERSION to $TMP_DIR..."
+    CLONE_SUCCESS=`git_setup_clean_branch $GIT_REPO $TMP_DIR $VERSION`
+
+    if [ "$CLONE_SUCCESS" = "true" ]; then
+        debug "Successful clone! Moving $TMP_DIR to $MODULE_DIR"
+        COPY_SUCCESS=`safe_copy $TMP_DIR $MODULE_DIR $BACKUP_DIR`
+
+        if [ "$COPY_SUCCESS" = "true" ]; then
+            log "Successful setup of puppet-st2 $VERSION to $MODULE_DIR"
+        else
+            log "Unable to copy files from $TMP_DIR to $MODULE_DIR"
+            log "Skipping branch deploy of puppet-st2 $VERSION"
+        fi
+    else
+        log "Unable to clone repo $GIT_REPO to $TMP_DIR"
     fi
 }
 
@@ -142,56 +201,52 @@ bootstrap_st2workroom() {
 #
 # Based on passed values, determines the appropriate Puppet branch
 # to apply to a system. The goal here is to ensure that once a user
-# changes from the mainline branch (`production`) to another branch,
+# changes from the mainline branch (`master`) to another branch,
 # subsequent runs of Puppet will automatically honor the previously
 # applied branch.
 #
 # This should be the case until either: a branch does not exist anymore
 # or a user manually requests an upgrade.
 #
-# Requires: new_test_env some_old_feature production /opt/puppet
+# Requires: new_test_env /opt/puppet false
 is_puppet_env_available() {
     REQUESTED_ENV=$1; shift;
-    CURRENT_ENV=$1; shift;
-    FALLBACK_ENV=$1; shift;
     WORK_DIR=$1; shift;
+    DEBUG=$1
 
-    SANITIZED_ENV=`sanitize_puppet_env $REQUESTED_ENV`
-    ENVIRONMENT_DIR="$WORK_DIR/environments/$SANITIZED_ENV"
-
-    if [ ! -d $PROJECT_ROOT/environments/$PUPPET_ENV ]; then
-        warn_requested_env_missing $SCRIPT_ENTRY $PUPPET_ENV $FALLBACK_ENV
-        PUPPET_ENV=$FALLBACK_ENV
-    fi
-
-    # If a user has not requested a new environment, but
-    # we are already checked out to an existing environment,
-    # stay there.
-    if [ -z "$REQUESTED_ENV" ] && [ -n "$CURRENT_ENV" ]; then
-        echo $CURRENT_ENV
-    elif [ -z "$CURRENT_ENV" ]; then
-        echo $FALLBACK_ENV
-    else
+    # If we want `current_working_directory`, just make it happen
+    if [ "$REQUESTED_ENV" = "current_working_directory" ]; then
         echo $REQUESTED_ENV
+    else
+        VALID_REF=`is_valid_ref $REQUESTED_ENV $WORK_DIR`
+        SANITIZED_ENV=`sanitize_puppet_env $REQUESTED_ENV`
+
+        if [ "$VALID_REF" = "true" ]; then
+            echo "true"
+        else
+            echo "false"
+        fi
     fi
 }
 
-# gather_puppet_args
+# is_valid_ref
 #
-# Assembles an argument list for Puppet based on a few config settings
+# This function checks a given git ref in a directory to determine
+# if the ref is eligible to be cloned.
 #
-# gather_puppet_args host001 /opt/puppet false
-gather_puppet_args() {
-    NODE=$1; shift;
-    WORK_ROOT=$1; shift;
-    DEBUG=$1; shift;
+# Currently only supports `branches` and `tags`
+#
+# is_valid_ref stellar_new_feature /opt/puppet false
+is_valid_ref() {
+    REF=$1; shift
+    WORK_DIR=$1; shift;
+    DEBUG=$1
 
-    PUPPET_GRAPH_ARGS="--graph --graphdir $WORK_ROOT/graphs/$NODE"
-    PUPPET_DEBUG_ARGS="--debug --verbose $PUPPET_GRAPH_ARGS"
-
-    if [ "$DEBUG" = "true" ]; then
-        ensure_directory_exists $WORK_ROOT/graphs/$NODE
-        echo $PUPPET_DEBUG_ARGS
+    GIT_REF_TYPE=`git_ref_type $REF $WORK_DIR`
+    if [ "$GIT_REF_TYPE" = "branch" ] || [ "$GIT_REF_TYPE" = "tag" ]; then
+        echo "true"
+    else
+        echo "false"
     fi
 }
 
@@ -200,18 +255,60 @@ gather_puppet_args() {
 # This command is responsible for running Puppet with a given root directory
 # and environment, while pushing any/all output to both STDOUT and a log file.
 #
-# run_puppet production /opt/puppet /var/log/puppet.log
+# run_puppet node001 master /opt/puppet /var/log/puppet.log false
 run_puppet() {
-    CONFIG_ROOT=$1; shift;
+    NODE=$1; shift;
     ENVIRONMENT=$1; shift;
+    WORK_ROOT=$1; shift;
     LOG_FILE=$1; shift;
-    ARGS=$@
+    DEBUG=$1;
+
+    PUPPET_GRAPH_ARGS="--graph --graphdir $WORK_ROOT/graphs/$NODE"
+    PUPPET_DEBUG_ARGS="--debug --verbose $PUPPET_GRAPH_ARGS"
+
+    if [ "$DEBUG" = "true" ]; then
+        ensure_directory_exists $WORK_ROOT/graphs/$NODE
+        ARGS=$PUPPET_DEBUG_ARGS
+    fi
 
     log "Running `puppet apply` with environment: $ENVIRONMENT"
     puppet apply --environment $ENVIRONMENT \
            --config $CONFIG_ROOT/puppet.conf \
            $CONFIG_ROOT/environments/$ENVIRONMENT/manifests $ARGS 2>&1 \
         | tee -a $LOG_FILE
+}
+
+# select_most_applicable_env
+#
+# Given three different environments, select and return the correct environment
+# to be generated and ultimately run by the installer.
+#
+# The output is the branch that is able to be executed, in ranked order
+#
+# * current_working_directory
+# * REQUESTED_ENV
+# * CURRENT_ENV
+# * FALLBACK_ENV
+#
+# select_mast_applicable_env new-feature old-feature fallback-env false
+select_most_applicable_env() {
+    REQUESTED_ENV=$1; shift;
+    CURRENT_ENV=$1; shift;
+    FALLBACK_ENV=$1; shift;
+    DEBUG=$1
+
+
+    if [ "$REQUESTED_ENV" = "current_working_directory" ]; then
+        echo "current_working_directory"
+    elif [ "$REQUESTED_ENV" = "$FALLBACK_ENV" ]; then
+        echo "$FALLBACK_ENV"
+    elif [ "$REQUESTED_ENV" != "$CURRENT_ENV" ] && [ "$REQUESTED_ENV" != "$FALLBACK_ENV" ]; then
+        echo $REQUESTED_ENV
+    elif [ "$REQUESTED_ENV" != "$CURRENT_ENV" ] && [ "$REQUESTED_ENV" = "$FALLBACK_ENV" ]; then
+        echo $CURRENT_ENV
+    else
+        echo $FALLBACK_ENV
+    fi
 }
 
 # Main init
@@ -222,6 +319,14 @@ init() {
     DIR=$( dirname "$(readlink -f "$0")" )
     . $DIR/shared-functions
 
+    SCRIPT_NAME=$0
+    SCRIPT_ARGS=$@
+    CONFIG_ROOT=$PROJECT_ROOT
+    LOG_FILE=$LOG_FILE
+    FALLBACK_ENV=master
+    NODE=$NODE
+
+    ### Settings
     # Enable Debug via the environment
     if [ -n "$DEBUG" ]; then
         debug "*******************************************************"
@@ -233,42 +338,53 @@ init() {
         ENABLE_DEBUG=false
     fi
 
-    SCRIPT_NAME=$0
-    CONFIG_ROOT=$ROOT_DIR
-    LOG_FILE=/var/log/puppet.log
-    FALLBACK_ENV=production
-    NODE=$NODE
+    # Setup which ENV to request
+    if [ -n "$ENV" ];  then
+        REQUESTED_ENV=$ENV
+    else
+        REQUESTED_ENV=$FALLBACK_ENV
+    fi
+    ### End Setting
 
     # Get together any puppet arguments to configure processing
-    SCRIPT_ARGS=$@
-    PUPPET_ARGS=`gather_puppet_args $NODE $CONFIG_ROOT $ENABLE_DEBUG`
-    ARGS="$PUPPET_ARGS $SCRIPT_ARGS"
-
-    CURRENT_ENV=`${CONFIG_ROOT}/bin/facter puppet_environment`
-
-    REQUESTED_ENV=`ensure_env_exists $ENV`
-    ENV_TO_APPLY=`determine_puppet_env $CURRENT_ENV $REQUESTED_ENV $FALLBACK_ENV`
-
     # Ensure we have all the permissions to run the script
-    bail_if_not_root
+    if [ `has_root_permissions` != "true" ]; then
+        log "*******************************************************"
+        log "          Please run with root permissions"
+        log "*******************************************************"
+
+        show_help
+        exit 1
+    fi
 
     # Ensure that code on the machine is the latest we can get!
-    update_from_upstream $ENABLE_DEBUG
+    git_clean_and_update $CONFIG_ROOT
 
     # Run any pre-flight commands
-    $CONFIG_ROOT/script/preflight-os
+    debug "Running pre-flight commands to ensure OS is ready"
+    #$CONFIG_ROOT/script/preflight-os
 
-    # If the user requested it, setup the StackStorm/puppet-st2 repo with the
-    # specified tag/branch.
-    if [ -n "$PUPPET_ST2_BRANCH" ]; then
-        bootstrap_puppet_st2 $PUPPET_ST2_BRANCH
+    # st2workroom / puppet environment setup
+    CURRENT_ENV=`${CONFIG_ROOT}/bin/facter puppet_environment`
+    VALID_ENVIRONMENT=`is_puppet_env_available $REQUESTED_ENV $CONFIG_ROOT $ENABLE_DEBUG`
+
+    if [ "$VALID_ENVIRONMENT" = "false" ]; then
+        warn_requested_env_missing $REQUESTED_ENV $FALLBACK_ENV
     fi
+
+    ENV_TO_APPLY=`select_most_applicable_env $REQUESTED_ENV $CURRENT_ENV $FALLBACK_ENV $ENABLE_DEBUG`
 
     # Ensure that the workroom is all setup properly.
     bootstrap_st2workroom $ENV_TO_APPLY $CONFIG_ROOT $LOG_FILE $ENABLE_DEBUG
 
-    # Now, let's kick off Puppet with all the right settings!
-    run_puppet $ENV_TO_APPLY $CONFIG_ROOT $LOG_FILE $ENABLE_DEBUG $ARGS
+    # If the user requested it, setup the StackStorm/puppet-st2 repo with the
+    # specified tag/branch. Must occur *after* st2workroom has been bootstrapped
+    # if [ -n "$PUPPET_ST2_BRANCH" ]; then
+    #     bootstrap_puppet_st2 $PUPPET_ST2_BRANCH $ENV_TO_APPLY $CONFIG_ROOT $DEBUG
+    # fi
+
+    ## Now, let's kick off Puppet with all the right settings!
+    #run_puppet $ENV_TO_APPLY $CONFIG_ROOT $LOG_FILE "$SCRIPT_ARGS" $ENABLE_DEBUG
 }
 
 # Main entry point for script
@@ -278,13 +394,18 @@ while :; do
             show_help
             exit
             ;;
+        -d|--debug)
+            DEBUG=true
+            shift
+            continue
+            ;;
         -e|--environment)
             if [ -n "$2" ]; then
                 ENV=$2
                 shift 2
                 continue
             else
-                printf 'ERROR "--environment" requires a non-empty argument.\n' >&2
+                printf 'ERROR "--environment" requires a non-empty argument.\n'
             fi
             ;;
         -s|--st2-puppet-branch)
@@ -293,7 +414,7 @@ while :; do
                 shift 2
                 continue
             else
-                printf 'ERROR "--st2-puppet-branch" requires a non-empty argument.\n' >&2
+                printf 'ERROR "--st2-puppet-branch" requires a non-empty argument.\n'
             fi
             ;;
         --)
@@ -301,7 +422,7 @@ while :; do
             break
             ;;
         -?*)
-            log "WARN: unknown option ($1)... ignoring" >&2
+            printf "WARN: unknown option ($1)... ignoring.\n"
             ;;
         *)
             break
