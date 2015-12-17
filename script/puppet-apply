@@ -8,6 +8,7 @@ source $DIR/shared-functions
 source $DIR/lib/puppet-apply.d/help
 source $DIR/lib/puppet-apply.d/environment
 source $DIR/lib/puppet-apply.d/puppet
+source $DIR/lib/puppet-apply.d/bootstrap
 
 bootstrap-st2workroom() {
     log "Setting up st2workroom in environment $(environment)"
@@ -99,4 +100,4 @@ while :; do
     shift
 done
 
-init $@
+init
