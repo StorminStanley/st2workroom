@@ -4,7 +4,6 @@ DIR=$( dirname "$(readlink -f "$0")" )
 
 init-bootstrap-os-linux() {
     local _dist_preflight_script="$(project-root)/script/bootstrap-os-$(os-family)-$(os-dist)"
-    debug "'bootstrap-os-linux': entering"
 
     if ! is-root; then
         show-help

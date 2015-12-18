@@ -2,8 +2,6 @@
 
 variable-set() {
     local _var="${1:-}"
-
-    trace "'variable-set' checking if variable '$_var' is set"
     if [[ -n "$_var" ]]; then
         true
     else
@@ -14,27 +12,19 @@ variable-set() {
 string-equals() {
     local _a="${1:?}"
     local _b="${2:?}"
-
-    trace "'string-equals' evaluating if $_a = $_b"
     if [[ "$_a" = "$_b" ]]; then true; else false; fi
 }
 
 execute-string() {
     local _command="${1:?}"
-
-    trace "'execute-string' Executing command: $_command"
     eval $_command
 }
 
 pushd-quiet() {
     local _dir="${1:-+1}"
     pushd $_dir >> /dev/null 2>&1
-
-    trace "'pushd-quiet' chdir to $(current-directory)"
 }
 
 current-directory() {
     local _dir=$(pwd)
-
-    trace "'current-directory' current directory is $_dir"
 }

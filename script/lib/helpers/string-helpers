@@ -1,26 +1,19 @@
 #!/usr/bin/env bash
 
 add-prefix-to-each() {
-    trace "'add-prefix-to-each' entering"
-
     local _args_array=($@)
     local _arg_len=${#_args_array[@]}
     local _prefix="${1:?}"
     local _array="${@:2:$_args_len}"
     local _blob=
 
-    debug "'add-prefix-to-each' adding $_prefix for elements $_array"
-
     for element in $_array; do
-        _blob="${blob} ${_prefix} ${element}"
+        _blob="${_blob} ${_prefix} ${element}"
     done
 
     echo $_blob
 }
 
 to-lowercase() {
-    local _word="${1:?}"
-    trace "'to-lowercase' for word $_word"
-
-    echo $_word | tr '[:upper:]' '[:lower:]'
+    echo "${1:?}" | tr '[:upper:]' '[:lower:]'
 }

@@ -1,33 +1,22 @@
 #!/usr/bin/env bash
 
 random-tmpdir() {
-    local _tmpdir=
-    _tmpdir=$(mktemp -d)
-
-    trace "'random-tmpdir' creating tempdir ${_tmpdir}"
-    echo $_tmpdir
+    echo $(mktemp -d)
 }
 
 recursive-mkdir() {
-    local _dir="${1:?}"
-
-    trace "'recursive-mkdir' creating directory ${_dir}"
-    mkdir -p $_dir
+    mkdir -p "${1:?}"
 }
 
 recursive-rm() {
-    local _dir="${1:?}"
-
-    trace "'recursive-rm' recursively deleting ${_dir}"
-    rm -rf $_dir
+    rm -rf "${1:?}"
 }
 
 ensure-directory-absent() {
     local _dir="${1:?}"
 
-    trace "'ensure-directory-absent' for dir: $_dir"
     if string-equals $_dir "/"; then
-        log "Will not continue... deleting / is not allowed directly"
+        error "Will not continue... deleting / is not allowed directly"
         exit 1
     fi
 
@@ -36,23 +25,16 @@ ensure-directory-absent() {
 
 ensure-directory-exists() {
     local _dir="${1:?}"
-
-    trace "'ensure-directory-exists' for dir: $_dir"
     if ! directory_exists $_dir; then recursive-mkdir $_dir; else true; fi
 }
 
 directory-exists() {
-    local _dir="${1:?}"
-
-    trace "'directory-exists' checking if directory $_dir exists"
-    if [[ -d "$_dir" ]]; then true; else false; fi
+    if [[ -d "${1:?}" ]]; then true; else false; fi
 }
 
 recursive-copy() {
     local _source_dir="${1:?}"
     local _dest_dir="${2:?}"
-
-    trace "'recursive-copy' recursively copying ${_source_dir} to ${_dest_dir}"
     cp -R $_source_dir $_dest_dir
 }
 
@@ -61,8 +43,6 @@ safe-copy() {
     local _dest_dir="${2:?}"
     local _backup_dir="${3:?}"
 
-    trace "'safe-copy' from $_source_dir to $_dest_dir (backup: $_backup_dir)"
-
     if directory-exists $_dest_dir; then
         safe-copy $_dest_dir $_backup_dir $(random-tmpdir)
     fi
@@ -70,30 +50,27 @@ safe-copy() {
     ensure-directory-absent $_dest_dir
     recursive-copy $_source_dir $_dest_dir
 
-    trace "'safe-copy' Cleaning up temp directory $_tmp_dir after successful copy"
     ensure-directory-absent $_backup_dir
 }
 
 ensure-file-exists() {
     local _file="${1:?}"
 
-    trace "'ensure-file-exists' for file: $_file"
     if ! file-exists $_file; then
         debug "file $_file does not exist. creating..."
         touch $_file
     fi
 }
 
-file-exists() {
+ensure-file-absent() {
     local _file="${1:?}"
+    if file-exists $_file; then recursive-rm $_file; else true; fi
+}
 
-    trace "'file-exists' for file: $_file"
+file-exists() {
     if [[ -f "${1:?}" ]]; then true; else false; fi
 }
 
 executable-exists() {
-    local _file="${1:?}"
-
-    trace "'executable-exists' for executable: $_file"
-    if hash $_file 2>/dev/null; then true; else false; fi
+    if hash "${1:?}" 2>/dev/null; then true; else false; fi
 }

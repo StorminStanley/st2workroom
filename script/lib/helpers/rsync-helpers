@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
 rsync-dir() {
-    trace "'rsync-dir' entering"
-
     local _args_array=($@)
     local _arg_len=${#_args_array[@]}
     local _src_dir="${1:?}"
@@ -22,8 +20,5 @@ rsync-dir() {
 
     $_args="${_default_args} ${_debug_args} ${_extra_args}"
     $_command="rsync ${_args} ${_log_dest}"
-
-    debug "rsyncing $_{src_dir} to ${_dst_dir} with arguments ${_args}"
     execute-string $_command
 }
-

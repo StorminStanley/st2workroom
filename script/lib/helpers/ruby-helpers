@@ -1,24 +1,18 @@
 #!/usr/bin/env bash
 
 install-bundler-if-needed() {
-    trace "'install-bundler-if-needed' checking if bundler exists"
-
     if ! executable-exists "bundler"; then
         install-gem bundler
     fi
 }
 
 install-ruby-if-needed() {
-    trace "'install-ruby-if-needed' checking if ruby needs to be installed"
-
     if os-is-ubuntu; then
         install-rvm
     fi
 }
 
 install-gem() {
-    trace "'install-gem' entering"
-
     local _gem="${1:?}"
     local _default_args="--no-ri --no-rdoc"
     local _log_dest=
@@ -32,20 +26,16 @@ install-gem() {
 
     $_args="${_default_args} ${_log_dest}"
     $_cmd="gem install ${_gem} ${_args}"
-
-    debug "Installing ${_gem} with args ${_args}"
     execute-string $_cmd
 }
 
 install-bundled-gems() {
-    trace "'install-bundled-gems' entering"
-
     local _log_dest=
     local _default_args="--deployment --binstubs"
     local _args=
     local _cmd=
 
-    pushd-quiet `project-root`
+    pushd-quiet $(project-root)
 
     if debug-enabled; then
         _log_dest="$(send-all-output-to-log-file-and-stdout)"
@@ -55,20 +45,25 @@ install-bundled-gems() {
 
     _args="${_default_args} ${_log_dest}"
     _cmd="$(bundler-command) install --path vendor/bundle ${_args}"
-
-    debug "Running bundler in ${_work_root} with ${_args}"
     execute-string $_cmd
 
     pushd-quiet +1
 }
 
 bundler-command() {
-    trace "'bundler-command' entering"
-
     if string-equals os-family "linux"; then
         echo "bundler"
     else
         error "Unable to find bundler binary. Aborting"
         exit 1
+    fi
+}
+
+
+init-enable-ruby-scl() {
+    local _canary_file="/opt/rh/ruby193/enable"
+
+    if file-exists $_canary_file; then
+        source $_canary_file
     fi
 }

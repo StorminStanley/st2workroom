@@ -7,7 +7,28 @@ source $DIR/shared-functions
 
 source "$(project-root)/script/lib/puppet-apply.d/help"
 source "$(project-root)/script/lib/puppet-apply.d/environment"
-source "$(project-root)/script/lib/puppet-apply.d/bootstrap"
+
+bootstrap-st2workroom() {
+    if local-development-mode; then
+        setup-current-working-directory-environment
+    else
+        setup-environment-from-git-branch
+    fi
+
+    install-puppetfile
+}
+
+bootstrap-puppet-st2() {
+    local _repo="https://github.com/stackstorm/st2.git"
+    local _module_dir="$(environment-dir)/modules/st2"
+    local _module_backup_dir="$(random-tmpdir)"
+    local _git_stage_dir="$(random-tmpdir)"
+
+    git-safe-clone $_repo $_git_stage_dir "$(puppet-st2-version)"
+    safe-copy $_module_dir $_module_backup_dir
+    ensure-directory-absent $_module_dir
+    safe-copy $_git_stage_dir $_module_dir
+}
 
 # Main init
 init-puppet-apply() {

@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
 show-help() {
-    trace "'show-help' entering"
-
     echo ""
     echo "StackStorm All-in-one Installer - System Update"
     echo "Usage: $0 [OPTION]..."
@@ -18,8 +16,6 @@ show-help() {
 }
 
 warn-invalid-environment() {
-    trace "'warn-invalid-environment' entering"
-
     local _requested_env="${1:?}"
     local _actual_env="${2:?}"
     local _sleep="${3:5}"

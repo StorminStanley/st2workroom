@@ -6,8 +6,6 @@ install-puppet-libraries() {
     local _debug_args=
     local _args=
 
-    trace "'install-puppet-libraries' for $_workroot"
-
     pushd-quiet environment-dir
 
     if debug-enabled; then
@@ -16,10 +14,9 @@ install-puppet-libraries() {
     else
         $_log_dest="$(send-all-output-to log-file)"
     fi
+
     $_args="${_debug_args} ${_log_dest}"
     $_cmd="librarian-puppet install --shared ${_args}"
-
-    debug "Running librarian-puppet in ${_work_root} with ${_args}"
     execute-string $_cmd
 
     pushd-quiet +1
@@ -34,8 +31,6 @@ run-puppet() {
     local _args=
     local _log_dest=
 
-    trace "'run-puppet'"
-
     if debug-enabled; then
         ensure-directory-exists environment-graph-dir
         $_graph_args="--graph --graphdir $(node-graph-dir)"
@@ -47,25 +42,17 @@ run-puppet() {
 
     $_args="$_env_args $_config_args $_manifest_args $_debug_args $_graph_args"
     $_cmd="puppet apply ${_args}"
-
-    debug "Running `puppet apply` with args: ${_args}"
-    eval $_cmd
+    execute-string $_cmd
 }
 
 install-puppetfile() {
-    trace "'install-puppetfile' for $(environment-dir)"
-    run-librarian-puppet environment-dir
+    run-librarian-puppet $(environment-dir)
 }
 
 facter-has-value() {
-    local $_fact="${1:?}"
-
-    trace "'facter-has-value' for fact: $_fact"
-    variable-set facter-value $_fact
+    variable-set facter-value "${1:?}"
 }
 
 facter-value() {
-    local $_fact="${1:?}"
-    trace "'facter-value' for fact: $_fact"
-    echo "$(project-root)/bin/facter $_fact"
+    echo "$(project-root)/bin/facter ${1:?}"
 }

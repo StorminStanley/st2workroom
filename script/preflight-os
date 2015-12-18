@@ -5,8 +5,6 @@ DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
 preflight-os-init() {
-    debug "'preflight-os' entering"
-
     eval _os_family_cmd=
 
     log "Ensure pre-flight libraries are setup..."
@@ -15,8 +13,6 @@ preflight-os-init() {
 
     # Preflight Setup. Entry point to OS/Distro specific scripts
     if file-exists "${DIR}/preflight-os-$(os-family)"; then
-        debug "Running pre-flight for $(os-family)"
-
         $_os_family_cmd="$DIR/preflight-os-$(os-family)"
         execute-string $_os_family_cmd
     fi
