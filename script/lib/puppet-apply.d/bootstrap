@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 bootstrap-st2workroom() {
-    log "Setting up st2workroom in environment $(environment)"
+    trace "'bootstrap-st2workroom' entering"
 
+    log "Setting up st2workroom in environment $(environment)"
     if local-development-mode; then
         setup-current-working-directory-environment
     else
@@ -14,6 +15,8 @@ bootstrap-st2workroom() {
 }
 
 bootstrap-puppet-st2() {
+    trace "'bootstrap-puppet-st2' entering"
+
     local _repo="https://github.com/stackstorm/st2.git"
     local _module_dir="$(environment-dir)/modules/st2"
     local _module_backup_dir="$(random-tmpdir)"

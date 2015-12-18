@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
-
 setup-environment-from-git-branch() {
-    rake environments:update[sanitized-puppet-environment]
+    trace "'setup-environment-from-git-branch' entering"
+    rake environments:update[sanitized-puppet-environment-to-apply]
 }
 
 sync-dir-to-puppet-environment() {
+    trace "'sync-dir-to-puppet-environment' entering"
+
     local _args_array=($@)
     local _arg_len=${#_args_array[@]}
 
@@ -23,11 +25,15 @@ sync-dir-to-puppet-environment() {
 }
 
 setup-current-working-directory-environment() {
+    trace "'setup-current-working-directory-environment' entering"
+
     local _excludes="environments vendor artifacts graphs packer script .git"
     sync-dir-to-puppet-environment project-root current_working_directory $_excludes_args
 }
 
 currently-in-an-environment() {
+    trace "'currently-in-an-environment' entering"
+
     if string-does-not-equal current-environment production-environment; then
         true
     else
@@ -36,6 +42,8 @@ currently-in-an-environment() {
 }
 
 current-environment() {
+    trace "'current-environment' entering"
+
     if facter-has-value puppet_environment; then
         facter-value puppet_environment
     else
@@ -44,18 +52,24 @@ current-environment() {
 }
 
 requested-environment() {
+    trace "'requested-environment' entering"
+
     if variable-set $ENV; then
         echo $ENV
     else
-        echo current-environment
+        current-environment
     fi
 }
 
 sanitized-puppet-environment-to-apply() {
-    echo environment-to-apply | sed 's/[-\/.]/_/g'
+    trace "'sanitized-puppet-environment-to-apply' entering"
+
+    environment-to-apply | sed 's/[-\/.]/_/g'
 }
 
 is-valid-environment() {
+    trace "'is-valid-environment' entering"
+
     if git-ref-is-branch project-root environment ||
             git-ref-is-tag project-root environment; then
         true
@@ -66,6 +80,8 @@ is-valid-environment() {
 }
 
 production-mode() {
+    trace "'production-mode' entering"
+
     if string-equals requested-environment production-environment; then
         true
     else
@@ -74,6 +90,8 @@ production-mode() {
 }
 
 local-development-mode() {
+    trace "'local-development-mode' entering"
+
     if string-equals requested-environment local-development-environment; then
         true
     else
@@ -82,42 +100,50 @@ local-development-mode() {
 }
 
 branch-development-mode() {
+    trace "'branch-development-mode' entering"
     if ! production-mode && ! local-development-mode; then true; else false; fi
 }
 
 local-development-environment() {
+    trace "'local-development-environment' entering"
     echo "current_working_directory"
 }
 
 production-environment() {
+    trace "'production-environment' entering"
     echo "master"
 }
 
 environment-to-apply() {
+    trace "'environment-to-apply' entering"
+
     if local-development-mode; then
-        echo local-development-environment
+        local-development-environment
     elif production-mode; then
-        echo production-environment
+        production-environment
     elif branch-development-mode && is-valid-environment; then
-        echo environment
+        environment
     else
-        echo production-environment
+        production-environment
     fi
 }
 
 environment-root() {
-    ensure-directory-exists $_dir
+    trace "'environment-root' entering"
     echo "$(project-root)/environments"
 }
 
 environment-dir() {
+    trace "'environment-dir' entering"
     echo "$(environment-root)/$(environment-to-apply)"
 }
 
 environment-graph-dir() {
+    trace "'environment-dir' entering"
     echo "$(environment-dir)/graphs"
 }
 
 node-graph-dir() {
+    trace "'node-graph-dir' entering"
     echo "$(environment-graph-dir)/$(node-name)"
 }

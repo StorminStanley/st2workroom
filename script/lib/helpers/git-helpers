@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
-## Git Commands
 git-ref-type() {
     local _git_ref="${1:?}"
     local _git_root_dir="${2:?}"
+
+    trace "checking 'git-ref-type' for $_git_root_dir at ref $_git_ref"
 
     if git show-ref -q --verify "refs/heads/${_git_ref}" 2>/dev/null; then
         echo "branch"
@@ -23,6 +24,8 @@ git-ref-is-branch() {
     local _dir="${1:?}"
     local _branch="${2:?}"
     local _ref_type=
+
+    trace "checking 'git-ref-is-branch' for $_dir at ref $_branch"
     _ref_type="$(git-ref-type $_dir $_branch)"
 
     if string-equals $_ref_type "branch"; then true; else false; fi
@@ -32,7 +35,9 @@ git-ref-is-tag() {
     local _dir="${1:?}"
     local _branch="${2:?}"
     local _ref_type=
+
     _ref_type="$(git-ref-type $_dir $_branch)"
+    trace "checking 'git-ref-is-tag' for $_dir at ref $_branch"
 
     if string-equals $_ref_type "tag"; then true; else false; fi
 }
@@ -42,12 +47,13 @@ safe-git-clone() {
     local _dest_dir="${2:?}"
     local _branch="${3:-master}"
 
+    trace "'safe-clone-repo' for $_repo to $_dest_dir on branch $_branch"
+
     if directory-exists $_dest_dir; then
         safe-copy $_dest_dir random-tmpdir
         ensure-directory-absent $_dest_dir
     fi
 
-    debug "Cloning git repo $_{repo} to ${_dest_dir} on branch ${_branch}"
     git clone $_repo $_dest_dir -b $_branch
 }
 
@@ -56,6 +62,7 @@ destructive-git-clone() {
     local _dest_dir="${2:?}"
     local _branch="${3:-master}"
 
+    trace "'destructive-clone-repo' for $_repo to $_dest_dir on branch $_branch"
     ensure-directory-absent $_dest_dir
     safe-git-clone $_repo $_dest_dir $_branch
 }
@@ -64,6 +71,7 @@ git-update-and-clean-hard() {
     local _dir="${1:?}"
     local _branch="${2:master}"
 
+    trace "'git-update-and-clean-hard' for $_dir on branch $_branch"
     git-update-and-clean $_dir
     git-hard-reset $_dir $_branch
 }
@@ -72,7 +80,7 @@ git-update-and-clean() {
     local _dir="${1:?}"
     pushd-quiet $_dir
 
-    debug "Updating git root ($_dir)"
+    trace "'git-update-and-clean' for $_dir on branch $_branch"
     git fetch --all
     git gc --auto
 
@@ -82,9 +90,10 @@ git-update-and-clean() {
 git-hard-reset() {
     local _dir="${1:?}"
     local _branch="${2:master}"
+
     pushd-quiet $_dir
 
-    debug "Hard resetting git repo ${_dir} to ${_branch}"
+    trace "'git-hard-reset' for ${_dir} on branch ${_branch}"
     git reset --hard $_branch
 
     pushd-quiet +1

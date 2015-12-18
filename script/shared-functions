@@ -18,6 +18,8 @@ source $DIR/lib/helpers/project-helpers
 source $DIR/lib/helpers/bash-helpers
 source $DIR/lib/helpers/ruby-helpers
 source $DIR/lib/helpers/os-helpers
+source $DIR/lib/helpers/debian-helpers
+source $DIR/lib/helpers/redhat-helpers
 source $DIR/lib/helpers/puppet-helpers
 
 source $DIR/lib/environment/enable-ruby-scl

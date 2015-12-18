@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+
+yum-clean() {
+    trace "'yum-clean'"
+    yum clean all
+    yum clean dbcache
+}
+
+yum-update() {
+    trace "'yum-update'"
+    yum -y update
+}
+
+yum-install-packages() {
+    local _packages="$*"
+
+    trace "'yum-install-packages' Installing yum packages $_packages"
+    yum -y install $_packages
+}
+
+yum-installgroup() {
+    local _group="${1:?}"
+
+    trace "'yum-installgroup' Installing Yum group $_group"
+    yum groupinstall -y $_group
+}
+
+rpm-install-package() {
+    local _rpm="${1:?}"
+
+    trace "'rpm-install-package' Installing RPM package $_rpm"
+    rpm -ivh $_rpm
+}
+
+install-epel() {
+    local _epel_6="https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm"
+    local _epel_7="https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
+
+    trace "entering 'install-epel'"
+
+    if rhel-6; then
+        install-rpm-package $_epel_6
+    elif rhel-7; then
+        install-rpm-package $_epel_7
+    else
+        error "enable to find EPEL package for $(os-family) $(os-major-version)"
+    fi
+}
+
+install-scl() {
+    trace "entering 'install-scl'"
+    yum-install-packages centos-release-SCL scl-utils
+}
+
+enable-cr() {
+    trace "entering 'enable-cr'"
+    yum-install-packages yum-utils
+    yum-config-manager --enable cr
+}
+
+rhel-6() {
+  trace "entering 'rhel-6'"
+  if os-is-redhat && os-major-version "6"; then true; else false; fi
+}
+
+rhel-7() {
+  trace "entering 'rhel-7'"
+  if os-is-redhat && os-major-version "7"; then true; else false; fi
+}

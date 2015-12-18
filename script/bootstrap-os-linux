@@ -3,15 +3,16 @@ DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
 init-bootstrap-os-linux() {
-    local _preflight_script="$(project-root)/script/bootstrap-$(os-family)-$(os-dist)"
+    local _dist_preflight_script="$(project-root)/script/bootstrap-os-$(os-family)-$(os-dist)"
+    debug "'bootstrap-os-linux': entering"
 
     if ! is-root; then
         show-help
         fail-loudly "Please run with root permissions"
     fi
 
-    if file-exists $_preflight_script; then
-       execute-string $_preflight_script
+    if file-exists $_dist_preflight_script; then
+        execute-string $_dist_preflight_script
     fi
 }
 

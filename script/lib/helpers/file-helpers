@@ -1,24 +1,31 @@
 #!/usr/bin/env bash
 
 random-tmpdir() {
-    echo $(mktemp -d)
+    local _tmpdir=
+    _tmpdir=$(mktemp -d)
+
+    trace "'random-tmpdir' creating tempdir ${_tmpdir}"
+    echo $_tmpdir
 }
 
 recursive-mkdir() {
     local _dir="${1:?}"
-    debug "Creating directory ${_dir}"
+
+    trace "'recursive-mkdir' creating directory ${_dir}"
     mkdir -p $_dir
 }
 
 recursive-rm() {
     local _dir="${1:?}"
-    debug "Recursively deleting ${_dir}"
+
+    trace "'recursive-rm' recursively deleting ${_dir}"
     rm -rf $_dir
 }
 
 ensure-directory-absent() {
     local _dir="${1:?}"
 
+    trace "'ensure-directory-absent' for dir: $_dir"
     if string-equals $_dir "/"; then
         log "Will not continue... deleting / is not allowed directly"
         exit 1
@@ -29,18 +36,23 @@ ensure-directory-absent() {
 
 ensure-directory-exists() {
     local _dir="${1:?}"
+
+    trace "'ensure-directory-exists' for dir: $_dir"
     if ! directory_exists $_dir; then recursive-mkdir $_dir; else true; fi
 }
 
 directory-exists() {
-    if [[ -d "${1:?}" ]]; then true; else false; fi
+    local _dir="${1:?}"
+
+    trace "'directory-exists' checking if directory $_dir exists"
+    if [[ -d "$_dir" ]]; then true; else false; fi
 }
 
 recursive-copy() {
     local _source_dir="${1:?}"
     local _dest_dir="${2:?}"
 
-    debug "Recursively copying ${_source_dir} to ${_dest_dir}"
+    trace "'recursive-copy' recursively copying ${_source_dir} to ${_dest_dir}"
     cp -R $_source_dir $_dest_dir
 }
 
@@ -49,21 +61,39 @@ safe-copy() {
     local _dest_dir="${2:?}"
     local _backup_dir="${3:?}"
 
+    trace "'safe-copy' from $_source_dir to $_dest_dir (backup: $_backup_dir)"
+
     if directory-exists $_dest_dir; then
-        safe-copy $_dest_dir $_backup_dir random-tmpdir
+        safe-copy $_dest_dir $_backup_dir $(random-tmpdir)
     fi
 
     ensure-directory-absent $_dest_dir
     recursive-copy $_source_dir $_dest_dir
 
-    debug "Cleaning up temp directory $_tmp_dir after successful copy"
+    trace "'safe-copy' Cleaning up temp directory $_tmp_dir after successful copy"
     ensure-directory-absent $_backup_dir
 }
 
-file-exists() {
-    if [[ -f "${1:?}" ]]; then
-        true
-    else
-        false
+ensure-file-exists() {
+    local _file="${1:?}"
+
+    trace "'ensure-file-exists' for file: $_file"
+    if ! file-exists $_file; then
+        debug "file $_file does not exist. creating..."
+        touch $_file
     fi
+}
+
+file-exists() {
+    local _file="${1:?}"
+
+    trace "'file-exists' for file: $_file"
+    if [[ -f "${1:?}" ]]; then true; else false; fi
+}
+
+executable-exists() {
+    local _file="${1:?}"
+
+    trace "'executable-exists' for executable: $_file"
+    if hash $_file 2>/dev/null; then true; else false; fi
 }

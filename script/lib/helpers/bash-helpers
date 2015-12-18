@@ -1,15 +1,10 @@
 #!/usr/bin/env bash
 
-send-all-output-to() {
-    echo " >> ${1:?} 2>&1"
-}
-
-send-output-to-file-and-stdout() {
-    echo " 2>&1 | tee -a ${1:?}"
-}
-
 variable-set() {
-    if [[ -n "${1:-}" ]]; then
+    local _var="${1:-}"
+
+    trace "'variable-set' checking if variable '$_var' is set"
+    if [[ -n "$_var" ]]; then
         true
     else
         false
@@ -18,23 +13,28 @@ variable-set() {
 
 string-equals() {
     local _a="${1:?}"
-    local _b="${1:?}"
-    debug "Evaluating if ${_a} = ${_b}"
+    local _b="${2:?}"
+
+    trace "'string-equals' evaluating if $_a = $_b"
     if [[ "$_a" = "$_b" ]]; then true; else false; fi
 }
 
 execute-string() {
     local _command="${1:?}"
-    debug "Executing command $_command"
+
+    trace "'execute-string' Executing command: $_command"
     eval $_command
 }
 
 pushd-quiet() {
     local _dir="${1:-+1}"
     pushd $_dir >> /dev/null 2>&1
-    debug "Changing directory to $(current-directory)"
+
+    trace "'pushd-quiet' chdir to $(current-directory)"
 }
 
 current-directory() {
-  echo $(pwd)
+    local _dir=$(pwd)
+
+    trace "'current-directory' current directory is $_dir"
 }

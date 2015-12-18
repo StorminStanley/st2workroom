@@ -2,18 +2,26 @@
 
 ## OS Checks
 is-root() {
+    trace "'is-root': checking if user has root privileges"
     if [[ $(id -u) -eq 0 ]]; then true; else false; fi
 }
 
 node-name() {
-    echo "$(hostname -s)"
+    local _node=$(hostname -s)
+
+    trace "getting 'node-name' for $_node"
+    echo $_node
 }
 
 os-is-linux() {
+    trace "'os-is-linux' checking to see if it's a linux box"
+
     if string-equals os-family "linux"; then true; else false; fi
 }
 
 dist-is-redhat() {
+    trace "'dist-is-redhat' checking to see if it's a rhel box"
+
     if os-is-linux && file-exists "/etc/redhat-release"; then
         true
     else
@@ -22,6 +30,7 @@ dist-is-redhat() {
 }
 
 dist-is-debian() {
+    trace "'dist-is-debian' checking to see if it's a rhel box"
     if os-is-linux && file-exists "/etc/debian_version"; then
         true
     else
@@ -30,6 +39,8 @@ dist-is-debian() {
 }
 
 os-revision() {
+    trace "'os-revision' checking OS revision"
+
     if dist-is-redhat; then
         get-redhat-release
     else
@@ -38,24 +49,31 @@ os-revision() {
 }
 
 get-redhat-release() {
+    trace "'get-redhat-release'"
     echo "$(cat /etc/redhat-release | sed s/.*release\ // | sed s/\ .*//)"
 }
 
 get-debian-release() {
+    trace "'get-debian-release'"
     echo "$(cat /etc/debian_version)"
 }
 
 os-family() {
-    echo "$(uname -s)" | to-lowercase
+    local _os_family=$(uname -s)
+
+    trace "'os-family' getting family name: $_os_family"
+    to-lowercase "$(uname -s)"
 }
 
 os-dist() {
     local _dist=
 
+    trace "'os-dist' checking..."
+
     if dist-is-redhat; then
-        $_dist="redhat"
+        _dist="redhat"
     elif dist-is-debian; then
-        $_dist="debian"
+        _dist="debian"
     fi
 
     echo $_dist
@@ -63,6 +81,9 @@ os-dist() {
 
 os-major-version() {
     local _rev=
+
+    trace "'os-major-version' attempting to detect..."
+
     if dist-is-redhat; then
         $_rev="$(os-revision) | cut -d '.' -f1"
         echo "$(execute-string $_rev)"
@@ -72,7 +93,10 @@ os-major-version() {
 }
 
 os-codename() {
-    echo $(/usr/bin/lsb_release -c -s)
+    local _codename=$(/usr/bin/lsb_release -c -s)
+
+    trace "'os-codename' grabbing codename: $_codename"
+    echo $_codename
 }
 
 ####

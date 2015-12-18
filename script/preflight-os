@@ -5,6 +5,8 @@ DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
 preflight-os-init() {
+    debug "'preflight-os' entering"
+
     eval _os_family_cmd=
 
     log "Ensure pre-flight libraries are setup..."

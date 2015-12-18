@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
+set -e
+
 DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
 init-bootstrap-os() {
+    debug "'bootstrap-os': entering"
+
     local _preflight_script="$(project-root)/script/bootstrap-os-$(os-family)"
     local _lock_file="/etc/st2workroom-bootstrapped"
 
@@ -13,11 +17,10 @@ init-bootstrap-os() {
 
     if file-exists $_preflight_script && ! file-exists $_lock_file; then
         execute-string $_preflight_script
+        ensure-file-exists $_lock_file
     else
         log "Lock file ${_lock_file} exists. Skipping bootstrap-os-$(os-family)"
     fi
-
-    ensure-file-exists $_lock_file
 }
 
 init-bootstrap-os

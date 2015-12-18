@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
-init() {
+init-enable-ruby-scl() {
     local _canary_file="/opt/rh/ruby193/enable"
+
     if file-exists $_canary_file; then
-        debug "Sourcing ruby SCL from ${_canary_file}"
+        debug "Sourcing ruby SCL from $_canary_file"
         source $_canary_file
     fi
 }
 
-init
+init-enable-ruby-scl

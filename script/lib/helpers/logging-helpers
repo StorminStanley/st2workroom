@@ -28,6 +28,12 @@ debug() {
     fi
 }
 
+trace () {
+    if trace-enabled; then
+        logger "trace" "${1:?}"
+    fi
+}
+
 fail-loudly() {
     error "*******************************************************"
     error "${1:?}"
@@ -38,6 +44,18 @@ fail-loudly() {
 log-file() {
     local _log_file=/var/log/puppet.log
     if variable-set $LOG_FILE; then echo $LOG_FILE; else echo $_log_file; fi
+}
+
+send-all-output-to-log-file-and-stdout() {
+    echo " 2>&1 | tee -a `log-file`"
+}
+
+send-all-output-to-log-file() {
+    echo " >> `log-file` 2>&1"
+}
+
+trace-enabled() {
+    if variable-set $TRACE; then true; else false; fi
 }
 
 debug-enabled() {

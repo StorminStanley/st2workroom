@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 rsync-dir() {
+    trace "'rsync-dir' entering"
+
     local _args_array=($@)
     local _arg_len=${#_args_array[@]}
     local _src_dir="${1:?}"

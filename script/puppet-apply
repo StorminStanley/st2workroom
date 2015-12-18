@@ -16,6 +16,7 @@ init-puppet-apply() {
         fail-loudly "Please run with root permissions"
     fi
 
+    run-bootstrap-os
     git-update-and-clean $(project-root)
     run-preflight-os
     bootstrap-st2workroom
@@ -58,6 +59,7 @@ while :; do
             fi
             ;;
         -t|--trace)
+            TRACE=true
             set -x
             shift
             continue

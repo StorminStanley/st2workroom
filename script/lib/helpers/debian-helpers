@@ -1,13 +1,27 @@
 #!/usr/bin/env bash
 
 install-apt-packages() {
+    trace "entering `install-apt-packages`"
     local _packages="${1:?}"
 
     update-apt-if-needed
-    debug "Installing packages using apt-get: ${_packages}"
+    debug "'install-apt-packages' Installing packages using apt-get: ${_packages}"
     DEBIAN_FRONTEND=noninteractive apt-get -y install $_packages
 }
 
 update-apt-if-needed() {
+    trace "'update-apt-if-needed' entering"
     DEBIAN_FRONTEND=noninteractive apt-get -y update
+}
+
+os-is-ubuntu() {
+    trace "'os-is-ubuntu' entering"
+    case `os-family` in
+        trusty|utopic|vivid|wily|xenial)
+            true
+            ;;
+        *)
+            false
+            ;;
+    esac
 }

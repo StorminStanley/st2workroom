@@ -4,48 +4,40 @@ set -e
 DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
-PACKAGES=""
+init-bootstrap-os-linux-redhat() {
+    debug "'bootstrap-os-linux-redhat' entering"
 
-if [ $MAJORVER = "6" ]; then
-    EPEL="https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm"
-    TOOL_PACKAGES="nscd nc git unzip curl scl-utils"
-    RUBY_PACKAGES="ruby193 ruby193-ruby-devel"
-    PYTHON_PACKAGES="python27 python27-pip python27-virtualenv python27-devel"
-    AUGEAS_PACKAGES="augeas augeas-devel"
-    PACKAGES="$TOOL_PACKAGES $RUBY_PACKAGES $PYTHON_PACKAGES $AUGEAS_PACKAGES"
-    SCL="centos-release-SCL"
-elif [ $MAJORVER = "7" ]; then
-    EPEL="https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
-    PACKAGES="ruby ruby-devel rubygem-bundler unzip curl git-core augeas augeas-devel gperftools-libs bind-utils net-tools"
-    CR=true
-fi
+    local _common_packages="unzip curl augeas augeas-devel"
+    local _majorver_packages=
+    local _python_packages=
+    local _ruby_packages=
+    local _git_packages=
 
-# Install EPEL on RHEL boxen
-if [ -n "$EPEL" ]; then
-    if [ ! -f /etc/yum.repos.d/epel.repo ]; then
-        rpm -ivh $EPEL
+    yum-update
+    install-epel
+    yum-groupinstall "Development Tools"
+
+    if rhel-6; then
+        _majorver_packages="nscd nc"
+        _ruby_packages="ruby193 ruby193-ruby-devel"
+        _python_packages="python27 python27-pip python27-virtualenv python27-devel"
+        _git_packages="git"
+
+        install-scl
+    elif rhel-7; then
+        _majorver_packages="gperftools-libs bind-utils net-tools"
+        _ruby_packages="ruby ruby-devel rubygem-bundler"
+        _git_packages="git-core"
+
+        enable-cr
     fi
-fi
 
-# If we're using the Software Collection Library, downlad the repo
-# and get it ready for usage. Needs to happen before other packages
-# attempt to install
-if [ -n "$SCL" ]; then
-    yum install -y $SCL
-fi
+    _languague_packages="${_ruby_packages} ${_python_packages}"
+    _tool_packages="${_common_packages} ${_augeas_packages} ${_git_packages}"
+    _packages="${_languague_packages} ${_tool_packages}"
 
-yum clean all
-yum clean dbcache
-yum groupinstall -y "Development Tools"
+    yum-install-packages $_packages
+    yum-clean
+}
 
-if [ "$CR" = true ] ; then
-    yum -y update
-    yum -y install yum-utils
-    yum-config-manager --enable cr
-fi
-
-yum install -y $PACKAGES
-
-if [ "$CR" = true ] ; then
-    yum-config-manager --disable cr
-fi
+init-bootstrap-os-linux-redhat

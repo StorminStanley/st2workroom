@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 
-add-prefix-do-each() {
+add-prefix-to-each() {
+    trace "'add-prefix-to-each' entering"
+
     local _args_array=($@)
     local _arg_len=${#_args_array[@]}
     local _prefix="${1:?}"
     local _array="${@:2:$_args_len}"
     local _blob=
+
+    debug "'add-prefix-to-each' adding $_prefix for elements $_array"
 
     for element in $_array; do
         _blob="${blob} ${_prefix} ${element}"
@@ -15,12 +19,8 @@ add-prefix-do-each() {
 }
 
 to-lowercase() {
-    while read word; do
-        case "$word" in
-            [A-Z])
-                n=$(printf "%d" "'$1")
-                n=$((n+32))
-                printf \\$(printf "%o" $n)
-        esac
-    done
+    local _word="${1:?}"
+    trace "'to-lowercase' for word $_word"
+
+    echo $_word | tr '[:upper:]' '[:lower:]'
 }

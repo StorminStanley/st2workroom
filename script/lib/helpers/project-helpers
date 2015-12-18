@@ -1,14 +1,25 @@
 #!/usr/bin/env bash
 
-run-preflight-os() {
-    eval "$(script-root)/preflight-os"
-
+run-bootstrap-os() {
+    trace "'run-bootstrap-os' starting..."
+    eval "$(script-root)/bootstrap-os"
 }
+
+run-preflight-os() {
+    trace "'run-preflight-os' starting..."
+    eval "$(script-root)/preflight-os"
+}
+
 script-root() {
-    echo "$(project-root)/script"
+    local _script_root="$(project-root)/script"
+
+    trace "'script-root' getting script-root: $_script_root"
+    echo $_script_root
 }
 
 project-root() {
     local _project_root=$PROJECT_ROOT
+
+    trace "'project-root' getting root dir: ${_project_root}"
     echo $_project_root
 }
