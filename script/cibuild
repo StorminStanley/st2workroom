@@ -1,6 +1,0 @@
-#!/usr/bin/env sh
-
-DIR=$( dirname "$(readlink "$0")" )
-. $DIR/script/shared-functions
-
-bundle exec rake rspec:spec
