@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
 git-ref-type() {
-    local _git_ref="${1:?}"
-    local _git_root_dir="${2:?}"
+    local _git_ref=
+    local _git_root_dir=
+    _git_ref="${1:?}"
+    _git_root_dir="${2:?}"
 
     if git show-ref -q --verify "refs/heads/${_git_ref}" 2>/dev/null; then
         echo "branch"
@@ -19,27 +21,34 @@ git-ref-type() {
 }
 
 git-ref-is-branch() {
+    local _dir=
+    local _branch=
+    local _ref_type=
     local _dir="${1:?}"
     local _branch="${2:?}"
-    local _ref_type=
 
     _ref_type="$(git-ref-type $_dir $_branch)"
     if string-equals $_ref_type "branch"; then true; else false; fi
 }
 
 git-ref-is-tag() {
+    local _dir=
+    local _branch=
+    local _ref_type=
     local _dir="${1:?}"
     local _branch="${2:?}"
-    local _ref_type=
 
     _ref_type="$(git-ref-type $_dir $_branch)"
     if string-equals $_ref_type "tag"; then true; else false; fi
 }
 
 safe-git-clone() {
-    local _repo="${1:?}"
-    local _dest_dir="${2:?}"
-    local _branch="${3:-master}"
+    local _repo=
+    local _dest_dir=
+    local _branch=
+    _repo="${1:?}"
+    _dest_dir="${2:?}"
+    _branch="${3:-master}"
 
     if directory-exists $_dest_dir; then
         safe-copy $_dest_dir random-tmpdir
@@ -50,26 +59,29 @@ safe-git-clone() {
 }
 
 destructive-git-clone() {
-    local _repo="${1:?}"
-    local _dest_dir="${2:?}"
-    local _branch="${3:-master}"
+    local _repo=
+    local _dest_dir=
+    local _branch=
+    _repo="${1:?}"
+    _dest_dir="${2:?}"
+    _branch="${3:-master}"
 
     ensure-directory-absent $_dest_dir
     safe-git-clone $_repo $_dest_dir $_branch
 }
 
 git-update-and-clean-hard() {
-    local _dir="${1:?}"
-    local _branch="${2:master}"
+    local _dir=
+    local _branch=
+    _dir="${1:?}"
+    _branch="${2:master}"
 
     git-update-and-clean $_dir
     git-hard-reset $_dir $_branch
 }
 
 git-update-and-clean() {
-    local _dir="${1:?}"
-
-    pushd-quiet $_dir
+    pushd-quiet "${1:?}"
 
     git fetch --all
     git gc --auto
@@ -78,8 +90,10 @@ git-update-and-clean() {
 }
 
 git-hard-reset() {
-    local _dir="${1:?}"
-    local _branch="${2:master}"
+    local _dir=
+    local _branch=
+    _dir="${1:?}"
+    _branch="${2:master}"
 
     pushd-quiet $_dir
 

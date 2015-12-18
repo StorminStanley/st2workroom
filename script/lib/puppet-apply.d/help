@@ -13,12 +13,19 @@ show-help() {
     echo "Environment Variables:"
     echo "  ENV=                     Set the st2workroom environment"
     echo "  ST2_PUPPET_BRANCH=       Set the upstream puppet-st2 branch"
+    echo
+    st2-support-contact-information
 }
 
 warn-invalid-environment() {
-    local _requested_env="${1:?}"
-    local _actual_env="${2:?}"
-    local _sleep="${3:5}"
+    local _requested_env=
+    local _actual_env=
+    local _sleep=
+    local _support_info=
+    _requested_env="${1:?}"
+    _actual_env="${2:?}"
+    _sleep="${3:5}"
+    _support_info="$(st2-support-contact-information)"
 
     info "********************************************************"
     info " Heads up friend! Just want let you know...  "
@@ -43,7 +50,8 @@ warn-invalid-environment() {
     info ""
     info " Maybe none of this applies to you, consider getting ahold of us"
     info " and letting us know. We'd like to fix it."
-    info "  - https://stackstorm.com/community/"
+    info ""
+    info $_support_info
     info "********************************************************"
 
     sleep $_sleep

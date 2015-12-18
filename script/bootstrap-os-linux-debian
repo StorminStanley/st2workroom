@@ -5,13 +5,13 @@ DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
 bootstrap-os-linux-debian() {
-    debug "entering `bootstrap-os-linux-debian`"
-
-    local _common_packages="unzip wget ruby ruby-dev git unzip wget gnupg2 git"
-    local _augeas_packages="libaugeas-dev pkg-config augeas-tools"
+    local _common_packages=
+    local _augeas_packages=
     local _ruby_packages=
     local _dist_packages=
     local _packages=
+    _common_packages="unzip wget ruby ruby-dev git unzip wget gnupg2 git"
+    _augeas_packages="libaugeas-dev pkg-config augeas-tools"
 
     if ! os-is-ubuntu; then
         _ruby_packages="ruby ruby-dev"

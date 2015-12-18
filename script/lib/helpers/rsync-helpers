@@ -1,15 +1,21 @@
 #!/usr/bin/env bash
 
 rsync-dir() {
-    local _args_array=($@)
-    local _arg_len=${#_args_array[@]}
-    local _src_dir="${1:?}"
-    local _dst_dir="${2:?}"
-    local _extra_args="${@:3:$_args_len}"
-    local _default_args="-arh --delete"
+    local _args_array=
+    local _arg_len=
+    local _src_dir=
+    local _dst_dir=
+    local _extra_args=
+    local _default_args=
     local _debug_args=
     local _args=
     local _log_dest=
+    _args_array=($@)
+    _arg_len=${#_args_array[@]}
+    _src_dir="${1:?}"
+    _dst_dir="${2:?}"
+    _extra_args="${@:3:$_args_len}"
+    _default_args="-arh --delete"
 
     if debug-enabled; then
         _debug_args="-v";

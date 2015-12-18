@@ -10,23 +10,7 @@ node-name() {
 }
 
 os-is-linux() {
-    if string-equals os-family "linux"; then true; else false; fi
-}
-
-dist-is-redhat() {
-    if os-is-linux && file-exists "/etc/redhat-release"; then
-        true
-    else
-        false
-    fi
-}
-
-dist-is-debian() {
-    if os-is-linux && file-exists "/etc/debian_version"; then
-        true
-    else
-        false
-    fi
+    if string-equals $(os-family) "linux"; then true; else false; fi
 }
 
 os-revision() {
@@ -35,14 +19,6 @@ os-revision() {
     else
         get-debian-release
     fi
-}
-
-get-redhat-release() {
-    echo "$(cat /etc/redhat-release | sed s/.*release\ // | sed s/\ .*//)"
-}
-
-get-debian-release() {
-    echo "$(cat /etc/debian_version)"
 }
 
 os-family() {
@@ -65,15 +41,11 @@ os-major-version() {
     local _rev=
 
     if dist-is-redhat; then
-        $_rev="$(os-revision) | cut -d '.' -f1"
+        _rev="$(os-revision) | cut -d '.' -f1"
         echo "$(execute-string $_rev)"
     else
         error "Unable to get os-major-version for $(os-dist)"
     fi
-}
-
-os-codename() {
-    echo $(/usr/bin/lsb_release -c -s)
 }
 
 ####

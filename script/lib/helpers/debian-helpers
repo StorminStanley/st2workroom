@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 install-apt-packages() {
-    local _packages="${1:?}"
+    local _packages=
+    _packages="${1:?}"
 
     update-apt-if-needed
-    debug "'install-apt-packages' Installing packages using apt-get: ${_packages}"
     DEBIAN_FRONTEND=noninteractive apt-get -y install $_packages
 }
 
@@ -12,8 +12,13 @@ update-apt-if-needed() {
     DEBIAN_FRONTEND=noninteractive apt-get -y update
 }
 
+ubuntu-trusty() {
+    echo "OS CODENAME: $(os-codename)"
+    if string-equals "$(os-codename)" "trusty"; then true; else false; fi
+}
+
 os-is-ubuntu() {
-    case `os-family` in
+    case $(os-codename) in
         trusty|utopic|vivid|wily|xenial)
             true
             ;;
@@ -21,4 +26,26 @@ os-is-ubuntu() {
             false
             ;;
     esac
+}
+
+supported-debian-distro() {
+    if ubuntu-trusty; then true;
+    else false;
+    fi
+}
+
+dist-is-debian() {
+    if os-is-linux && file-exists "/etc/debian_version"; then true
+    else false
+    fi
+}
+
+get-debian-release() {
+    echo "$(cat /etc/debian_version)"
+}
+
+os-codename() {
+    if dist-is-debian; then echo $(/usr/bin/lsb_release -c -s)
+    else echo "unknown"
+    fi
 }

@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 
 add-prefix-to-each() {
-    local _args_array=($@)
-    local _arg_len=${#_args_array[@]}
-    local _prefix="${1:?}"
-    local _array="${@:2:$_args_len}"
+    local _args_array=
+    local _arg_len=
+    local _prefix=
+    local _array=
     local _blob=
+    _args_array=($@)
+    _arg_len=${#_args_array[@]}
+    _prefix="${1:?}"
+    _array="${@:2:$_args_len}"
 
     for element in $_array; do
         _blob="${_blob} ${_prefix} ${element}"

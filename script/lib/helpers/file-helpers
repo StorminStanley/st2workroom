@@ -13,7 +13,8 @@ recursive-rm() {
 }
 
 ensure-directory-absent() {
-    local _dir="${1:?}"
+    local _dir=
+    _dir="${1:?}"
 
     if string-equals $_dir "/"; then
         error "Will not continue... deleting / is not allowed directly"
@@ -24,7 +25,8 @@ ensure-directory-absent() {
 }
 
 ensure-directory-exists() {
-    local _dir="${1:?}"
+    local _dir=
+    _dir="${1:?}"
     if ! directory_exists $_dir; then recursive-mkdir $_dir; else true; fi
 }
 
@@ -33,15 +35,16 @@ directory-exists() {
 }
 
 recursive-copy() {
-    local _source_dir="${1:?}"
-    local _dest_dir="${2:?}"
-    cp -R $_source_dir $_dest_dir
+    cp -R "${1:?}" "${2:?}"
 }
 
 safe-copy() {
-    local _source_dir="${1:?}"
-    local _dest_dir="${2:?}"
-    local _backup_dir="${3:?}"
+    local _source_dir=
+    local _dest_dir=
+    local _backup_dir=
+    _source_dir="${1:?}"
+    _dest_dir="${2:?}"
+    _backup_dir="${3:?}"
 
     if directory-exists $_dest_dir; then
         safe-copy $_dest_dir $_backup_dir $(random-tmpdir)
@@ -54,7 +57,8 @@ safe-copy() {
 }
 
 ensure-file-exists() {
-    local _file="${1:?}"
+    local _file=
+    _file="${1:?}"
 
     if ! file-exists $_file; then
         debug "file $_file does not exist. creating..."
@@ -63,7 +67,9 @@ ensure-file-exists() {
 }
 
 ensure-file-absent() {
-    local _file="${1:?}"
+    local _file=
+    _file="${1:?}"
+
     if file-exists $_file; then recursive-rm $_file; else true; fi
 }
 

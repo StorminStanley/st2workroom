@@ -7,12 +7,12 @@ DIR=$( dirname "$(readlink -f "$0")" )
 # Checks to ensure that the current version of the installer
 # is compatable with the OS running.
 
-compatable_os() {
+compatable-os() {
     echo "Passed OS Detection..."
     exit 0
 }
 
-incompatable_os() {
+incompatable-os() {
     echo ""
     echo "OH NO! Y U NO WORK?!"
     echo ""
@@ -34,32 +34,18 @@ incompatable_os() {
     echo "us using your favorite communication mechanism, and we'll be there with a"
     echo "hot cup of cocoa and some tips on how to get some automation happening!"
     echo ""
-    echo "Email: support@stackstorm.com"
-    echo "IRC: irc.freenode.net/#stackstorm"
-    echo "Slack: https://stackstorm.com/community-signup"
+    st2-support-contact-information
     echo ""
     exit 1
 }
 
-if [ "$DIST" = "RedHat" ]; then
-    case $MAJORVER in
-    6|7)
-        compatable_os
-        ;;
-    *)
-        incompatable_os
-        ;;
-    esac
-elif [ "$DIST" = "Debian" ]; then
-    case $CODENAME in
-    trusty)
-        compatable_os
-        ;;
-    *)
-        incompatable_os
-        ;;
-    esac
-else
-    incompatable_os
-fi
+init-check-os-compat() {
+    if supported-redhat-distro || supported-debian-distro; then
+        compatable-os
+    else
+        incompatable-os
+    fi
+}
 
+
+init-check-os-compat

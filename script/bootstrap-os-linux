@@ -3,7 +3,8 @@ DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
 init-bootstrap-os-linux() {
-    local _dist_preflight_script="$(project-root)/script/bootstrap-os-$(os-family)-$(os-dist)"
+    local _dist_preflight_script=
+    _dist_preflight_script="$(project-root)/script/bootstrap-os-$(os-family)-$(os-dist)"
 
     if ! is-root; then
         show-help

@@ -42,8 +42,10 @@ show-help() {
 }
 
 clone-aio-installer-from-github() {
-    local _repo="https://github.com/StackStorm/st2workroom"
-    local _dst_dir="$(project-root)"
+    local _repo=
+    local _dst_dir=
+    _repo="https://github.com/StackStorm/st2workroom"
+    _dst_dir=$(project-root)
 
     safe-git-clone $_repo $_dst_dir
 }
@@ -64,6 +66,7 @@ install-git() {
         install-git-on-debian
     else
         echo "Unable to install git for your OS $(os-family)"
+    fi
 }
 
 safe-git-clone() {
@@ -72,7 +75,7 @@ safe-git-clone() {
     local _branch="${3:-master}"
 
     if directory-exists $_dest_dir; then
-        safe-copy $_dest_dir random-tmpdir
+        safe-copy $_dest_dir "${_dest_dir}.old" $(random-tmpdir)
         ensure-directory-absent $_dest_dir
     fi
 
@@ -101,7 +104,7 @@ dist-is-debian() {
 }
 
 os-is-linux() {
-    if string-equals os-family "Linux"; then true; else false; fi
+    if string-equals $(os-family) "Linux"; then true; else false; fi
 }
 
 os-family() {
@@ -134,6 +137,11 @@ set-facter-value() {
 # and must be independent.
 
 ## Bash Helpers
+string-equals() {
+    local _a="${1:?}"
+    local _b="${2:?}"
+    if [[ "$_a" = "$_b" ]]; then true; else false; fi
+}
 variable-set() {
     local _var="${1:-}"
     if [[ -n "$_var" ]]; then
@@ -268,7 +276,7 @@ setup-answer-file-if-supplied-by-user() {
     local _answer_file_path="$(project-root)/hieradata/answers.yaml"
     if variable-set $ANSWER_FILE; then
         ensure-file-absent $_answer_file_path
-        safe-copy $ANSWER_FILE $_answer_file_path
+        safe-copy $ANSWER_FILE $_answer_file_path "$(random-tmpdir)"
     fi
 }
 

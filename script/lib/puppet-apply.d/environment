@@ -5,15 +5,20 @@ setup-environment-from-git-branch() {
 }
 
 sync-dir-to-puppet-environment() {
-    local _args_array=($@)
-    local _arg_len=${#_args_array[@]}
-
-    local _source_dir="${1:?}"
-    local _environment="${2:?}"
-    local _excludes="${@:3:$_args_len}"
-    local _environment_dir="$(environment-dir ${_environment})"
-
+    local _args_array=
+    local _arg_len=
+    local _source_dir=
+    local _environment=
+    local _excludes=
+    local _environment_dir=
     local _excludes_args=
+    _args_array=($@)
+    _arg_len=${#_args_array[@]}
+    _source_dir="${1:?}"
+    _environment="${2:?}"
+    _excludes="${@:3:$_args_len}"
+    _environment_dir="$(environment-dir ${_environment})"
+
     if has-value $_excludes; then
         _excludes_args="$(add-prefix-to-each '--excludes' $_excludes)"
     fi
@@ -22,7 +27,9 @@ sync-dir-to-puppet-environment() {
 }
 
 setup-current-working-directory-environment() {
-    local _excludes="environments vendor artifacts graphs packer script .git"
+    local _excludes=
+    _excludes="environments vendor artifacts graphs packer script .git"
+
     sync-dir-to-puppet-environment project-root current_working_directory $_excludes_args
 }
 

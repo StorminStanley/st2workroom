@@ -23,3 +23,32 @@ project-root() {
 installer-bootstrap-lock-file() {
     echo "/etc/st2workroom-bootstrapped"
 }
+
+kick-command-vagrant() {
+    echo "vagrant provision st2"
+}
+
+kick-command-update-system() {
+    echo "update-system"
+}
+
+kick-command-bootstrap-st2() {
+    echo "curl -sSL $(st2-install-url) | sudo sh"
+}
+
+st2-install-url() {
+    echo "http://stackstorm.com/install.sh"
+}
+
+st2-support-contact-information() {
+    echo "Email: support@stackstorm.com"
+    echo "IRC: irc.freenode.net/#stackstorm"
+    echo "Slack: http://stackstorm.com/community-signup"
+}
+
+run-st2-core-local-check() {
+    local _st2_command=
+    _st2_command="st2 run core.local date &> /dev/null"
+
+    if command-successfully-run $_st2_command; then true; else false; fi
+}

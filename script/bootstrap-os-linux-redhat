@@ -5,13 +5,12 @@ DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
 init-bootstrap-os-linux-redhat() {
-    debug "'bootstrap-os-linux-redhat' entering"
-
-    local _common_packages="unzip curl augeas augeas-devel"
+    local _common_packages=
     local _majorver_packages=
     local _python_packages=
     local _ruby_packages=
     local _git_packages=
+    _common_packages="unzip curl augeas augeas-devel"
 
     yum-update
     install-epel

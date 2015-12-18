@@ -42,7 +42,9 @@ fail-loudly() {
 }
 
 log-file() {
-    local _log_file=/var/log/puppet.log
+    local _log_file=
+    _log_file=/var/log/puppet.log
+
     if variable-set $LOG_FILE; then echo $LOG_FILE; else echo $_log_file; fi
 }
 

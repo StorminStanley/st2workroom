@@ -14,7 +14,6 @@ yum-install-packages() {
 }
 
 yum-installgroup() {
-    local _group="$*"
     yum groupinstall -y "${*:?}"
 }
 
@@ -23,8 +22,10 @@ rpm-install-package() {
 }
 
 install-epel() {
-    local _epel_6="https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm"
-    local _epel_7="https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
+    local _epel_6=
+    local _epel_7=
+    _epel_6="https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm"
+    _epel_7="https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
 
     if rhel-6; then
         install-rpm-package $_epel_6
@@ -45,9 +46,26 @@ enable-cr() {
 }
 
 rhel-6() {
-  if os-is-redhat && os-major-version "6"; then true; else false; fi
+  if dist-is-redhat && os-major-version "6"; then true; else false; fi
 }
 
 rhel-7() {
-  if os-is-redhat && os-major-version "7"; then true; else false; fi
+  if dist-is-redhat && os-major-version "7"; then true; else false; fi
+}
+
+supported-redhat-distro() {
+    if rhel-6; then true;
+    elif rhel-7; then true;
+    else false;
+    fi
+}
+
+dist-is-redhat() {
+    if os-is-linux && file-exists "/etc/redhat-release"; then true;
+    else false;
+    fi
+}
+
+get-redhat-release() {
+    echo "$(cat /etc/redhat-release | sed s/.*release\ // | sed s/\ .*//)"
 }

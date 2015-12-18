@@ -5,8 +5,10 @@ DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
 init-bootstrap-os() {
-    local _os_family_preflight_script="$(project-root)/script/bootstrap-os-$(os-family)"
-    local _lock_file=$(installer-bootstrap-lock-file)
+    local _os_family_preflight_script=
+    local _lock_file=
+    _os_family_preflight_script="$(project-root)/script/bootstrap-os-$(os-family)"
+    _lock_file=$(installer-bootstrap-lock-file)
 
     if ! is-root; then
         show-help

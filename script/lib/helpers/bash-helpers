@@ -1,30 +1,26 @@
 #!/usr/bin/env bash
 
 variable-set() {
-    local _var="${1:-}"
-    if [[ -n "$_var" ]]; then
-        true
-    else
-        false
-    fi
+    if [[ -n "${1:?}" ]]; then true; else false; fi
 }
 
 string-equals() {
-    local _a="${1:?}"
-    local _b="${2:?}"
-    if [[ "$_a" = "$_b" ]]; then true; else false; fi
+    if [[ "${1:?}" = "${2:?}" ]]; then true; else false; fi
 }
 
 execute-string() {
-    local _command="${1:?}"
-    eval $_command
+    eval "${1:?}"
 }
 
 pushd-quiet() {
-    local _dir="${1:-+1}"
-    pushd $_dir >> /dev/null 2>&1
+    pushd "${1:?}" >> /dev/null 2>&1
 }
 
 current-directory() {
-    local _dir=$(pwd)
+    echo "$(pwd)"
+}
+
+command-successfully-run() {
+    eval "${1:?}"
+    if [ $? -eq 0 ]; then true; else false; fi
 }

@@ -13,10 +13,12 @@ install-ruby-if-needed() {
 }
 
 install-gem() {
-    local _gem="${1:?}"
-    local _default_args="--no-ri --no-rdoc"
+    local _gem=
+    local _default_args=
     local _log_dest=
     local _cmd=
+    _gem="${1:?}"
+    _default_args="--no-ri --no-rdoc"
 
     if debug-enabled; then
         $_log_dest="$(send-all-output-to-log-file-and-stdout)"
@@ -31,9 +33,10 @@ install-gem() {
 
 install-bundled-gems() {
     local _log_dest=
-    local _default_args="--deployment --binstubs"
+    local _default_args=
     local _args=
     local _cmd=
+    _default_args="--deployment --binstubs"
 
     pushd-quiet $(project-root)
 
@@ -61,7 +64,8 @@ bundler-command() {
 
 
 init-enable-ruby-scl() {
-    local _canary_file="/opt/rh/ruby193/enable"
+    local _canary_file=
+    _canary_file="/opt/rh/ruby193/enable"
 
     if file-exists $_canary_file; then
         source $_canary_file
