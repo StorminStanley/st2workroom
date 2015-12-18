@@ -7,7 +7,7 @@ if [ -f /etc/profile.d/st2.sh ]; then
   . /etc/profile.d/st2.sh
 fi
 
-retry_message() {
+retry-message() {
     local _st2_datacenter=
     local _kick_command=
     _st2_datacenter="$(facter datacenter)"
@@ -75,9 +75,9 @@ ok_message() {
 run-check-st2-ok() {
     if executable-exists 'st2'; then
         if run-st2-core-local-check; then ok_message;
-        else retry_message; exit 1;
+        else retry-message; exit 1;
         fi
-    else retry_message; exit 2;
+    else retry-message; exit 2;
     fi
 }
 
