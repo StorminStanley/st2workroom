@@ -12,7 +12,7 @@ gem 'ipaddress',        '~> 0.8.0'
 group :development do
   gem 'guard'
   gem 'guard-shell'
-  gem 'rspec-puppet', '~> 1.0.1'
+  gem 'rspec-puppet', '~> 2.2.0'
   gem 'pry',          '~> 0.10.1'
   gem 'puppet-lint',  '~> 0.3.2'
 end
