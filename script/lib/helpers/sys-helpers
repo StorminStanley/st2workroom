@@ -11,3 +11,33 @@ set -o pipefail
 current-epoch() {
     echo $(date +%s)
 }
+
+# returns if the user has enabled "FORCE" mode
+#
+# returns boolean
+#
+# @ user-requested-force-mode
+user-requested-force-mode() {
+  if variable-set $FORCE;
+  then true;
+  else false;
+  fi
+}
+
+# returns if force mode is enabled
+#
+# returns boolean
+#
+# echo force-mode
+force-mode() {
+  user-requested-force-mode
+}
+
+# returns if force mode is enabled. Inverse of `force-mode`
+#
+# returns boolean
+#
+# echo force-mode
+force-mode-not-enabled() {
+  ! user-requested-force-mode
+}

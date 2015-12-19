@@ -8,30 +8,37 @@ set -e
 set -u
 set -o pipefail
 
-DIR=$( dirname "$(readlink -f "$0")" )
+init-shared-functions() {
+    DIR=$( dirname "$(readlink -f "$0")" )
 
-# Bash Helpers
-source $DIR/lib/helpers/string-helpers
-source $DIR/lib/helpers/file-helpers
-source $DIR/lib/helpers/logging-helpers
+    # Load up initial configuration
+    source $DIR/lib/config
 
-# OS Helpers
-source $DIR/lib/helpers/os-helpers
-source $DIR/lib/helpers/debian-helpers
-source $DIR/lib/helpers/redhat-helpers
+    # Bash Helpers
+    source $DIR/lib/helpers/string-helpers
+    source $DIR/lib/helpers/file-helpers
+    source $DIR/lib/helpers/logging-helpers
 
-# Tool Helpers
-source $DIR/lib/helpers/rsync-helpers
-source $DIR/lib/helpers/puppet-helpers
-source $DIR/lib/helpers/git-helpers
+    # OS Helpers
+    source $DIR/lib/helpers/os-helpers
+    source $DIR/lib/helpers/debian-helpers
+    source $DIR/lib/helpers/redhat-helpers
 
-# Language Helpers
-source $DIR/lib/helpers/bash-helpers
-source $DIR/lib/helpers/ruby-helpers
+    # Tool Helpers
+    source $DIR/lib/helpers/rsync-helpers
+    source $DIR/lib/helpers/puppet-helpers
+    source $DIR/lib/helpers/git-helpers
 
-# Project Helpers
-source $DIR/lib/helpers/project-helpers
+    # Language Helpers
+    source $DIR/lib/helpers/bash-helpers
+    source $DIR/lib/helpers/ruby-helpers
 
-# LEGACY! THESE ARE GOING AWAY
-PROJECT_ROOT=/opt/puppet
-PATH=${PROJECT_ROOT}/bin:/usr/local/bin:$PATH
+    # Project Helpers
+    source $DIR/lib/helpers/project-helpers
+    source $DIR/lib/helpers/help-helpers
+
+    # Set the path to include local binaries for AIO
+    export PATH="$(project-root)/bin:$PATH"
+}
+
+init-shared-functions

@@ -63,5 +63,6 @@ warn-invalid-environment() {
     info $_support_info
     info "********************************************************"
 
+    debug "'wart-invalid-environment': sleeping for ${_sleep} seconds."
     sleep $_sleep
 }

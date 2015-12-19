@@ -19,16 +19,22 @@ init-bootstrap-os() {
 
     if ! is-root; then
         show-help
-        fail-loudly "Please run with root permissions"
+        fail-loudly $(error-run-with-root-permissions)
     fi
 
     if file-exists $_os_family_preflight_script
-            && ! file-exists $_lock_file;
+        && file-does-not-exist $_lock_file;
     then
         execute-string $_os_family_preflight_script
-        #ensure-file-exists $_lock_file
+        ensure-lock-file-exists $_lock_file
+    elif file-exists $_os_family_preflight_script
+        && force-mode;
+    then execute-string $_os_family_preflight_script;
+    elif file-exists $_lock_file;
+    then
+        info-loudly $(notice-lock-file-exists)
     else
-        log "Lock file ${_lock_file} exists. Skipping bootstrap-os-$(os-family)"
+        fail-loudly $(error-what-even-happened)
     fi
 }
 

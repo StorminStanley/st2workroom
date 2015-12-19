@@ -5,6 +5,8 @@ set -o pipefail
 
 # Creates and returns a random temporary directory
 #
+# returns string
+#
 # @ random-tmpdir
 random-tmpdir() {
     echo $(mktemp -d)
@@ -17,7 +19,7 @@ recursive-mkdir() {
     local _dir=
     _dir="${1:?}"
 
-    debug "`recursive-mkdir`: creating dir $_dir"
+    debug "'recursive-mkdir': creating dir $_dir"
     mkdir -p $_dir
 }
 
@@ -29,7 +31,7 @@ recursive-rm() {
     local _file=
     _file="${1:?}"
 
-    debug "`recursive-rm`: removing $_file"
+    debug "*** 'recursive-rm': removing $_file ***"
     rm -rf "${1:?}"
 }
 
@@ -42,17 +44,48 @@ recursive-rm() {
 # @ ensure-directory-absent <dir>
 ensure-directory-absent() {
     local _dir=
+    local _protected_directories=
+    local _sys_dirs=
     _dir="${1:?}"
+    _unpack_system_dirs="declare -a $_sys_dirs=$(system-directories)"
+    execute-string $_unpack_system_dirs
 
-    if string-equals $_dir "/";
-    then
-        fail-loudly "Will not continue... deleting / is not allowed directly"
-    fi
+    for $_sys_dir in $_sys_dirs;
+    do
+        if string-equals $_dir $_sys_dir;
+        then fail-loudly $(abort-protected-dir ${_dir})
+        fi
+    done
 
     if directory-exists $_dir;
     then recursive-rm $_dir;
     else true;
     fi
+}
+
+# Let user know they've violated the rules! Cannot delete this directory!
+# They should know, but, it's fine because it happens. Safeguards are
+# because we :heart: each other.
+#
+# exits when called
+#
+# abort-protected-directory <dir>
+abort-protected-directory() {
+    local _dir="${1:?}"
+
+    cat << EOL
+*****************************************************
+Aborting. Attempted to delete protected directory.
+
+* ${_dir}
+
+Please check your code to make sure its safe for use.
+*****************************************************
+
+:heart:
+EOL
+
+    exit 1
 }
 
 # safe wrapper to create a directory. skips unnecessary checks
@@ -66,7 +99,7 @@ ensure-directory-exists() {
     _dir="${1:?}"
 
     if directory-does-not-exist $_dir;
-    then recursive-mkdir;
+    then recursive-mkdir $_dir;
     else true;
     fi
 }
@@ -78,13 +111,7 @@ ensure-directory-exists() {
 #
 # @ directory-does-not-exist <dir>
 directory-does-not-exist() {
-    local _dir=
-    _dir="${1:?}"
-
-    if directory-exists $_dir;
-    then false;
-    else true;
-    fi
+    ! directory-exists "${1:?}"
 }
 
 # logic check to determine if a directory exists on the fs
@@ -106,10 +133,10 @@ recursive-copy() {
     local _src=
     local _dst=
     _src="${1:?}"
-    _dst="${1:?}"
+    _dst="${2:?}"
 
-    debug "`recursive-copy`: from $_src to $_dst"
-    cp -R "${1:?}" "${2:?}"
+    debug "'recursive-copy': from ${_src} to ${_dst}"
+    cp -R $_src $_dst
 }
 
 # copy a file or directory from one place to another. automatically
@@ -157,7 +184,7 @@ ensure-file-exists() {
 
     if file-does-not-exist $_file;
     then
-        debug "file $_file does not exist. creating..."
+        debug "'ensure-file-exists': file $_file does not exist. creating..."
         touch $_file
     fi
 }
@@ -182,13 +209,7 @@ ensure-file-absent() {
 #
 # @ file-does-not-exist <file>
 file-does-not-exist() {
-    local _file=
-    _file="${1:?}"
-
-    if file-exists $_file;
-    then false;
-    else true;
-    fi
+    ! file-exists "${1:?}"
 }
 
 # tests to determine if a file exists on the file-system
@@ -197,10 +218,7 @@ file-does-not-exist() {
 #
 # @ file-exists <file>
 file-exists() {
-    local _file=
-    _file="${1:?}"
-
-    if [[ -f "$_file" ]];
+    if [[ -f "${1:?}" ]];
     then true;
     else false;
     fi
@@ -226,10 +244,7 @@ executable-in-path() {
 #
 # @ executable-not-in-path 'st2'
 executable-not-in-path() {
-    if executable-in-path "${1:?}";
-    then false;
-    else true;
-    fi
+    ! executable-in-path "${1:?}"
 }
 
 # echo a string to a completely new file. Takes a backup of the destination
@@ -251,5 +266,9 @@ echo-to-new-file() {
 #
 # @ echo-to-file <message> <file>
 echo-to-file() {
+    local _message="${1:?}"
+    local _dest="${1:?}"
+
+    debug "'echo-to-file': pushing ${_message} to ${_dest}"
     echo "${1:?}" >> "${2:?}"
 }

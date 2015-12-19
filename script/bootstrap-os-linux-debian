@@ -26,7 +26,6 @@ bootstrap-os-linux-debian() {
 
     _packages="${_common_packages} ${_augeas_packages} ${_ruby_packages} ${_dist_packages}"
 
-    debug "installing the following packages via apt-get: ${_packages}"
     install-apt-packages $_packages
     install-bundler-if-needed
 }

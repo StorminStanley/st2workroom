@@ -87,3 +87,18 @@ os-major-version() {
         error "Unable to get os-major-version for $(os-dist)"
     fi
 }
+
+# Returns a string of directories belonging to the system
+#
+# returns string
+#
+# @ system-directories
+system-directories() {
+    local _dirs=
+    local _blob=
+    _dirs=(
+        /
+    )
+
+    echo "$(array-to-string $_dirs)"
+}

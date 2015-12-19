@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+#
+# Required StackStorm AIO configuration functions
+
+## THE ONLY GLOBAL VARIABLES
+LOG_FILE="${AIO_LOGFILE:-/var/log/puppet.log}"
+PROJECT_ROOT="${AIO_PROJECT_ROOT:-/opt/puppet}"
+
+####################################
+
+# Path to the librarian-puppet path
+librarian-puppet-path() {
+    local _cmd=
+    _cmd="$(project-root)/bin/librarian-puppet"
+
+    if variable-set $AIO_LIBRARIAN_PUPPET_PATH;
+    then echo $AIO_LIBRARIAN_PUPPET_PATH;
+    elif file-exists $_cmd;
+    then echo $_cmd;
+    else
+        else fail-loud $(unable-to-find-bootstrap-file puppet)
+    fi
+}
+
+# Path to puppet binary
+puppet-path() {
+    local _cmd=
+    _cmd="$(project-root)/bin/puppet"
+
+    if variable-set $AIO_PUPPET_PATH;
+    then echo $AIO_PUPPET_PATH;
+    elif file-exists $_cmd;
+    then echo $_cmd;
+    else
+        else fail-loud $(error-unable-to-find-bootstrap-file puppet)
+    fi
+}
+
+facter-path() {
+    local _cmd=
+    _cmd="$(project-root)/bin/facter"
+
+    if variable-set $AIO_FACTER_PATH;
+    then echo $AIO_FACTER_PATH;
+    elif file-exists $_cmd;
+    then echo $_cmd;
+    else
+        else fail-loud $(error-unable-to-find-bootstrap-file facter)
+    fi
+}
+
+project-root() {
+    echo $PROJECT_ROOT
+}
+
+default-log-file() {
+    ensure-file-exists $LOG_FILE
+    echo $LOG_FILE
+}

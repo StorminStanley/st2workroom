@@ -100,7 +100,8 @@ git-clone() {
     _dest_dir="${2:?}"
     _branch="${3:-master}"
 
-    git clone $_repo $_dest_dir -b $_branch
+    _cmd="$(git-cmd clone ${_repo} ${_dest_dir} -b ${_branch})"
+    execute-string $_cmd
 }
 
 # perform a git clone with no apologies. destroys anything in its path
@@ -126,7 +127,7 @@ git-update-and-clean-hard() {
     local _dir=
     local _branch=
     _dir="${1:?}"
-    _branch="${2:master}"
+    _branch="${2:-master}"
 
     git-update-and-clean $_dir
     git-hard-reset $_dir $_branch
@@ -134,12 +135,21 @@ git-update-and-clean-hard() {
 
 # updates and cleans a git repository from upstream
 #
-# @ git-update-and-clean
+# @ git-update-and-clean <dir>
 git-update-and-clean() {
-    pushd-quiet "${1:?}"
+    local _dir=
+    _dir="${1:?}"
 
-    git fetch --all
-    git gc --auto
+    pushd-quiet $_dir
+
+    _fetch_cmd="$(git-cmd) fetch --all"
+    debug "'git-update-and-clean': in directory ${_dir}"
+    debug "'git-update-and-clean': running command: ${_fetch_cmd}"
+    execute-string $_fetch_cmd
+
+    _gc_cmd="$(git-cmd) gc --auto"
+    debug "'git-update-and-clean': running command ${_gc_cmd}"
+    execute-string $_gc_cmd
 
     pushd-stepback
 }
@@ -150,12 +160,28 @@ git-update-and-clean() {
 git-hard-reset() {
     local _dir=
     local _branch=
+    local _cmd=
     _dir="${1:?}"
-    _branch="${2:master}"
+    _branch="${2:-master}"
 
     pushd-quiet $_dir
+    debug "'git-hard-reset': in directory ${_dir}"
 
-    git reset --hard $_branch
+    _cmd="$(git-cmd) reset --hard ${_branch}"
+    debug "'git-hard-reset': running '${_cmd}'"
+    execute-string $_cmd
 
     pushd-stepback
+}
+
+git-cmd() {
+    local _cmd=
+    _cmd="git ${@}"
+
+    if executable-in-path "git";
+    then
+        debug "'git-cmd': running command ${_cmd}"
+        execute-string $_cmd
+    else fail-loud $(unable-to-find-bootstrap-file git)
+    fi
 }

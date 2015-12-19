@@ -8,7 +8,11 @@ set -o pipefail
 #
 # @ setup-environment-from-git-branch <branch>
 setup-environment-from-git-branch() {
-    rake environments:update[$(sanitized-puppet-environment-to-apply)]
+    local _cmd=
+    _cmd="rake environments:update[$(sanitized-puppet-environment-to-apply)]"
+
+    debug "'setup-environment-from-git-branch': running command ${_cmd}"
+    execute-string $_cmd
 }
 
 # Sync a directory to the AIO puppet directory as an environment

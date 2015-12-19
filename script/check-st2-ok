@@ -25,6 +25,7 @@ init-check-st2-ok() {
 retry-message() {
     local _st2_datacenter=
     local _kick_command=
+    _st2_datacenter="$(
     _st2_datacenter="$(facter datacenter)"
 
     if string-equal $_st2_datacenter "vagrant";

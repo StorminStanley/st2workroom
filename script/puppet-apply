@@ -64,7 +64,13 @@ while :; do
             show_help
             exit
             ;;
+        -v|--verbose)
+            AIO_LOG_LEVEL=verbose
+            shift
+            continue
+            ;;
         -d|--debug)
+            AIO_LOG_LEVEL=debug
             DEBUG=true
             shift
             continue
@@ -90,6 +96,11 @@ while :; do
         -t|--trace)
             TRACE=true
             set -x
+            shift
+            continue
+            ;;
+        -f|--force)
+            FORCE=true
             shift
             continue
             ;;

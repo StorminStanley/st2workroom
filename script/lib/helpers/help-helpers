@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+
+# returns a string to the user letting them know that a crucial
+# component of the AIO installer cannot be found by the installer.
+# to be returned to 'fail-loud'
+#
+# returns string
+#
+# @ error-unable-to-find-bootrap-file
+error-unable-to-find-bootstrap-file() {
+    local _error=
+    local _cmd=
+
+    _cmd="${1:?}"
+    _error=<<EOF
+Oh no! It looks like we were unable to find the command '${_cmd}'. This command
+is used to gather essential facts about your computer to properly configure
+StackStorm on this system.
+
+This is typically caused by the bootstrap failing to properly run. Please
+the following KB article to see if you cannot get on your way.
+
+* https://stackstorm.reamaze.com/kb/installation/facter-not-found
+
+If that doesn't work, come and find us, we'd love to get you going!
+
+$(st2-support-contact-information)
+EOF
+
+    echo $_error
+}
+
+# when the user is unable to run as a user with elevated privileges,
+# we need to let them know. Returns a string for use with 'fail-loud'
+#
+# returns string
+#
+# @ error-run-with-root-permissions
+error-run-with-root-permissions() {
+    local _error=
+    local _cmd=
+
+    _cmd="${1:?}"
+    _error=<<EOF
+It looks like you are running this script as a non-root user.
+Please try running again with elevated privileges.
+
+If you believe you should not have received this error, please
+let us know! We'd love to know what's going on, and help you
+get going.
+
+$(st2-support-contact-information)
+EOF
+
+    echo $_error
+}
+
+# sometimes, things happen. No matter how much we try, things happen
+# in cases like these, let's let the user know that this is totally
+# bizzare, and how to get in contact with us.
+#
+# returns string
+#
+# @ error-what-even-happened
+error-what-even-happened() {
+    local _error=
+    local _cmd=
+
+    _cmd="${1:?}"
+    _error=<<EOF
+Oh my goodness! What on earth even happened here!? No
+idea how you got into this situation. But, that's nothing but
+an interesting problem to solve on this automation journey!
+
+Get in contact with us... we'd love to help you get going.
+
+$(st2-support-contact-information)
+EOF
+
+    echo $_error
+}
+
+# returns a string informing the user that there is still a bootstrap
+# file, and it will not continue processing.
+#
+# @ notice-lock-file-exists
+notice-lock-file-exists() {
+    local _notice=
+    local _cmd=
+
+    _cmd="${1:?}"
+    _notice=<<EOF
+It looks like the installer is attempting to bootstrap this system,
+but it cannot because of one of two reasons.
+
+* The install succeeded! But, there is a lock file at $(installer-bootstrap-lock-file)
+* The installer did not complete successfully, and left behind a lock file at $(installer-bootstrap-lock-file)
+
+But, the common theme is: there is a lock-file preventing bootstrapping
+from continuing. This one: $(installer-bootstrap-lock-file)
+
+This is not an issue, unless it is, in which case you may need to
+re-run the bootstrap. To bypass this check, and just plow through
+and re-run the bootstrap again, either:
+
+* Delete the lock file at $(installer-bootstrap-lock-file), or...
+* Run this command again with the '--force' option.
+
+EOF
+
+    echo $_notice
+}
+
+# returns a string when AIO encounters an unknown EPEL OS
+error-unknown-epel-version() {
+    local _error=
+    local _cmd=
+
+    _cmd="${1:?}"
+    _error=<<EOF
+It looks like the installer cannot find the version of EPEL
+needed for your OS. If you find this to be in error, please
+let us know! We'd love to help out
+
+$(st2-support-contact-information)
+
+EOF
+
+    echo $_error
+}

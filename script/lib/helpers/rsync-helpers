@@ -25,15 +25,17 @@ rsync-dir() {
     _extra_args="${@:3:$_args_len}"
     _default_args="-arh --delete"
 
-    if debug-enabled;
+    if log-level-debug;
     then
         _debug_args="-v";
-        _log_dest="$(send-output-to-file-and-stdout $(log-file))"
+        _log_dest="$(send-output-to-file-and-stdout-to-log-file)"
     else
-        _log_dest="$(send-all-output-to $(log-file))"
+        _log_dest="$(send-all-output-to-log-file)"
     fi
 
     _args="${_default_args} ${_debug_args} ${_extra_args}"
     _cmd="rsync ${_args} ${_log_dest}"
+
+    debug "'rsync-dir': executing command ${_cmd}"
     execute-string $_cmd
 }

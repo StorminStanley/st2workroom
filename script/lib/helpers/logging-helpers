@@ -3,16 +3,6 @@ set -e
 set -u
 set -o pipefail
 
-# global variable that will silence any `info` messages
-#
-# @ silence-info-messages
-silence-info-messages() {
-    if variable-set $ST2_SILENCE_INFO;
-    then true;
-    else false;
-    fi
-}
-
 # main logger function
 #
 # @ logger <log-level> <message>
@@ -23,8 +13,8 @@ logger() {
 # info logger.
 #
 # @ info <message>
-info() {
-    if ! silence-info-messages;
+verbose() {
+    if log-level-verbose;
     then logger "info" "${1:?}"
     fi
 }
@@ -47,7 +37,7 @@ error() {
 #
 # @ debug <message>
 debug() {
-    if debug-enabled;
+    if log-level-debug;
     then logger "debug" "${1:?}"
     fi
 }
@@ -62,45 +52,58 @@ fail-loudly() {
     exit 1
 }
 
+verbose-loudly() {
+    if log-level-verbose; then
+        verbose "*******************************************************"
+        verbose "${1:?}"
+        verbose "*******************************************************"
+    fi
+}
+
+# check to determine if the log level is set to info
+log-level-debug() {
+    if variable-set $AIO_LOG_LEVEL
+        && string-equals $AIO_LOG_LEVEL "debug";
+    then true;
+    else false;
+    fi
+}
+
+# check to determine if the log level is set to info
+log-level-verbose() {
+    if variable-set $AIO_LOG_LEVEL
+        && string-equals $AIO_LOG_LEVEL "verbose";
+    then true;
+    else false;
+    fi
+}
+
 # return the logging file to dump output to
 #
 # @ log-file
 log-file() {
-    local _log_file=
-    _log_file=/var/log/puppet.log
-
     if variable-set $LOG_FILE;
     then echo $LOG_FILE;
-    else echo $_log_file;
+    else echo "/var/log/puppet.log"
     fi
 }
 
 # stub string to ensure output is piped through STDOUT and log file
+# use with 'eval' or 'execute-string'
 #
 # returns string
 #
 # @ send-all-output-to-log-file-and-stdout
 send-all-output-to-log-file-and-stdout() {
-    echo " 2>&1 | tee -a `log-file`"
+    echo " 2>&1 | tee -a $(log-file)"
 }
 
 # stub string to ensure output is piped to log file
+# use with 'eval' or 'execute-string'
 #
 # returns string
 #
 # @ send-all-output-to-log-file
 send-all-output-to-log-file() {
     echo " >> $(log-file) 2>&1"
-}
-
-# determine if debug mode is enabled
-#
-# returns boolean
-#
-# @ debug-enabled
-debug-enabled() {
-    if variable-set $DEBUG;
-    then true;
-    else false;
-    fi
 }

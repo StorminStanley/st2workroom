@@ -70,3 +70,26 @@ command-successfully-run() {
     else false;
     fi
 }
+
+# converts an array to a string for passing to
+# another function. Adopted from Matt McClure
+# bash v2.
+#
+# http://notes-matthewlmcclure.blogspot.com/2009/12/return-array-from-bash-function-v-2.html
+#
+# Unfortunately, it is impossible to get rid of all bashisms, so
+# if needed, here is how to unpack from this function:
+#
+#    _unpack_var="declare -a $_new_var=$(some-return-function)"
+#    execute-string "${_unpack_system_dirs}"
+#
+# at which point, $_new_var will be in scope.
+#
+# Use sparingly, usually only to separate data from control
+#
+# @ array-to-string <array>
+array-to-string()
+{
+    local -a array=( "$@" )
+    declare -p array | sed -e 's/^declare -a array=//'
+}

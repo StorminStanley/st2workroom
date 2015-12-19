@@ -139,6 +139,7 @@ apt-has-not-been-updated-since-last-frequency() {
 #
 # @ update-apt
 update-apt() {
+    debug "'update-apt': running apt-get update"
     DEBIAN_FRONTEND=noninteractive apt-get -y update
 }
 
@@ -157,8 +158,9 @@ update-apt-if-cache-is-stale() {
 # @ install-apt-packages <pkgs>
 install-apt-packages() {
     local _packages=
-    _packages="${1:?}"
+    _packages="${@:?}"
 
     update-apt-if-cache-is-stable
+    debug "'install-apt-package': installing package $_packages"
     DEBIAN_FRONTEND=noninteractive apt-get -y install $_packages
 }

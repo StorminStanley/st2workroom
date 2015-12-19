@@ -19,16 +19,22 @@ install-puppet-libraries() {
     if debug-enabled;
     then
         _debug_args="--verbose";
-        _log_dest="$(send-output-to-file-and-stdout $(log-file))"
+        _log_dest="$(send-output-to-file-and-stdout-to-log-file)"
     else
-        _log_dest="$(send-all-output-to $(log-file))"
+        _log_dest="$(send-all-output-to-log-file)"
     fi
 
     _args="${_debug_args} ${_log_dest}"
-    _cmd="librarian-puppet install --shared ${_args}"
+    _cmd="$(librarian-puppet-path) install --shared ${_args}"
+
+    debug "'install-puppet-libraries': executing command: ${_cmd}"
     execute-string $_cmd
 
     pushd-stepout
+}
+
+librarian-puppet-exists() {
+    file-exists $(librarian-puppet-path)
 }
 
 # assembles and executes puppet, selecting the proper environment to apply
@@ -55,13 +61,15 @@ run-puppet() {
         ensure-directory-exists $(node-graph-dir)
         _graph_args="--graph --graphdir $(node-graph-dir)"
         _debug_args="--debug --verbose"
-        _log_dest="$(send-output-to-file-and-stdout $(log-file))"
+        _log_dest="$(send-output-to-file-and-stdout-to-log-file)"
     else
-        _log_dest="$(send-all-output-to $(log-file))"
+        _log_dest="$(send-all-output-to-log-file)"
     fi
 
-    _args="$_env_args $_config_args $_manifest_args $_debug_args $_graph_args"
-    _cmd="puppet apply ${_args}"
+    _args="${_env_args} ${_config_args} ${_manifest_args} ${_debug_args} ${_graph_args}"
+    _cmd="$(puppet-path) apply ${_args}"
+
+    debug "'run-puppet': executing command ${_cmd}"
     execute-string $_cmd
 }
 
@@ -71,7 +79,7 @@ run-puppet() {
 #
 # @ facter-has-value <fact>
 facter-has-value() {
-    variable-set facter-value "${1:?}"
+    command-successfully-run $(facter-value ${1:?});
 }
 
 # returns the value of a facter fact
@@ -80,7 +88,13 @@ facter-has-value() {
 #
 # @ facter-value <fact>
 facter-value() {
-    echo "$(project-root)/bin/facter ${1:?}"
+    local _cmd=
+    _cmd="$(facter-path) ${1:?}"
+    execute-string $_cmd;
+}
+
+facter-exists() {
+    file-exists "$(project-root)/bin/facter"
 }
 
 # returns the default facts.d directory

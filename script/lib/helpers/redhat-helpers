@@ -7,36 +7,81 @@ set -o pipefail
 #
 # @ yum-clean
 yum-clean() {
-    yum clean all
-    yum clean dbcache
+    local _clean_cmd=
+    local _cache_cmd=
+
+    _clean_cmd="$(yum-cmd clean all)"
+    execute-script $_clean_cmd
+
+    _cache_cmd="$(yum-cmd clean dbcache)"
+    execute-script $_cache_cmd
+}
+
+yum-cmd() {
+    local _cmd=
+    _cmd="yum ${@}"
+
+    if executable-in-path "git";
+    then
+        debug "'yum-cmd': running command ${_cmd}"
+        execute-string $_cmd
+    else fail-loud $(unable-to-find-bootstrap-file yum)
+    fi
 }
 
 # Updates all packages on system via yum
 #
 # @ yum-update
 yum-update() {
-    yum -y update
+    local _cmd=
+    _cmd="$(yum-cmd) -y update"
+    execute-script $_cmd
 }
 
 # install packages via yum
 #
 # @ yum-install-packages <pkgs>
 yum-install-packages() {
-    yum -y install "${*:?}"
+    local _packages=
+    local _cmd=
+    _packages="${@}"
+    _cmd="$(yum-cmd -y install ${_packages})"
+    execute-script $_cmd
 }
 
 # install packages via yum groupinstall
 #
 # @ yum-installgroup <groups>
 yum-installgroup() {
-    yum groupinstall -y "${*:?}"
+    local _groups=
+    local _cmd=
+    _groups="${@}"
+    _cmd="$(yum-cmd groupinstall -i ${_groups})"
+    execute-script $_cmd
 }
 
 # install package directly from RPM
 #
 # @ rpm-install-package <pkg>
 rpm-install-package() {
-    rpm -ivh "${1:?}"
+    local _packages=
+    local _cmd=
+    _packages="${@}"
+
+    _cmd="$(rpm-cmd -ivh ${_packages})"
+    execute-script $_cmd
+}
+
+rpm-cmd() {
+    local _cmd=
+    _cmd="rpm ${@}"
+
+    if executable-in-path "rpm";
+    then
+        debug "'rpm-cmd': running command ${_cmd}"
+        execute-string $_cmd
+    else fail-loud $(unable-to-find-bootstrap-file rpm)
+    fi
 }
 
 # install EPEL for a given RH distribution
@@ -53,9 +98,10 @@ install-epel() {
     elif rhel-7;
     then install-rpm-package $_epel_7
     else
-        error "enable to find EPEL package for $(os-family) $(os-major-version)"
+        fail-loud $(error-unknown-epel-version)
     fi
 }
+
 
 # Install RedHat Software Collections Library
 #
@@ -68,8 +114,12 @@ install-scl() {
 #
 # @ install-cr
 enable-cr() {
+    local _cmd=
+    _cmd="yum-config-manager --enable cr"
+
     yum-install-packages yum-utils
-    yum-config-manager --enable cr
+    debug "'enable-cr': running command ${_cmd}"
+    execute-string $_cmd
 }
 
 # Determine if an OS is a RHEL 6 system

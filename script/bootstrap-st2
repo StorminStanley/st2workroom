@@ -3,6 +3,11 @@ set -e
 set -u
 set -o pipefail
 
+STABLE_AIO_VERSION="1.0.0"
+PROJECT_ROOT=${AIO_PROJECT_ROOT:-/opt/puppet}
+LOG_FILE=${AIO_LOG_FILE:-/var/log/puppet.log}
+AIO_VERSION=${AIO_VERSION:-master}
+
 # StackStorm AIO Bootstrap Script
 #
 # This script contains a subset of functions necessary to have the script
@@ -19,11 +24,11 @@ set -o pipefail
 #
 # @ default-aio-version
 stable-aio-version() {
-    echo "master"
+    echo $STABLE_AIO_VERSION
 }
 
 project-root() {
-    echo "/opt/puppet"
+    echo $PROJECT_ROOT
 }
 
 
@@ -321,7 +326,7 @@ ensure-directory-exists() {
 project-root() {
     if variable-set $PROJECT_ROOT;
     then echo $PROJECT_ROOT
-    else project-root
+    else echo "/opt/puppet"
     fi
 }
 

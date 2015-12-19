@@ -15,11 +15,6 @@ init-bootstrap-os-linux() {
     local _dist_preflight_script=
     _dist_preflight_script="$(project-root)/script/bootstrap-os-$(os-family)-$(os-dist)"
 
-    if ! is-root; then
-        show-help
-        fail-loudly "Please run with root permissions"
-    fi
-
     if file-exists $_dist_preflight_script;
     then execute-string $_dist_preflight_script;
     fi

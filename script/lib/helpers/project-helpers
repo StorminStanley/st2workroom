@@ -3,18 +3,22 @@ set -e
 set -u
 set -o pipefail
 
+default-project-root() {
+    echo "/opt/puppet"
+}
+
 # runs the OS bootstrap scripts for AIO
 #
 # @ run-bootstrap-os
 run-bootstrap-os() {
-    eval "$(script-root)/bootstrap-os"
+    execute-script "$(script-root)/bootstrap-os"
 }
 
 # runs any and all preflight scripts before AIO kickoff
 #
 # @ run-preflight-os
 run-preflight-os() {
-    eval "$(script-root)/preflight-os"
+    execute-script "$(script-root)/preflight-os"
 }
 
 # get the current directory where shell scripts are stored
@@ -23,8 +27,9 @@ run-preflight-os() {
 #
 # @ script-root
 script-root() {
-    echo "$(project-root)/script"
+    execute-script "$(project-root)/script"
 }
+
 
 # get the root of the AIO project
 #
@@ -34,7 +39,7 @@ script-root() {
 project-root() {
     if variable-set $PROJECT_ROOT;
     then echo $PROJECT_ROOT;
-    else echo "/opt/puppet";
+    else default-project-root;
     fi
 }
 
@@ -113,14 +118,14 @@ run-st2-core-local-check() {
 #
 # @ check-for-os-compatability
 check-for-os-compatability() {
-    eval "$(project-root)/script/check-os-compat"
+    execute-command "$(project-root)/script/check-os-compat"
 }
 
 # run puppet apply
 #
 # @ run-puppet-apply
 run-puppet-apply() {
-    eval "$(project-root)/script/puppet-apply"
+    execute-command "$(project-root)/script/puppet-apply"
 }
 
 # check the health of a StackStorm installation
@@ -128,7 +133,7 @@ run-puppet-apply() {
 # @ check-st2-health
 check-st2-health() {
     if ! skip-st2-ok-check;
-    then eval "$(project-root)/script/check-st2-ok"
+    then execute-command "$(project-root)/script/check-st2-ok"
     fi
 }
 
@@ -158,13 +163,11 @@ install-aio-bundled-gems() {
 setup-answer-file-if-supplied-by-user() {
     local _answer_file_path=
     _answer_file_path="$(project-root)/hieradata/answers.yaml"
+
     if variable-set $ANSWER_FILE;
-    then
-        ensure-file-absent $_answer_file_path
-        safe-copy $ANSWER_FILE $_answer_file_path
+    then safe-copy $ANSWER_FILE $_answer_file_path
     fi
 }
-
 
 # determine whether or not a user has requested hubot *not*
 # be installed now or later.
@@ -178,7 +181,6 @@ user-requested-to-disable-hubot() {
     else false;
     fi
 }
-
 
 # disable hubot by setting a value in local user workroom answer file
 #

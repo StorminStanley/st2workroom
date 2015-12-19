@@ -29,13 +29,14 @@ install-gem() {
     _gem="${1:?}"
     _default_args="--no-ri --no-rdoc"
 
-    if debug-enabled;
+    if log-level-debug;
     then _log_dest="$(send-all-output-to-log-file-and-stdout)"
     else _log_dest="$(send-all-output-to-log-file)"
     fi
 
     $_args="${_default_args} ${_log_dest}"
     $_cmd="gem install ${_gem} ${_args}"
+    debug "'install-gem': running command ${_cmd}"
     execute-string $_cmd
 }
 
@@ -58,6 +59,7 @@ install-bundled-gems() {
 
     _args="${_default_args} ${_log_dest}"
     _cmd="$(bundler-command) install --path vendor/bundle ${_args}"
+    debug "'install-bundled-gems': running command ${_cmd}"
     execute-string $_cmd
 
     pushd-stepout
