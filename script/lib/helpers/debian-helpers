@@ -13,7 +13,6 @@ update-apt-if-needed() {
 }
 
 ubuntu-trusty() {
-    echo "OS CODENAME: $(os-codename)"
     if string-equals "$(os-codename)" "trusty"; then true; else false; fi
 }
 
