@@ -13,7 +13,7 @@ init-preflight-os() {
 
     # Preflight Setup. Entry point to OS/Distro specific scripts
     if file-exists "${DIR}/preflight-os-$(os-family)"; then
-        $_os_family_cmd="$DIR/preflight-os-$(os-family)"
+        _os_family_cmd="$DIR/preflight-os-$(os-family)"
         execute-string $_os_family_cmd
     fi
 }
