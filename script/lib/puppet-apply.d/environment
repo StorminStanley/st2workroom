@@ -30,7 +30,7 @@ setup-current-working-directory-environment() {
     local _excludes=
     _excludes="environments vendor artifacts graphs packer script .git"
 
-    sync-dir-to-puppet-environment project-root current_working_directory $_excludes_args
+    sync-dir-to-puppet-environment $(project-root) current_working_directory $_excludes_args
 }
 
 currently-in-an-environment() {
