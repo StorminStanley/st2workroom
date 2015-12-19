@@ -70,12 +70,15 @@ install-git() {
 }
 
 safe-git-clone() {
-    local _repo="${1:?}"
-    local _dest_dir="${2:?}"
-    local _branch="${3:-master}"
+    local _repo=
+    local _dest_dir=
+    local _branch=
+    _repo="${1:?}"
+    _dest_dir="${2:?}"
+    _branch="${3:-master}"
 
     if directory-exists $_dest_dir; then
-        safe-copy $_dest_dir "${_dest_dir}.old" $(random-tmpdir)
+        safe-copy $_dest_dir "${_dest_dir}.old"
         ensure-directory-absent $_dest_dir
     fi
 
