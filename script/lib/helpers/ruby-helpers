@@ -35,7 +35,7 @@ install-gem() {
     fi
 
     $_args="${_default_args} ${_log_dest}"
-    $_cmd="gem install ${_gem} ${_args}"
+    $_cmd="$(gem-command) install ${_gem} ${_args}"
     debug "'install-gem': running command ${_cmd}"
     execute-string $_cmd
 }
@@ -71,10 +71,26 @@ install-bundled-gems() {
 #
 # @ bundler-command
 bundler-command() {
-    if string-equals os-family "linux";
-    then echo "bundler"
-    else
-        error "Unable to find bundler binary. Aborting"
-        exit 1
+    local _cmd=
+    _cmd="bundler"
+
+    if file-exists $_cmd;
+    then echo $_cmd
+    else fail-loud $(error-unable-to-find-bootstrap-file bundler)
+    fi
+}
+
+# return the command necessary to execute gem
+#
+# returns string
+#
+# @ gem-command
+gem-command() {
+    local _cmd=
+    _cmd="gem"
+
+    if file-exists $_cmd;
+    then echo $_cmd
+    else fail-loud $(error-unable-to-find-bootstrap-file gem)
     fi
 }
