@@ -16,7 +16,8 @@ install-puppet-libraries() {
 
     pushd-quiet $_work_dir
 
-    if debug-enabled;
+    if log-level-debug
+        || log-level-verbose;
     then
         _debug_args="--verbose";
         _log_dest="$(send-output-to-file-and-stdout-to-log-file)"
@@ -56,11 +57,15 @@ run-puppet() {
     _config_args="--config $(project-root)/puppet.conf"
     _manifest_args="$(environment-dir)/manifests"
 
-    if debug-enabled;
+    if log-level-verbose;
     then
         ensure-directory-exists $(node-graph-dir)
         _graph_args="--graph --graphdir $(node-graph-dir)"
         _debug_args="--debug --verbose"
+        _log_dest="$(send-output-to-file-and-stdout-to-log-file)"
+    elif log-level-debug;
+    then
+        _debug_args="--verbose"
         _log_dest="$(send-output-to-file-and-stdout-to-log-file)"
     else
         _log_dest="$(send-all-output-to-log-file)"
@@ -119,4 +124,45 @@ set-facter-value() {
 
     ensure-directory-exists $(facts-d-directory)
     echo-to-new-file "${_fact}=${_value}" $_fact_file
+}
+
+
+librarian-puppet-path() {
+    local _cmd=
+    _cmd="$(project-root)/bin/librarian-puppet"
+
+    if variable-set $AIO_LIBRARIAN_PUPPET_PATH;
+    then echo $AIO_LIBRARIAN_PUPPET_PATH;
+    elif file-exists $_cmd;
+    then echo $_cmd;
+    else
+        else fail-loud $(unable-to-find-bootstrap-file librarian-puppet)
+    fi
+}
+
+# Path to puppet binary
+puppet-path() {
+    local _cmd=
+    _cmd="$(project-root)/bin/puppet"
+
+    if variable-set $AIO_PUPPET_PATH;
+    then echo $AIO_PUPPET_PATH;
+    elif file-exists $_cmd;
+    then echo $_cmd;
+    else
+        else fail-loud $(error-unable-to-find-bootstrap-file puppet)
+    fi
+}
+
+facter-path() {
+    local _cmd=
+    _cmd="$(project-root)/bin/facter"
+
+    if variable-set $AIO_FACTER_PATH;
+    then echo $AIO_FACTER_PATH;
+    elif file-exists $_cmd;
+    then echo $_cmd;
+    else
+        else fail-loud $(error-unable-to-find-bootstrap-file facter)
+    fi
 }
