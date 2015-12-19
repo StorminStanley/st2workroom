@@ -1,0 +1,166 @@
+#!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
+
+# detect if the current os/distro is ubuntu trusty (14.04)
+#
+# returns boolean
+#
+# @ ubuntu-trusty
+ubuntu-trusty() {
+    if string-equals "$(os-codename)" "trusty";
+    then true;
+    else false;
+    fi
+}
+
+# detect if the current os/distro is ubuntu xenial (16.04)
+#
+# returns boolean
+#
+# @ ubuntu-xenial
+ubuntu-xenial() {
+    if string-equals "$(os-codename)" "xenial";
+    then true;
+    else false;
+    fi
+}
+
+# detect if the current OS is a (known/supported) ubuntu OS
+#
+# returns boolean
+#
+# @ os-is-ubuntu
+os-is-ubuntu() {
+    if ubuntu-trusty
+       || ubuntu-xenial;
+    then true;
+    else false;
+    fi
+}
+
+# detect if the current OS is a (known/supported) debian OS
+#
+# returns boolean
+#
+# @ supported-debian-distro
+supported-debian-distro() {
+    if ubuntu-trusty;
+    then true;
+    else false;
+    fi
+}
+
+# detect if the current OS is a debian flavored OS
+#
+# returns boolean
+#
+# @ dist-is-debian
+dist-is-debian() {
+    if os-is-linux
+        && file-exists "/etc/debian_version";
+    then true
+    else false
+    fi
+}
+
+# get the current debian release version
+#
+# returns string
+#
+# @ get-debian-release
+get-debian-release() {
+    if dist-is-debian;
+    then echo "$(cat /etc/debian_version)";
+    else echo "unknown";
+    fi;
+}
+
+# get the current debian release codename
+#
+# returns string
+#
+# @ os-codename
+os-codename() {
+    if dist-is-debian;
+    then echo $(/usr/bin/lsb_release -c -s);
+    else echo "unknown";
+    fi
+}
+
+# retrieve the default time between updating apt cache
+#
+# returns integer
+#
+# @ apt-update-frequency
+apt-update-frequency() {
+    local _update_frequency=
+    _update_frequency=30
+
+    if variable-set $APT_UPDATE_FREQ;
+    then echo $APT_UPDATE_FREQ;
+    else echo $_update_frequency;
+    fi
+}
+
+# only run apt-get update if it has not been updated recently
+#
+# @ update-apt-if-needed
+update-apt-if-needed() {
+    if apt-has-not-been-run-recently;
+    then update-apt;
+    fi
+}
+
+# returns the update-success-stamp apt file
+#
+# returns string
+#
+# @ apt-update-success-file
+apt-update-success-file() {
+    echo "/var/lib/apt/periodic/update-success-stamp"
+}
+
+# check to see if the update-success-stamp has been updated since
+# the default apt-update-frequency
+#
+# returns boolean
+#
+# @ apt-has-not-been-updated-since-last-frequency
+apt-has-not-been-updated-since-last-frequency() {
+    if [ `find $(apt-update-success-file) -mmin +$(apt-update-frequency) | grep apt` ];
+    then true
+    else false
+    fi
+}
+
+# runs update-apt non-interactively
+#
+# @ update-apt
+update-apt() {
+    debug "'update-apt': running apt-get update"
+    DEBIAN_FRONTEND=noninteractive apt-get -y update
+}
+
+# checks to determine if apt-get update has been updated recently
+#
+# update-apt-if-cache-is-stale
+update-apt-if-cache-is-stale() {
+    if file-exists $(apt-update-success-file)
+          && apt-has-not-been-updated-since-last-frequency
+    then update-apt;
+    fi
+}
+
+# installs a number of packages via apt-get
+#
+# @ install-apt-packages <pkgs>
+install-apt-packages() {
+    local _packages=
+    _packages="${@:?}"
+
+    update-apt-if-cache-is-stable
+    debug "'install-apt-package': installing package $_packages"
+    DEBIAN_FRONTEND=noninteractive apt-get -y install $_packages
+}

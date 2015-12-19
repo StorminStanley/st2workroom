@@ -1,0 +1,214 @@
+#!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
+
+default-project-root() {
+    echo "/opt/puppet"
+}
+
+# runs the OS bootstrap scripts for AIO
+#
+# @ run-bootstrap-os
+run-bootstrap-os() {
+    execute-script "$(script-root)/bootstrap-os"
+}
+
+# runs any and all preflight scripts before AIO kickoff
+#
+# @ run-preflight-os
+run-preflight-os() {
+    execute-script "$(script-root)/preflight-os"
+}
+
+# get the current directory where shell scripts are stored
+#
+# returns string
+#
+# @ script-root
+script-root() {
+    execute-script "$(project-root)/script"
+}
+
+
+# get the root of the AIO project
+#
+# returns string
+#
+# @ project-root
+project-root() {
+    if variable-set $PROJECT_ROOT;
+    then echo $PROJECT_ROOT;
+    else default-project-root;
+    fi
+}
+
+# get the AIO installer lock-file path
+#
+# returns string
+#
+# @ installer-bootstrap-lock-file
+installer-bootstrap-lock-file() {
+    echo "/etc/st2workroom-bootstrapped"
+}
+
+# get the re-run command for vagrant
+#
+# returns string
+#
+# @ kick-command-vagrant
+kick-command-vagrant() {
+    echo "vagrant provision st2"
+}
+
+# get the re-run command for running system
+#
+# returns string
+#
+# @ kick-command-update-system
+kick-command-update-system() {
+    echo "update-system"
+}
+
+# get the re-run command for an incompletely bootstrapped system
+#
+# returns string
+#
+# @ kick-command-bootstrap-st2
+kick-command-bootstrap-st2() {
+    echo "curl -sSL $(st2-install-url) | sudo sh"
+}
+
+# get the URL where the AIO script can be downloaded
+#
+# returns string
+#
+# @ st2-install-url
+st2-install-url() {
+    echo "http://stackstorm.com/install.sh"
+}
+
+# returns current support contact information for StackStorm
+#
+# returns string
+#
+# @ st2-support-contact-information
+st2-support-contact-information() {
+    echo "Email: support@stackstorm.com"
+    echo "IRC: irc.freenode.net/#stackstorm"
+    echo "Slack: http://stackstorm.com/community-signup"
+}
+
+# runs a simple check command to see if StackStorm is working
+#
+# returns boolean
+#
+# @ run-st2-core-local-check
+run-st2-core-local-check() {
+    local _cmd=
+    _cmd="st2 run core.local date &> /dev/null"
+
+    if command-successfully-run $_cmd;
+    then true;
+    else false;
+    fi
+}
+
+# run os-compatability-check
+#
+# @ check-for-os-compatability
+check-for-os-compatability() {
+    execute-command "$(project-root)/script/check-os-compat"
+}
+
+# run puppet apply
+#
+# @ run-puppet-apply
+run-puppet-apply() {
+    execute-command "$(project-root)/script/puppet-apply"
+}
+
+# check the health of a StackStorm installation
+#
+# @ check-st2-health
+check-st2-health() {
+    if ! skip-st2-ok-check;
+    then execute-command "$(project-root)/script/check-st2-ok"
+    fi
+}
+
+# return the location of the default workroom hiera file
+#
+# returns string
+#
+# @ workroom-hiera-file
+workroom-hiera-file() {
+    echo "$(project-root)/hieradata/workroom.yaml"
+}
+
+# Install shared Puppet libraries for AIO
+#
+# @ install-shared-config-mgmt-libraries
+install-shared-config-mgmt-libraries() {
+    run-librarian-puppet $(environment-dir)
+}
+
+# Install shared Rubygems for AIO
+#
+# @ install-shared-config-mgmt-libraries
+install-aio-bundled-gems() {
+    install-bundled-gems $(project-root)
+}
+
+setup-answer-file-if-supplied-by-user() {
+    local _answer_file_path=
+    _answer_file_path="$(project-root)/hieradata/answers.yaml"
+
+    if variable-set $ANSWER_FILE;
+    then safe-copy $ANSWER_FILE $_answer_file_path
+    fi
+}
+
+# determine whether or not a user has requested hubot *not*
+# be installed now or later.
+#
+# returns boolean
+#
+# @ user-requested-to-disable-hubot
+user-requested-to-disable-hubot() {
+    if variable-set $DISABLE_HUBOT;
+    then true;
+    else false;
+    fi
+}
+
+# disable hubot by setting a value in local user workroom answer file
+#
+# @ ensure-hubot-is-not-installed-if-requested-by-user
+ensure-hubot-is-not-installed-if-requested-by-user() {
+    if user-requested-to-disable-hubot;
+    then echo-to-file "hubot: false" "$(workroom-hiera-file)"
+    fi
+}
+
+# test to ensure that before AIO begins, all of the dependencies
+# are installed on the system
+#
+# returns boolean
+#
+# @ ensure-system-has-all-dependencies
+ensure-system-has-all-dependencies() {
+    true
+}
+
+# load up StackStorm environment variables if set
+#
+# @ source-st2-profile
+source-st2-profile() {
+    local _file=
+    _file="/etc/profile.d/st2.sh"
+
+    if file-exists $_file;
+    then source $_file;
+    fi
+}

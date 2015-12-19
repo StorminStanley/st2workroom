@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
+
+DIR=$( dirname "$(readlink -f "$0")" )
+. $DIR/shared-functions
+
+# main preflight script for linux. ensures that any distribution bootstrap
+# scripts are also loaded if they exist.
+#
+# @ init-preflight-os-linux
+init-preflight-os-linux() {
+    if file-exists "${DIR}/preflight-os-$(os-family)-$(os-dist)"; then
+        $DIR/preflight-os-$(os-family)-$(os-dist)
+    fi
+}
+
+init-preflight-os-linux

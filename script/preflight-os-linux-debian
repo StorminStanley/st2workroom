@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
+
+DIR=$( dirname "$(readlink -f "$0")" )
+. $DIR/shared-functions
+
+# run the bootstrap script for Debian systems
+#
+# @ init-preflight-os-linux-debian
+init-preflight-os-linux-debian() {
+    update-apt-if-cache-is-stale
+}
+
+init-preflight-os-linux-debian

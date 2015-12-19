@@ -1,0 +1,196 @@
+#!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
+
+# cleans and removes database cache for yum
+#
+# @ yum-clean
+yum-clean() {
+    local _clean_cmd=
+    local _cache_cmd=
+
+    _clean_cmd="$(yum-cmd clean all)"
+    execute-script $_clean_cmd
+
+    _cache_cmd="$(yum-cmd clean dbcache)"
+    execute-script $_cache_cmd
+}
+
+yum-cmd() {
+    local _cmd=
+    _cmd="yum ${@}"
+
+    if executable-in-path "git";
+    then
+        debug "'yum-cmd': running command ${_cmd}"
+        execute-string $_cmd
+    else fail-loud $(unable-to-find-bootstrap-file yum)
+    fi
+}
+
+# Updates all packages on system via yum
+#
+# @ yum-update
+yum-update() {
+    local _cmd=
+    _cmd="$(yum-cmd) -y update"
+    execute-script $_cmd
+}
+
+# install packages via yum
+#
+# @ yum-install-packages <pkgs>
+yum-install-packages() {
+    local _packages=
+    local _cmd=
+    _packages="${@}"
+    _cmd="$(yum-cmd -y install ${_packages})"
+    execute-script $_cmd
+}
+
+# install packages via yum groupinstall
+#
+# @ yum-installgroup <groups>
+yum-installgroup() {
+    local _groups=
+    local _cmd=
+    _groups="${@}"
+    _cmd="$(yum-cmd groupinstall -i ${_groups})"
+    execute-script $_cmd
+}
+
+# install package directly from RPM
+#
+# @ rpm-install-package <pkg>
+rpm-install-package() {
+    local _packages=
+    local _cmd=
+    _packages="${@}"
+
+    _cmd="$(rpm-cmd -ivh ${_packages})"
+    execute-script $_cmd
+}
+
+rpm-cmd() {
+    local _cmd=
+    _cmd="rpm ${@}"
+
+    if executable-in-path "rpm";
+    then
+        debug "'rpm-cmd': running command ${_cmd}"
+        execute-string $_cmd
+    else fail-loud $(unable-to-find-bootstrap-file rpm)
+    fi
+}
+
+# install EPEL for a given RH distribution
+#
+# @ install-epel
+install-epel() {
+    local _epel_6=
+    local _epel_7=
+    _epel_6="https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm"
+    _epel_7="https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
+
+    if rhel-6;
+    then install-rpm-package $_epel_6
+    elif rhel-7;
+    then install-rpm-package $_epel_7
+    else
+        fail-loud $(error-unknown-epel-version)
+    fi
+}
+
+
+# Install RedHat Software Collections Library
+#
+# @ install-scl
+install-scl() {
+    yum-install-packages centos-release-SCL scl-utils
+}
+
+# Install RedHat cr
+#
+# @ install-cr
+enable-cr() {
+    local _cmd=
+    _cmd="yum-config-manager --enable cr"
+
+    yum-install-packages yum-utils
+    debug "'enable-cr': running command ${_cmd}"
+    execute-string $_cmd
+}
+
+# Determine if an OS is a RHEL 6 system
+#
+# returns boolean
+#
+# @ rhel-6
+rhel-6() {
+    if dist-is-redhat
+       && os-major-version "6";
+    then true;
+    else false;
+    fi
+}
+
+# determines if an OS is a RHEL 7 system
+#
+# returns boolean
+#
+# @ rhel-7
+rhel-7() {
+    if dist-is-redhat
+       && os-major-version "7";
+    then true;
+    else false;
+    fi
+}
+
+# detect if the given redhat system is a supported OS
+#
+# returns boolean
+#
+# @ supported-redhat-distro
+supported-redhat-distro() {
+    if rhel-6; then true;
+    elif rhel-7; then true;
+    else false;
+    fi
+}
+
+# detect if the current OS is a redhat system
+#
+# returns boolean
+#
+# @ dist-is-redhat
+dist-is-redhat() {
+    if os-is-linux
+       && file-exists "/etc/redhat-release";
+    then true;
+    else false;
+    fi
+}
+
+# Get the current redhat release version
+#
+# returns string
+#
+# @ get-redhat-release
+get-redhat-release() {
+    echo "$(cat /etc/redhat-release | sed s/.*release\ // | sed s/\ .*//)"
+}
+
+# If the given OS has the RH Software Collection Library,
+# then source that file and get it into the environment
+#
+# @ enable-rh-ruby-scl
+init-enable-ruby-scl() {
+    local _canary_file=
+    _canary_file="/opt/rh/ruby193/enable"
+
+    if file-exists $_canary_file;
+    then source $_canary_file
+    fi
+}

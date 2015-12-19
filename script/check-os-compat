@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -e
+set -u
+set -o pipefail
 
 DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
@@ -7,59 +9,46 @@ DIR=$( dirname "$(readlink -f "$0")" )
 # Checks to ensure that the current version of the installer
 # is compatable with the OS running.
 
-compatable_os() {
-    echo "Passed OS Detection..."
-    exit 0
+compatable-os() {
+    log "Passed OS Detection..."
 }
 
-incompatable_os() {
-    echo ""
-    echo "OH NO! Y U NO WORK?!"
-    echo ""
-    echo "Well, bummer. It seems that you have found yourself at the end of a"
-    echo "long cavern. Ahead of you is darkness. You can hear the wind blowing"
-    echo "across your left ear"
-    echo ""
-    echo "You are running on an unsupported OS. Good news there is a high chance"
-    echo "StackStorm can and *should* run on your OS. We're hard at work adding"
-    echo "adding additional support all the time"
-    echo ""
-    echo "* Supported OS List: https://docs.stackstorm.com/install/all_in_one.html#supported-platforms"
-    echo ""
-    echo "We could also use your help! Want to help us add OS support? Take a look at"
-    echo "https://stackstorm.reamaze.com/articles/adding-os-support-to-all-in-one-installer"
-    echo "and see if you can lend us a hand."
-    echo ""
-    echo "Don't forget to let us know if we can help out in any other way. Come find"
-    echo "us using your favorite communication mechanism, and we'll be there with a"
-    echo "hot cup of cocoa and some tips on how to get some automation happening!"
-    echo ""
-    echo "Email: support@stackstorm.com"
-    echo "IRC: irc.freenode.net/#stackstorm"
-    echo "Slack: https://stackstorm.com/community-signup"
-    echo ""
-    exit 1
+incompatable-os() {
+    local _error_message=
+    _error_message=<<EOF
+OH NO! Y U NO WORK?!
+
+Well, bummer. It seems that you have found yourself at the end of a
+long cavern. Ahead of you is darkness. You can hear the wind blowing
+across your left ear
+
+You are running on an unsupported OS. Good news there is a high chance
+StackStorm can and *should* run on your OS. We're hard at work adding
+adding additional support all the time
+
+* Supported OS List: https://docs.stackstorm.com/install/all_in_one.html#supported-platforms
+
+We could also use your help! Want to help us add OS support? Take a look at
+https://stackstorm.reamaze.com/articles/adding-os-support-to-all-in-one-installer
+and see if you can lend us a hand.
+
+Don't forget to let us know if we can help out in any other way. Come find
+us using your favorite communication mechanism, and we'll be there with a
+hot cup of cocoa and some tips on how to get some automation happening!
+
+$(st2-support-contact-information)
+EOF
+
+    fail-loud $_error_message
 }
 
-if [ "$DIST" = "RedHat" ]; then
-    case $MAJORVER in
-    6|7)
-        compatable_os
-        ;;
-    *)
-        incompatable_os
-        ;;
-    esac
-elif [ "$DIST" = "Debian" ]; then
-    case $CODENAME in
-    trusty)
-        compatable_os
-        ;;
-    *)
-        incompatable_os
-        ;;
-    esac
-else
-    incompatable_os
-fi
+# Check to detect if the OS is a supported OS for StackStorm
+init-check-os-compat() {
+    if supported-redhat-distro
+            || supported-debian-distro;
+    then compatable-os;
+    else incompatable-os;
+    fi
+}
 
+init-check-os-compat

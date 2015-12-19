@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
+
+DIR=$( dirname "$(readlink -f "$0")" )
+. $DIR/shared-functions
+
+# start the linux operating system bootstrap. Ensures that any linux OS
+# tasks are taken care of, and detect/load any OS distribution scripts to also
+# process as part of bootstrap phase
+#
+# @ init-bootstrap-os-linux
+init-bootstrap-os-linux() {
+    local _dist_preflight_script=
+    _dist_preflight_script="$(project-root)/script/bootstrap-os-$(os-family)-$(os-dist)"
+
+    if file-exists $_dist_preflight_script;
+    then execute-string $_dist_preflight_script;
+    fi
+}
+
+# Kick off main entry
+init-bootstrap-os-linux

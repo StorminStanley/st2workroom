@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
+
+install-bundler-if-needed() {
+    if executable-not-in-path "bundler";
+    then install-gem "bundler"
+    fi
+}
+
+# Attempt to install ruby via rvm if needed on the OS
+#
+# @ install-ruby-if-needed
+install-ruby-if-needed() {
+    if os-is-ubuntu;
+    then install-rvm;
+    fi
+}
+
+# install a gem on the system
+#
+# @ install-gem <gem>
+install-gem() {
+    local _gem=
+    local _default_args=
+    local _log_dest=
+    local _cmd=
+    _gem="${1:?}"
+    _default_args="--no-ri --no-rdoc"
+
+    if log-level-debug;
+    then _log_dest="$(send-all-output-to-log-file-and-stdout)"
+    else _log_dest="$(send-all-output-to-log-file)"
+    fi
+
+    $_args="${_default_args} ${_log_dest}"
+    $_cmd="$(gem-command) install ${_gem} ${_args}"
+    debug "'install-gem': running command ${_cmd}"
+    execute-string $_cmd
+}
+
+# install gems from a Gemfile in a given directory
+install-bundled-gems() {
+    local _work_dir=
+    local _log_dest=
+    local _default_args=
+    local _args=
+    local _cmd=
+    _work_dir="${1:?}"
+    _default_args="--deployment --binstubs"
+
+    pushd-quiet $_work_dir
+
+    if debug-enabled;
+    then _log_dest="$(send-all-output-to-log-file-and-stdout)"
+    else _log_dest="$(send-all-output-to-log-file)"
+    fi
+
+    _args="${_default_args} ${_log_dest}"
+    _cmd="$(bundler-command) install --path vendor/bundle ${_args}"
+    debug "'install-bundled-gems': running command ${_cmd}"
+    execute-string $_cmd
+
+    pushd-stepout
+}
+
+# return the command necessary to execute bundler
+#
+# returns string
+#
+# @ bundler-command
+bundler-command() {
+    local _cmd=
+    _cmd="bundler"
+
+    if file-exists $_cmd;
+    then echo $_cmd
+    else fail-loud $(error-unable-to-find-bootstrap-file bundler)
+    fi
+}
+
+# return the command necessary to execute gem
+#
+# returns string
+#
+# @ gem-command
+gem-command() {
+    local _cmd=
+    _cmd="gem"
+
+    if file-exists $_cmd;
+    then echo $_cmd
+    else fail-loud $(error-unable-to-find-bootstrap-file gem)
+    fi
+}

@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
+
+# StackStorm AIO uninstaller
+DIR=$( dirname "$(readlink -f "$0")" )
+. $DIR/shared-functions
+
+### CLI Parsing
+show_help() {
+  echo "StackStorm All-in-one uninstaller"
+  echo "Usage: $0 [OPTION]..."
+  echo
+  echo "  -h,  --help        This help screen"
+  echo "  -c,  --clean       (soft reset) Removes all customized variables"
+  echo "                     and tries to reconfigure the system"
+  echo
+}
+
+reset-installer() {
+    local _files=
+    for i in mistral st2client st2flow st2server st2web facts; do
+        safe-delete "/etc/facter/facts.d/${i}"
+    fi
+
+    fail-loud "Removed StackStorm installer files. Please run bootstrap again"
+}
+
+# determine if a user has requested to not fully uninstall the AIO, but
+# rather return the system to a clean state with the bits still installed
+#
+# returns boolean
+#
+# @ user-requested-installer-reset
+user-requested-installer-reset() {
+    if variable-set $ST2_CLEAN;
+    then true;
+    else false;
+    fi
+}
+
+# main function
+#
+# @ init-uninstall-st2
+init-uninstall-st2() {
+    if ! is-root; then
+        show-help
+        fail-loudly "Please run with root permissions"
+    fi
+
+    if user-requested-installer-reset;
+    then reset-installer
+    fi
+}
+
+init-uninstall-st2

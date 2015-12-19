@@ -1,0 +1,187 @@
+#!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
+
+# determines the type of ref based on dir and ref
+#
+# returns string
+#
+# @ git-ref-type <ref> <dir>
+git-ref-type() {
+    local _ref=
+    local _dir=
+    _ref="${1:?}"
+    _dir="${2:?}"
+
+    if git-ref-is-branch $_ref $_dir;
+    then echo "branch"
+    elif git-ref-is-tag $_ref $_dir;
+    then echo "tag"
+    else echo "unknown"
+    fi
+}
+
+# determines if a git ref is a branch
+#
+# returns boolean
+#
+# @ git-ref-is-branch <ref> <dir>
+git-ref-is-branch() {
+    local _ref=
+    local _dir=
+    local _cmd=
+    _ref="${1:?}"
+    _dir="${2:?}"
+    _cmd="git show-ref -q --verify 'refs/heads/${_ref}' 2>/dev/null;"
+
+    pushd-quiet $_dir
+
+    if command-successfully-run $_cmd;
+    then true;
+    else false;
+    fi
+
+    pushd-stepback
+}
+
+# determines if a git ref is a tag
+#
+# returns boolean
+#
+# @ git-ref-is-tag <ref> <dir>
+git-ref-is-branch() {
+    local _ref=
+    local _dir=
+    local _cmd=
+    _ref="${1:?}"
+    _dir="${2:?}"
+    _cmd="git show-ref -q --verify 'refs/tags/${_ref}' 2>/dev/null;"
+
+    pushd-quiet $_dir
+
+    if command-successfully-run $_cmd;
+    then true;
+    else false;
+    fi
+
+    pushd-stepback
+}
+
+# safely clone a repo to a new directory by making a backup
+# of a directory if it already exists
+#
+# @ safe-git-clone <repo> <dest> [branch]
+safe-git-clone() {
+    local _repo=
+    local _dest_dir=
+    local _branch=
+    _repo="${1:?}"
+    _dest_dir="${2:?}"
+    _branch="${3:-master}"
+
+    if directory-exists $_dest_dir;
+    then
+        safe-copy $_dest_dir "${_dest_dir}.$(current-epoch)"
+        ensure-directory-absent $_dest_dir
+    fi
+
+    git-clone $_repo $_dest_dir $_branch
+}
+
+# perform a git clone with sane defaults
+#
+# @ git-clone <repo> <dest> [branch]
+git-clone() {
+    local _repo=
+    local _dest_dir=
+    local _branch=
+    _repo="${1:?}"
+    _dest_dir="${2:?}"
+    _branch="${3:-master}"
+
+    _cmd="$(git-cmd clone ${_repo} ${_dest_dir} -b ${_branch})"
+    execute-string $_cmd
+}
+
+# perform a git clone with no apologies. destroys anything in its path
+#
+# @ destructive-git-clone <repo> <dest> [branch]
+destructive-git-clone() {
+    local _repo=
+    local _dest_dir=
+    local _branch=
+    _repo="${1:?}"
+    _dest_dir="${2:?}"
+    _branch="${3:-master}"
+
+    ensure-directory-absent $_dest_dir
+    git-clone $_repo $_dest_dir $_branch
+}
+
+# updates and cleans a git repository from upstream, and resets hard
+# to clean state from upstream
+#
+# @ git-update-and-clean-hard <dir> [branch]
+git-update-and-clean-hard() {
+    local _dir=
+    local _branch=
+    _dir="${1:?}"
+    _branch="${2:-master}"
+
+    git-update-and-clean $_dir
+    git-hard-reset $_dir $_branch
+}
+
+# updates and cleans a git repository from upstream
+#
+# @ git-update-and-clean <dir>
+git-update-and-clean() {
+    local _dir=
+    _dir="${1:?}"
+
+    pushd-quiet $_dir
+
+    _fetch_cmd="$(git-cmd) fetch --all"
+    debug "'git-update-and-clean': in directory ${_dir}"
+    debug "'git-update-and-clean': running command: ${_fetch_cmd}"
+    execute-string $_fetch_cmd
+
+    _gc_cmd="$(git-cmd) gc --auto"
+    debug "'git-update-and-clean': running command ${_gc_cmd}"
+    execute-string $_gc_cmd
+
+    pushd-stepback
+}
+
+# performs a hard reset of a git repo based on passed branch
+#
+# @ git-hard-reset <dir> [branch]
+git-hard-reset() {
+    local _dir=
+    local _branch=
+    local _cmd=
+    _dir="${1:?}"
+    _branch="${2:-master}"
+
+    pushd-quiet $_dir
+    debug "'git-hard-reset': in directory ${_dir}"
+
+    _cmd="$(git-cmd) reset --hard ${_branch}"
+    debug "'git-hard-reset': running '${_cmd}'"
+    execute-string $_cmd
+
+    pushd-stepback
+}
+
+git-cmd() {
+    local _cmd=
+    _cmd="git ${@}"
+
+    if executable-in-path "git";
+    then
+        debug "'git-cmd': running command ${_cmd}"
+        execute-string $_cmd
+    else fail-loud $(unable-to-find-bootstrap-file git)
+    fi
+}

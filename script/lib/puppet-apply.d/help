@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
+
+# Show help output for AIO installer
+#
+# @ show-help
+show-help() {
+    echo ""
+    echo "StackStorm All-in-one Installer - System Update"
+    echo "Usage: $0 [OPTION]..."
+    echo
+    echo "  -e,  --environment,      Set the st2workroom environment"
+    echo "  -s,  --st2-puppet-branch Set the upstream puppet-st2 branch"
+    echo "  -h,  --help              This help screen"
+    echo "  -t,  --trace             Execute with shell tracing enabled"
+    echo ""
+    echo "Environment Variables:"
+    echo "  ENV=                     Set the st2workroom environment"
+    echo "  ST2_PUPPET_BRANCH=       Set the upstream puppet-st2 branch"
+    echo
+    st2-support-contact-information
+}
+
+# warn the user that a requested environment is not valid
+#
+# @ warn-invalid-environment
+warn-invalid-environment() {
+    local _requested_env=
+    local _actual_env=
+    local _sleep=
+    local _support_verbose=
+    _requested_env="${1:?}"
+    _actual_env="${2:?}"
+    _sleep="${3:5}"
+    _support_verbose="$(st2-support-contact-information)"
+
+    verbose "********************************************************"
+    verbose " Heads up friend! Just want let you know...  "
+    verbose ""
+    verbose " Once upon a time, as recently as 5 seconds ago, this machine"
+    verbose " was asked to run the AIO installer commands in the ${_requested_env}"
+    verbose " environment. Alas, as much as it try, it was not possible"
+    verbose ""
+    verbose " But, as the machine came to learn, it was not all doom and"
+    verbose " gloom! This could happen for any number of reasons, and all it had to"
+    verbose " do is figure out which one!? Can you help?!"
+    verbose ""
+    verbose " * Is the branch name spelled correctly?"
+    verbose " * If you personally or someone you know has been working"
+    verbose "   on a feature, and you merged and/or deleted the branch"
+    verbose ""
+    verbose " In the end, machine realized there was another path to take"
+    verbose " and instead continued on using the **${_actual_env}** branch"
+    verbose ""
+    verbose " TL;DR: The machine could not find the requested branch ${_requested_env}"
+    verbose "        Falling back to ${_actual_env}"
+    verbose ""
+    verbose " Maybe none of this applies to you, consider getting ahold of us"
+    verbose " and letting us know. We'd like to fix it."
+    verbose ""
+    verbose $_support_info
+    verbose "********************************************************"
+
+    debug "'warn-invalid-environment': sleeping for ${_sleep} seconds."
+    sleep $_sleep
+}

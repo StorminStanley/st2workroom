@@ -1,42 +1,44 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 #
 # To use, add to script
 #
 # DIR=$( dirname "$(readlink -f "$0")" )
 # . $DIR/shared-functions
+set -e
+set -u
+set -o pipefail
 
-# On hosts that use RH Software collections, ensure that
-# the profile is up and ready to go to source ruby.
-if [ -f /opt/rh/ruby193/enable ]; then
-  . /opt/rh/ruby193/enable
-fi
+init-shared-functions() {
+    DIR=$( dirname "$(readlink -f "$0")" )
 
-PROJECT_ROOT=/opt/puppet
-LOG_FILE=/var/log/puppet.log
-NODE=$(hostname -s);
-PATH=${PROJECT_ROOT}/bin:/usr/local/bin:$PATH
+    # Load up initial configuration
+    source $DIR/lib/config
 
-# From http://www.novell.com/coolsolutions/feature/11251.html
-OS=`uname -s`
-REV=`uname -r`
-MACH=`uname -m`
+    # Bash Helpers
+    source $DIR/lib/helpers/string-helpers
+    source $DIR/lib/helpers/file-helpers
+    source $DIR/lib/helpers/logging-helpers
 
-if [ "$OS" = "OpenBSD" ]; then
-    ARCH=`arch -s`
-    BUNDLE_PATH='bundle20'
-elif [ "$OS" = "Linux" ]; then
-	KERNEL=`uname -r`
-  BUNDLE_PATH='bundle'
-	if [ -f /etc/redhat-release ]; then
-		DIST='RedHat'
-		REV=`cat /etc/redhat-release | sed s/.*release\ // | sed s/\ .*//`
-    MAJORVER=`echo $REV | cut -d '.' -f1`
-	elif [ -f /etc/SUSE-release ]; then
-		DIST=`cat /etc/SUSE-release | tr "\n" ' '| sed s/VERSION.*//`
-		REV=`cat /etc/SUSE-release | tr "\n" ' ' | sed s/.*=\ //`
-	elif [ -f /etc/debian_version ] ; then
-		DIST="Debian"
-		REV="`cat /etc/debian_version`"
-    CODENAME=`/usr/bin/lsb_release -c -s`
-	fi
-fi
+    # OS Helpers
+    source $DIR/lib/helpers/os-helpers
+    source $DIR/lib/helpers/debian-helpers
+    source $DIR/lib/helpers/redhat-helpers
+
+    # Tool Helpers
+    source $DIR/lib/helpers/rsync-helpers
+    source $DIR/lib/helpers/puppet-helpers
+    source $DIR/lib/helpers/git-helpers
+
+    # Language Helpers
+    source $DIR/lib/helpers/bash-helpers
+    source $DIR/lib/helpers/ruby-helpers
+
+    # Project Helpers
+    source $DIR/lib/helpers/project-helpers
+    source $DIR/lib/helpers/help-helpers
+
+    # Set the path to include local binaries for AIO
+    export PATH="$(project-root)/bin:$PATH"
+}
+
+init-shared-functions

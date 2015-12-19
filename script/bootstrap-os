@@ -1,36 +1,41 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 set -e
-
-if [ $(id -u) -ne 0 ]; then
-    echo "Please run with root privileges"
-    exit 1
-fi
+set -u
+set -o pipefail
 
 DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
-# Check to see if bootstrap has been done already...
-# Bootstrap is responsible for retrieving core utilities:
-#  * git
-#  * wget
-#  * ruby
-#  * bundler
+# start the operating system bootstrap. Ensures that any generic OS
+# tasks are taken care of, and detect/load any OS family scripts to also
+# process as part of bootstrap phase
 #
-# Everything else beyond this is handled within the project
-#
-if [ ! -f /etc/st2workroom-bootstrapped ]; then
-    if [ "$OS" = "Linux" ]; then
-        if [ "$DIST" = "RedHat" ]; then
-            $DIR/bootstrap-redhat
-        elif [ "$DIST" = "Debian" ]; then
-            $DIR/bootstrap-debian
-        else
-            echo "Unsupported OS."
-            exit 1
-        fi
-    elif [ "$OS" = "OpenBSD" ]; then
-        $DIR/bootstrap-openbsd
-    fi
-fi
+# @ init-bootstrap-os
+init-bootstrap-os() {
+    local _os_family_preflight_script=
+    local _lock_file=
+    _os_family_preflight_script="$(project-root)/script/bootstrap-os-$(os-family)"
+    _lock_file=$(installer-bootstrap-lock-file)
 
-touch /etc/st2workroom-bootstrapped
+    if ! is-root; then
+        show-help
+        fail-loudly $(error-run-with-root-permissions)
+    fi
+
+    if file-exists $_os_family_preflight_script
+        && file-does-not-exist $_lock_file;
+    then
+        execute-string $_os_family_preflight_script
+        ensure-lock-file-exists $_lock_file
+    elif file-exists $_os_family_preflight_script
+        && force-mode;
+    then execute-string $_os_family_preflight_script;
+    elif file-exists $_lock_file;
+    then
+        verbose-loudly $(notice-lock-file-exists)
+    else
+        fail-loudly $(error-what-even-happened)
+    fi
+}
+
+init-bootstrap-os

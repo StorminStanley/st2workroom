@@ -1,22 +1,38 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
 
 DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
-if [ -f /etc/profile.d/st2.sh ]; then
-  . /etc/profile.d/st2.sh
-fi
-
-retry_message() {
-    ST2_DATACENTER=`facter datacenter`
-    if [ "$ST2_DATACENTER" = "vagrant" ]; then
-        KICK_COMMAND="vagrant provision st2"
-    else
-        if [ -e /usr/bin/update-system ]; then
-          KICK_COMMAND="update-system"
-        else
-          KICK_COMMAND="curl -sSL http://stackstorm.com/install.sh | sudo sh"
+# Main entry point to check if st2 is installed properly
+#
+# @ init-check-st2-ok
+init-check-st2-ok() {
+    if executable-exists 'st2'; then
+        if run-st2-core-local-check; then ok_message;
+        else retry-message; exit 1;
         fi
+    else retry-message; exit 2;
+    fi
+}
+
+# shows a retry message in the event of a failure to boostrap,
+# encouraging the user to try-again on convergence.
+#
+# @ retry-message
+retry-message() {
+    local _st2_datacenter=
+    local _kick_command=
+    _st2_datacenter="$(
+    _st2_datacenter="$(facter datacenter)"
+
+    if string-equal $_st2_datacenter "vagrant";
+    then _kick_command="$(kick-command-vagrant)"
+    elif update-system-command-is-present;
+    then _kick_command="$(kick-command-update-system)"
+    else _kick_command="$(kick-command-bootstrap-st2)"
     fi
 
     echo ""
@@ -24,47 +40,21 @@ retry_message() {
     echo "Don't worry! Occasionally something goes wrong, and you just have"
     echo "to kick the tires a bit. Try re-provisioning by executing the command:"
     echo ""
-    echo "${KICK_COMMAND}"
+    echo "${_kick_command}"
     echo ""
     echo "If you don't happen to get the 'OK' after that, give us a shout!"
     echo "We don't want to leave you hanging! Come find your favorite way to"
     echo "contact us, and we'll get you going faster than you can say..."
     echo "AUTOMATE ALL THE THINGS!"
     echo
-    echo "Email: support@stackstorm.com"
-    echo "IRC: irc.freenode.net/#stackstorm"
-    echo "Slack: http://stackstorm.com/community-signup"
-    echo
-}
-
-
-
-
-
-prompt_for_credentials() {
-    echo ""
-    echo "Things are looking promising! We've installed all the things, and need to"
-    echo "run a bit of a self-diagnostic to make sure everything is setup properly"
-    echo ""
-    echo "Looks like you've installed via sudo, and not as the root user (Good for you!)"
-    echo "You will need to enter the password for the user ${USER} below. This will run:"
-    echo ""
-    echo "st2 auth ${USER} -t"
-    echo ""
-    echo "This command generates a token for you. This command will use the configured"
-    echo "authentication integration (Typically PAM or LDAP auth). This depends on how"
-    echo "on how you have installed/configured the system. You can learn more about these"
-    echo "topics at:"
-    echo ""
-    echo "  * Tokens - http://docs.stackstorm.com/cli.html"
-    echo "  * Authentication - http://docs.stackstorm.com/config/authentication.html"
-    echo ""
-    echo "Otherwise, please enter your password now..."
+    st2-support-contact-information
 }
 
 ok_message() {
-    ST2_IP=`facter st2_ip`
-    ST2_FQDN=`facter fqdn`
+    local _st2_ip=
+    local _st2_fqdn=
+    _st2_ip="$(facter st2_ip)"
+    _st2_fqdn="$(facter fqdn)"
 
     echo ""
     echo ""
@@ -78,8 +68,8 @@ ok_message() {
     echo "  st2 is installed and ready to use."
     echo ""
     echo "First time starting this machine up?"
-    echo "Visit https://${ST2_IP}/setup to configure StackStorm"
-    echo "Otherwise, head to https://${ST2_FQDN} to access the WebUI"
+    echo "Visit https://${_st2_ip}/setup to configure StackStorm"
+    echo "Otherwise, head to https://${_st2_fqdn} to access the WebUI"
     echo ""
     echo "If you would like to use the CLI interface, you will need"
     echo "to ensure that StackStorm environment variables are properly"
@@ -94,29 +84,7 @@ ok_message() {
     echo "* Documentation  - https://docs.stackstorm.com"
     echo "* Knowledge Base - https://stackstorm.reamaze.com"
     echo ""
-    echo "Thanks for installing StackStorm! Come visit us in our Slack Channel"
-    echo "and tell us how it's going. We'd love to hear from you!"
-    echo "http://stackstorm.com/community-signup"
+    st2-support-contact-information
 }
 
-# Only run the check for StackStorm in the event that it actually exists
-if [ -f /usr/bin/st2 ]; then
-  # Check to see if the current user is root, and if not, have them authenticate
-  if [ "${USER}" != 'root' ] || [ ! -n $ST2_AUTH_TOKEN ]; then
-    prompt_for_credentials
-    export ST2_AUTH_TOKEN=$(st2 auth $USER -t)
-  fi
-
-  # Run the actual check
-  st2 run core.local date &> /dev/null
-  if [ $? -eq 0 ]; then
-    ok_message
-    exit 0
-  else
-    retry_message
-    exit 1 # Failure with the self-check
-  fi
-else
-  retry_message
-  exit 2 # StackStorm is not installed on the system
-fi
+init-check-st2-ok

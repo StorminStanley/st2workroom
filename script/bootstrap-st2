@@ -1,55 +1,372 @@
-#!/usr/bin/env sh
-# This stand-alone script should be able to be used to kickstart a new node
+#!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
 
-PROJECT_ROOT=/opt/puppet
+STABLE_AIO_VERSION="1.0.0"
+PROJECT_ROOT=${AIO_PROJECT_ROOT:-/opt/puppet}
+LOG_FILE=${AIO_LOG_FILE:-/var/log/puppet.log}
+AIO_VERSION=${AIO_VERSION:-master}
 
-if [ $(id -u) -ne 0 ]; then
-    echo "Please run with root privileges"
-    exit 1
-fi
+# StackStorm AIO Bootstrap Script
+#
+# This script contains a subset of functions necessary to have the script
+# call and invite friends and family to the system and sources their functions
+# As such, a few functions may be incomplete of mirrored, but are overwritten
+# by the sourcing
 
-### CLI Parsing
-show_help() {
-  echo "StackStorm All-in-one Installer"
-  echo "Usage: $0 [OPTION]..."
-  echo
-  echo "  -a,  --answers     Supply installer with an answer file"
-  echo "  -h,  --help        This help screen"
-  echo
+
+# Returns the default / stable version of the AIO bootstrap.
+# change this value only when requesting to bump the default/production
+# version of the AIO installer.
+#
+# returns string
+#
+# @ default-aio-version
+stable-aio-version() {
+    echo $STABLE_AIO_VERSION
 }
 
-ANSWER_FILE=""
+project-root() {
+    echo $PROJECT_ROOT
+}
 
+
+# main entry point to bootstrap StackStorm AIO
+#
+# @ init-bootstrap-st2
+init-bootstrap-st2() {
+    if ! is-root; then
+        echo "Please re-run with root privileges"
+        show-help
+        exit 1
+    fi
+
+    install-git
+    clone-aio-installer-from-github
+    source-aio-helpers
+
+    # ---- after this point, use upstream helpers and commands ----
+
+    check-for-os-compatability
+    set-puppet-role-to-st2
+    ensure-hubot-is-not-installed-if-requested-by-user
+    setup-answer-file-if-supplied-by-user
+
+    run-bootstrap-os
+    ensure-system-has-all-dependencies
+    run-puppet-apply
+    check-st2-health
+}
+
+# show all help information for the bootstrap script
+#
+# @ show-help
+show-help() {
+    echo ""
+    echo "StackStorm All-in-one Installer"
+    echo "Usage: $0 [OPTION]..."
+    echo
+    echo "  -e,  --environment,      Set the st2workroom environment"
+    echo "  -b,  --branch,           Same as --environment (DEPRECATED)"
+    echo "  -s,  --st2-puppet-branch Set the upstream puppet-st2 branch"
+    echo "  -h,  --help              This help screen"
+    echo "  -t,  --trace             Execute with shell tracing enabled"
+    echo ""
+    echo "Environment Variables:"
+    echo "  ENV=                     Set the st2workroom environment"
+    echo "  ST2_PUPPET_BRANCH=       Set the upstream puppet-st2 branch"
+}
+
+# downloads the StackStorm AIO installer from upstream
+clone-aio-installer-from-github() {
+    local _repo=
+    local _dst_dir=
+    _repo="https://github.com/StackStorm/st2workroom"
+    _dst_dir=$(project-root)
+
+    safe-git-clone $_repo $_dst_dir
+}
+
+# load all AIO helpers once downloaded from upstream
+#
+# @ source-aio-helpers
+source-aio-helpers() {
+    source "$(project-root)/script/shared-functions"
+}
+
+# detect the version of the AIO installer to process
+aio-version-to-install() {
+    if variable-set $BRANCH;
+    then echo $BRANCH;
+    else stable-aio-version;
+    fi
+}
+
+# install git on a debian system
+#
+# @ install-git-on-debian
+install-git-on-debian() {
+    apt-get install -y git
+}
+
+# install git on a RHEL system
+#
+# @ install-git-on-redhat
+install-git-on-redhat() {
+    yum install -y git-core
+}
+
+# attempts to detect and install git on an OS
+#
+# @ install-git
+install-git() {
+    if dist-is-redhat;
+    then install-git-on-redhat
+    elif dist-is-debian;
+    then install-git-on-debian
+    else
+        echo "Unable to install git for your OS $(os-family)"
+    fi
+}
+
+# safely clone an upstream repository. If the directory already exists
+# then make a backup. Likewise, ensure that the parent directory requested
+# exists so git does not have a bad time and bail out.
+#
+# @ safe-git-clone <repo> <dest_dir> <branch>
+safe-git-clone() {
+    local _repo=
+    local _dest_dir=
+    local _branch=
+    local _parent_dir=
+    _parent_dir=$(dirname $_dest_dir)
+    _repo="${1:?}"
+    _dest_dir="${2:?}"
+    _branch="${3:-master}"
+
+    if directory-exists $_dest_dir;
+    then
+        safe-copy $_dest_dir "${_dest_dir}.$(current-epoch)"
+        ensure-directory-absent $_dest_dir
+    fi
+
+    ensure-directory-exists $_parent_dir
+    git clone $_repo $_dest_dir -b $_branch
+}
+
+# returns the current epoch at run-time
+#
+# returns string
+#
+# @ current-epoch
+current-epoch() {
+    echo $(date +%s)
+}
+
+# determines if has root permissions
+#
+# returns boolean
+#
+# @ is-root
+is-root() {
+    if [[ $(id -u) -eq 0 ]];
+    then true;
+    else false;
+    fi
+}
+
+# detect if a directory exists on the file-system
+#
+# returns boolean
+#
+# @ directory-exists
+directory-exists() {
+    if [[ -d "${1:?}" ]];
+    then true;
+    else false;
+    fi
+}
+
+# safe wrapper to remove a directory. contains a series
+# of logic checks to ensure specific directories are
+# not deleted.
+#
+# returns boolean
+#
+# @ ensure-directory-absent <dir>
+ensure-directory-absent() {
+    local _dir=
+    _dir="${1:?}"
+
+    if directory-exists $_dir;
+    then recursive-rm $_dir;
+    else true;
+    fi
+}
+
+# Recursively deletes a file or directory.
+# DANGEROUS! No safeguards.
+#
+# @ recursive-rm <dir>
+recursive-rm() {
+    rm -rf "${1:?}"
+}
+
+
+# detect if the OS is a RHEL system
+#
+# returns boolean
+#
+# @ dist-is-redhat
+dist-is-redhat() {
+    if os-is-linux
+        && file-exists "/etc/redhat-release";
+    then true;
+    else false;
+    fi
+}
+
+# detect if the OS is a Debian system
+#
+# returns boolean
+#
+# @ dist-is-debian
+dist-is-debian() {
+    if os-is-linux
+        && file-exists "/etc/debian_version";
+    then true;
+    else false;
+    fi
+}
+
+# detect if the OS is a Linux system
+#
+# returns boolean
+#
+# @ os-is-linux
+os-is-linux() {
+    if string-equals $(os-family) "Linux";
+    then true;
+    else false;
+    fi
+}
+
+# return the OS family version
+#
+# returns string
+#
+# @ os-family
+os-family() {
+    echo $(uname -s)
+}
+
+# Safely copy a directory from src to dst, ensuring that the dst
+# is empty. If it exists, move what is there out of the way before
+# continuing
+#
+# @ safe-copy <src> <dst>
+safe-copy() {
+    local _source_dir=
+    local _dest_dir=
+    _source_dir="${1:?}"
+    _dest_dir="${2:?}"
+
+    if directory-exists $_dest_dir;
+    then
+        safe-copy $_dest_dir "${_dest_dir}.$(current-epoch)"
+    fi
+
+    ensure-directory-absent $_dest_dir
+    recursive-copy $_source_dir $_dest_dir
+    ensure-directory-absent $_backup_dir
+}
+
+
+# ensure that a directory is absent, with safeguards to prevent
+# a horrible, horrible mistake
+#
+# @ ensure-directory-absent <dir>
+ensure-directory-absent() {
+    local _dir=
+    _dir="${1:?}"
+
+    if string-equals $_dir "/";
+    then
+        error "Will not continue... deleting / is not allowed directly"
+        exit 1
+    fi
+
+    if directory-exists $_dir;
+    then recursive-rm $_dir;
+    else true;
+    fi
+}
+
+# Recursively ensure a directory exists.
+#
+# @ recursive-mkdir <dir>
+recursive-mkdir() {
+    mkdir -p "${1:?}"
+}
+
+# safe wrapper to create a directory. skips unnecessary checks
+# by doing some prodding around before it blindly creates a directory
+#
+# returns boolean
+#
+# @ ensure-directory-exists <dir>
+ensure-directory-exists() {
+    if directory-does-not-exist "${1:?}"
+    then recursive-mkdir;
+    else true;
+    fi
+}
+
+project-root() {
+    if variable-set $PROJECT_ROOT;
+    then echo $PROJECT_ROOT
+    else echo "/opt/puppet"
+    fi
+}
+
+
+# Main entry point for script
 while :; do
     case $1 in
         -h|-\?|--help)
             show_help
             exit
             ;;
-        -a|--answers)
+        -d|--debug)
+            DEBUG=true
+            shift
+            continue
+            ;;
+        -e|--environment)
             if [ -n "$2" ]; then
-                ANSWER_FILE=$2
-                if [ ! -f ${ANSWER_FILE} ]; then
-                    printf "ERROR: Answers file ${ANSWER_FILE} doesn't exist\n" >&2
-                    exit 2
-                fi
+                ENV=$2
                 shift 2
                 continue
             else
-                printf 'ERROR: "--answers" requires a non-empty option argument.\n' >&2
-                exit 1
+                printf 'ERROR "--environment" requires a non-empty argument.\n'
             fi
             ;;
-        --answers=?*)
-            ANSWER_FILE=${1#*=}
-            ;;
-        --answers=)
-            printf 'ERROR: "--answers" requires a non-empty option argument.\n' >&2
-            exit 1
+        -s|--st2-puppet-branch)
+            if [ -n "$2" ]; then
+                PUPPET_ST2_BRANCH=$2
+                shift 2
+                continue
+            else
+                printf 'ERROR "--st2-puppet-branch" requires a non-empty argument.\n'
+            fi
             ;;
         -b|--branch)
             if [ -n "$2" ]; then
-                BRANCH=$2
+                ENV=$2
+                printf 'Please make note, "--branch" variable is deprecated.\n'
+                printf 'Instead, change your entry to "--environment".\n'
+                printf 'Will continue for now, but please update.\n'
                 shift 2
                 continue
             else
@@ -58,18 +375,24 @@ while :; do
             fi
             ;;
         --branch=?*)
-            BRANCH=${1#*=}
+            ENV=${1#*=}
             ;;
         --branch=)
             printf 'ERROR: "--branch" requires a non-empty option argument.\n' >&2
             exit 1
+            ;;
+        -t|--trace)
+            TRACE=true
+            set -x
+            shift
+            continue
             ;;
         --)
             shift
             break
             ;;
         -?*)
-            printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
+            printf "WARN: unknown option ($1)... ignoring.\n"
             ;;
         *)
             break
@@ -77,63 +400,4 @@ while :; do
     shift
 done
 
-### Installation Steps
-# Install Pre-req for git
-if [ -f /usr/bin/apt-get ]; then
-  apt-get install -y git
-fi
-
-if [ -f /usr/bin/yum ]; then
-  yum install -y git-core
-fi
-
-if [ ! -d ${PROJECT_ROOT}/.git ]; then
-  # Backup the directory in the event that masterless setup goes south
-  if [ -d ${PROJECT_ROOT} ]; then
-    mv ${PROJECT_ROOT} ${PROJECT_ROOT}.old
-  fi
-  git clone https://github.com/StackStorm/st2workroom ${PROJECT_ROOT}
-fi
-
-# If a user provides a branch, check it out
-if [ -n "$BRANCH" ]; then
-    git --git-dir=${PROJECT_ROOT}/.git --work-tree=${PROJECT_ROOT} checkout ${BRANCH}
-fi
-
-# Ability to disable hubot, drop to long-term setting for installer.
-if [ ! -z "$DISABLE_HUBOT" ]; then
-  echo "hubot: false" >> ${PROJECT_ROOT}/hieradata/workroom.yaml
-fi
-
-# Create Facter sink
-if [ ! -d /etc/facter/facts.d ]; then
-  echo "Setting up facter.d..."
-  mkdir -p /etc/facter/facts.d
-fi
-
-echo "role=st2" > /etc/facter/facts.d/role.txt
-
-# Ensure that we're installing on a supported OS version
-${PROJECT_ROOT}/script/check-os-compat
-
-# Start up the st2 bootstrap
-${PROJECT_ROOT}/script/bootstrap-os
-
-# If a user provides an answer file, put it in the right place
-if [ -n "$ANSWER_FILE" ]; then
-  # Get rid of any answers file that may be there.
-  if [ -f "${PROJECT_ROOT}/hieradata/answers.yaml" ]; then
-    rm -rf ${PROJECT_ROOT}/hieradata/answers.yaml
-  fi
-
-  # Put the answers file in the right place
-  cp $ANSWER_FILE ${PROJECT_ROOT}/hieradata/answers.yaml
-fi
-
-# Converge the system
-${PROJECT_ROOT}/script/puppet-apply
-
-# Check to see if StackStorm is running properly
-if [ -z "$SKIP_OK_CHECK" ]; then
-  ${PROJECT_ROOT}/script/check-st2-ok
-fi
+init-bootstrap-st2

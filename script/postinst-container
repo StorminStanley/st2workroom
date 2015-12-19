@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source $DIR/shared-functions
-
-# Get rid of Puppet Manifests
-rm -rf $PROJECT_ROOT /etc/puppet

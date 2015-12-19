@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
+
+DIR=$( dirname "$(readlink -f "$0")" )
+. $DIR/shared-functions
+
+# start the debian operating system bootstrap. Ensures that any RedHat OS
+# tasks are taken care of
+#
+# @ init-bootstrap-os-linux-redhat
+init-bootstrap-os-linux-redhat() {
+    local _common_packages=
+    local _majorver_packages=
+    local _python_packages=
+    local _ruby_packages=
+    local _git_packages=
+    _common_packages="unzip curl augeas augeas-devel"
+
+    yum-update
+    install-epel
+    yum-groupinstall "Development Tools"
+
+    if rhel-6; then
+        _majorver_packages="nscd nc"
+        _ruby_packages="ruby193 ruby193-ruby-devel"
+        _python_packages="python27 python27-pip python27-virtualenv python27-devel"
+        _git_packages="git"
+
+        install-scl
+    elif rhel-7; then
+        _majorver_packages="gperftools-libs bind-utils net-tools"
+        _ruby_packages="ruby ruby-devel rubygem-bundler"
+        _git_packages="git-core"
+
+        enable-cr
+    fi
+
+    _languague_packages="${_ruby_packages} ${_python_packages}"
+    _tool_packages="${_common_packages} ${_augeas_packages} ${_git_packages}"
+    _packages="${_languague_packages} ${_tool_packages}"
+
+    yum-install-packages $_packages
+    yum-clean
+}
+
+# Main init
+init-bootstrap-os-linux-redhat

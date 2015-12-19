@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
+
+DIR=$( dirname "$(readlink -f "$0")" )
+. $DIR/shared-functions
+
+# start the debian operating system bootstrap. Ensures that any debian OS
+# tasks are taken care of
+#
+# @ init-bootstrap-os-linux-debian
+bootstrap-os-linux-debian() {
+    local _common_packages=
+    local _augeas_packages=
+    local _ruby_packages=
+    local _dist_packages=
+    local _packages=
+    _common_packages="unzip wget ruby ruby-dev git unzip wget gnupg2 git"
+    _augeas_packages="libaugeas-dev pkg-config augeas-tools"
+
+    if ! os-is-ubuntu; then
+        _ruby_packages="ruby ruby-dev"
+        _dist_packages="bundler apt-transport-https"
+    fi
+
+    _packages="${_common_packages} ${_augeas_packages} ${_ruby_packages} ${_dist_packages}"
+
+    install-apt-packages $_packages
+    install-bundler-if-needed
+}
+
+bootstrap-os-linux-debian

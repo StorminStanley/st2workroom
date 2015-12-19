@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
+
+# rsync a directory from *src* to *dst*, automatically ensuring a full sync
+# and deleting stale files if they are removed from *src*
+#
+# @ rsync-dir <src> <dst>
+rsync-dir() {
+    local _args_array=
+    local _arg_len=
+    local _src_dir=
+    local _dst_dir=
+    local _extra_args=
+    local _default_args=
+    local _debug_args=
+    local _log_dest=
+    local _cmd=
+    local _args=
+    _args_array=($@)
+    _arg_len=${#_args_array[@]}
+    _src_dir="${1:?}"
+    _dst_dir="${2:?}"
+    _extra_args="${@:3:$_args_len}"
+    _default_args="-arh --delete"
+
+    if log-level-debug;
+    then
+        _debug_args="-v";
+        _log_dest="$(send-output-to-file-and-stdout-to-log-file)"
+    else
+        _log_dest="$(send-all-output-to-log-file)"
+    fi
+
+    _args="${_default_args} ${_debug_args} ${_extra_args}"
+    _cmd="rsync ${_args} ${_log_dest}"
+
+    debug "'rsync-dir': executing command ${_cmd}"
+    execute-string $_cmd
+}

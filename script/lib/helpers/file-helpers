@@ -1,0 +1,274 @@
+#!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
+
+# Creates and returns a random temporary directory
+#
+# returns string
+#
+# @ random-tmpdir
+random-tmpdir() {
+    echo $(mktemp -d)
+}
+
+# Recursively ensure a directory exists.
+#
+# @ recursive-mkdir <dir>
+recursive-mkdir() {
+    local _dir=
+    _dir="${1:?}"
+
+    debug "'recursive-mkdir': creating dir $_dir"
+    mkdir -p $_dir
+}
+
+# Recursively deletes a file or directory.
+# DANGEROUS! No safeguards.
+#
+# @ recursive-rm <dir>
+recursive-rm() {
+    local _file=
+    _file="${1:?}"
+
+    debug "*** 'recursive-rm': removing $_file ***"
+    rm -rf "${1:?}"
+}
+
+# safe wrapper to remove a directory. contains a series
+# of logic checks to ensure specific directories are
+# not deleted.
+#
+# returns boolean
+#
+# @ ensure-directory-absent <dir>
+ensure-directory-absent() {
+    local _dir=
+    local _protected_directories=
+    local _sys_dirs=
+    _dir="${1:?}"
+    _unpack_system_dirs="declare -a $_sys_dirs=$(system-directories)"
+    execute-string $_unpack_system_dirs
+
+    for $_sys_dir in $_sys_dirs;
+    do
+        if string-equals $_dir $_sys_dir;
+        then fail-loudly $(abort-protected-dir ${_dir})
+        fi
+    done
+
+    if directory-exists $_dir;
+    then recursive-rm $_dir;
+    else true;
+    fi
+}
+
+# Let user know they've violated the rules! Cannot delete this directory!
+# They should know, but, it's fine because it happens. Safeguards are
+# because we :heart: each other.
+#
+# exits when called
+#
+# abort-protected-directory <dir>
+abort-protected-directory() {
+    local _dir="${1:?}"
+
+    cat << EOL
+*****************************************************
+Aborting. Attempted to delete protected directory.
+
+* ${_dir}
+
+Please check your code to make sure its safe for use.
+*****************************************************
+
+:heart:
+EOL
+
+    exit 1
+}
+
+# safe wrapper to create a directory. skips unnecessary checks
+# by doing some prodding around before it blindly creates a directory
+#
+# returns boolean
+#
+# @ ensure-directory-exists <dir>
+ensure-directory-exists() {
+    local _dir=
+    _dir="${1:?}"
+
+    if directory-does-not-exist $_dir;
+    then recursive-mkdir $_dir;
+    else true;
+    fi
+}
+
+# logic check to determine if a directory is absent on the fs
+# inverse of `directory-exists`
+#
+# returns boolean
+#
+# @ directory-does-not-exist <dir>
+directory-does-not-exist() {
+    ! directory-exists "${1:?}"
+}
+
+# logic check to determine if a directory exists on the fs
+# returns boolean
+#
+# @ directory-exists <dir>
+directory-exists() {
+    if [[ -d "${1:?}" ]];
+    then true;
+    else false;
+    fi
+}
+
+# recursively copy files or directories from one place to
+# another.
+#
+# @ recursive-copy <src> <dst>
+recursive-copy() {
+    local _src=
+    local _dst=
+    _src="${1:?}"
+    _dst="${2:?}"
+
+    debug "'recursive-copy': from ${_src} to ${_dst}"
+    cp -R $_src $_dst
+}
+
+# copy a file or directory from one place to another. automatically
+# backs up any file if it exists with a epoch timestamp.
+#
+# @ safe-copy /tmp/installer /opt/stackstorm/installer
+safe-copy() {
+    local _source_dir=
+    local _dest_dir=
+    local _backup_dir=
+    _source_dir="${1:?}"
+    _dest_dir="${2:?}"
+    _backup_dir="${_dest_dir}.$(current-epoch)"
+
+    if directory-exists $_dest_dir;
+    then
+        recursive-copy $_dest_dir $_backup_dir
+    fi
+
+    ensure-directory-absent $_dest_dir
+    recursive-copy $_source_dir $_dest_dir
+}
+
+# deletes a file by creating a backup of itself with an epoch
+# timestamp. Ensures the original file/dir is removed
+#
+# @ safe-delete /tmp/installer
+safe-delete() {
+    local _dir=
+    local _backup_dir=
+    _source_dir="${1:?}"
+    _backup_dir="${_dir}.$(current-epoch)"
+
+    ensure-directory-absent $_backup_dir
+    recursive-copy $_dir $_backup_dir
+    recursive-rm $_dir
+}
+
+# touches a file on the file-system only if it doesn't exist
+#
+# @ ensure-file-exists <file>
+ensure-file-exists() {
+    local _file=
+    _file="${1:?}"
+
+    if file-does-not-exist $_file;
+    then
+        debug "'ensure-file-exists': file $_file does not exist. creating..."
+        touch $_file
+    fi
+}
+
+# removes a file on the file-system, otherwise skips the operation
+#
+# @ ensure-file-absent <dir>
+ensure-file-absent() {
+    local _file=
+    _file="${1:?}"
+
+    if file-exists $_file;
+    then recursive-rm $_file;
+    else true;
+    fi
+}
+
+# tests to determine if a file exists on the file-system
+# inverse of `file-exists`
+#
+# returns boolean
+#
+# @ file-does-not-exist <file>
+file-does-not-exist() {
+    ! file-exists "${1:?}"
+}
+
+# tests to determine if a file exists on the file-system
+#
+# returns boolean
+#
+# @ file-exists <file>
+file-exists() {
+    if [[ -f "${1:?}" ]];
+    then true;
+    else false;
+    fi
+}
+
+# tests to determine if an executable is in the current running
+# environment. like: `which`
+#
+# returns boolean
+#
+# @ executable-in-path 'st2'
+executable-in-path() {
+    if hash "${1:?}" 2>/dev/null;
+    then true;
+    else false;
+    fi
+}
+
+# tests to determine if an executable is not in the current running
+# environment. like: `which`. Inverse of `executable-in-path`
+#
+# returns boolean
+#
+# @ executable-not-in-path 'st2'
+executable-not-in-path() {
+    ! executable-in-path "${1:?}"
+}
+
+# echo a string to a completely new file. Takes a backup of the destination
+# if it happens to exist before taking action.
+#
+# @ echo-to-new-file <message> <filename>
+echo-to-new-file() {
+    local _message=
+    local _file=
+    _message="${1:?}"
+    _file="${2:?}"
+
+    safe-copy $_file "${_file}.$(current-epoch)"
+    ensure-file-absent $_file
+    echo-to-file $_message $_file
+}
+
+# echo a string to a file, appending to the file itself
+#
+# @ echo-to-file <message> <file>
+echo-to-file() {
+    local _message="${1:?}"
+    local _dest="${1:?}"
+
+    debug "'echo-to-file': pushing ${_message} to ${_dest}"
+    echo "${1:?}" >> "${2:?}"
+}
