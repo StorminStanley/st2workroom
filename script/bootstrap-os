@@ -32,7 +32,7 @@ init-bootstrap-os() {
     then execute-string $_os_family_preflight_script;
     elif file-exists $_lock_file;
     then
-        info-loudly $(notice-lock-file-exists)
+        verbose-loudly $(notice-lock-file-exists)
     else
         fail-loudly $(error-what-even-happened)
     fi
