@@ -4,7 +4,7 @@ set -e
 DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
-preflight-os-init() {
+init-preflight-os() {
     eval _os_family_cmd=
 
     log "Ensure pre-flight libraries are setup..."
@@ -18,4 +18,4 @@ preflight-os-init() {
     fi
 }
 
-preflight-os-init
+init-preflight-os
