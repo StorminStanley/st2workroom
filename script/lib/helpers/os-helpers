@@ -14,10 +14,10 @@ os-is-linux() {
 }
 
 os-revision() {
-    if dist-is-redhat; then
-        get-redhat-release
+    if dist-is-redhat; then get-redhat-release;
+    elif dist-is-debian; then get-debian-release;
     else
-        get-debian-release
+    	echo "Unknown OS revision"
     fi
 }
 
