@@ -1,46 +1,86 @@
 #!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
 
-## OS Checks
+# determines if has root permissions
+#
+# returns boolean
+#
+# @ is-root
 is-root() {
-    if [[ $(id -u) -eq 0 ]]; then true; else false; fi
+    if [[ $(id -u) -eq 0 ]];
+    then true;
+    else false;
+    fi
 }
 
+# returns the current short hostname
+#
+# returns string
+#
+# @ node-name
 node-name() {
     echo $(hostname -s)
 }
 
+# check to see if the OS is a Linux system
+#
+# returns boolean
+#
+# @ os-is-linux
 os-is-linux() {
-    if string-equals $(os-family) "linux"; then true; else false; fi
-}
-
-os-revision() {
-    if dist-is-redhat; then
-        get-redhat-release
-    else
-        get-debian-release
+    if string-equals $(os-family) "linux";
+    then true;
+    else false;
     fi
 }
 
+# returns the OS release version
+#
+# returns string
+#
+# @ os-revision
+os-revision() {
+    if dist-is-redhat; then get-redhat-release;
+    elif dist-is-debian; then get-debian-release;
+    else echo "Unknown OS revision"
+    fi
+}
+
+# returns the OS family version
+#
+# returns string
+#
+# @ os-family
 os-family() {
     to-lowercase "$(uname -s)"
 }
 
+# determine what os distribution currently running
+#
+# returns string
+#
+# @ os-dist
 os-dist() {
-    local _dist=
-
-    if dist-is-redhat; then
-        _dist="redhat"
-    elif dist-is-debian; then
-        _dist="debian"
+    if dist-is-redhat;
+    then echo "redhat"
+    elif dist-is-debian;
+    then echo "debian"
+    else "unknown"
     fi
-
-    echo $_dist
 }
 
+# detects and returns the major OS version
+#
+# returns string
+#
+# @ os-major-version
 os-major-version() {
     local _rev=
 
-    if dist-is-redhat; then
+    if dist-is-redhat;
+    then
         _rev="$(os-revision) | cut -d '.' -f1"
         echo "$(execute-string $_rev)"
     else

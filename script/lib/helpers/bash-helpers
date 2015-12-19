@@ -1,26 +1,72 @@
 #!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
 
+# check to determine if a bash variable has a value
+#
+# returns boolean
+#
+# @ variable-set <ENV>
 variable-set() {
-    if [[ -n "${1:?}" ]]; then true; else false; fi
+    if [[ -n "${1:?}" ]];
+    then true;
+    else false;
+    fi
 }
 
+# determine if a string equals another string
+#
+# returns boolean
+#
+# @ string-equals <str1> <str2>
 string-equals() {
-    if [[ "${1:?}" = "${2:?}" ]]; then true; else false; fi
+    if [[ "${1:?}" = "${2:?}" ]];
+    then true;
+    else false;
+    fi
 }
 
+# execute the command stored in a string
+#
+# @ execute-string <str>
 execute-string() {
     eval "${1:?}"
 }
 
+# quietly chdir
+#
+# pushd-quiet <dir>
 pushd-quiet() {
     pushd "${1:?}" >> /dev/null 2>&1
 }
 
+# chdir to the previous dir in the stack
+#
+# pushd-stepback
+pushd-stepback() {
+    pushd-quiet +1
+}
+
+# show the current directory at runtime
+#
+# returns string
+#
+# current-directory
 current-directory() {
     echo "$(pwd)"
 }
 
+# Determine if command successfully ran
+#
+# returns boolean
+#
+# command-successfully-run <cmd>
 command-successfully-run() {
-    eval "${1:?}"
-    if [ $? -eq 0 ]; then true; else false; fi
+    execute-string "${1:?}"
+
+    if [ $? -eq 0 ];
+    then true;
+    else false;
+    fi
 }

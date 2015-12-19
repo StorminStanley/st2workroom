@@ -1,39 +1,60 @@
 #!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
 
-#silence-info-messages() {
-#    if variable-set $ST2_SILENCE_INFO; then true; else false; fi
-#}
+# global variable that will silence any `info` messages
+#
+# @ silence-info-messages
+silence-info-messages() {
+    if variable-set $ST2_SILENCE_INFO;
+    then true;
+    else false;
+    fi
+}
 
+# main logger function
+#
+# @ logger <log-level> <message>
 logger() {
     echo "[${1:?}] ${2:?}"
 }
 
+# info logger.
+#
+# @ info <message>
 info() {
-    if ! silence-info-messages; then
-        logger "info" "${1:?}"
+    if ! silence-info-messages;
+    then logger "info" "${1:?}"
     fi
 }
 
+# default logger
+#
+# @ log <message>
 log() {
     logger "log" "${1:?}"
 }
 
+# error logger
+#
+# @ error <message>
 error() {
     logger "error" "${1:?}"
 }
 
+# debug logger
+#
+# @ debug <message>
 debug() {
-    if debug-enabled; then
-        logger "debug" "${1:?}"
+    if debug-enabled;
+    then logger "debug" "${1:?}"
     fi
 }
 
-trace () {
-    if trace-enabled; then
-        logger "trace" "${1:?}"
-    fi
-}
-
+# bail out, put a big flashy message, and exit 1
+#
+# @ fail-loudly <message>
 fail-loudly() {
     error "*******************************************************"
     error "${1:?}"
@@ -41,25 +62,45 @@ fail-loudly() {
     exit 1
 }
 
+# return the logging file to dump output to
+#
+# @ log-file
 log-file() {
     local _log_file=
     _log_file=/var/log/puppet.log
 
-    if variable-set $LOG_FILE; then echo $LOG_FILE; else echo $_log_file; fi
+    if variable-set $LOG_FILE;
+    then echo $LOG_FILE;
+    else echo $_log_file;
+    fi
 }
 
+# stub string to ensure output is piped through STDOUT and log file
+#
+# returns string
+#
+# @ send-all-output-to-log-file-and-stdout
 send-all-output-to-log-file-and-stdout() {
     echo " 2>&1 | tee -a `log-file`"
 }
 
+# stub string to ensure output is piped to log file
+#
+# returns string
+#
+# @ send-all-output-to-log-file
 send-all-output-to-log-file() {
-    echo " >> `log-file` 2>&1"
+    echo " >> $(log-file) 2>&1"
 }
 
-trace-enabled() {
-    if variable-set $TRACE; then true; else false; fi
-}
-
+# determine if debug mode is enabled
+#
+# returns boolean
+#
+# @ debug-enabled
 debug-enabled() {
-    if variable-set $DEBUG; then true; else false; fi
+    if variable-set $DEBUG;
+    then true;
+    else false;
+    fi
 }

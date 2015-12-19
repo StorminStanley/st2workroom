@@ -1,23 +1,37 @@
 #!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
 
 DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
-if [ -f /etc/profile.d/st2.sh ]; then
-  . /etc/profile.d/st2.sh
-fi
+# Main entry point to check if st2 is installed properly
+#
+# @ init-check-st2-ok
+init-check-st2-ok() {
+    if executable-exists 'st2'; then
+        if run-st2-core-local-check; then ok_message;
+        else retry-message; exit 1;
+        fi
+    else retry-message; exit 2;
+    fi
+}
 
+# shows a retry message in the event of a failure to boostrap,
+# encouraging the user to try-again on convergence.
+#
+# @ retry-message
 retry-message() {
     local _st2_datacenter=
     local _kick_command=
     _st2_datacenter="$(facter datacenter)"
 
-    if string-equal $_st2_datacenter "vagrant"; then
-        _kick_command="$(kick-command-vagrant)"
-    elif update-system-command-is-present; then
-        _kick_command="$(kick-command-update-system)"
-    else
-        _kick_command="$(kick-command-bootstrap-st2)"
+    if string-equal $_st2_datacenter "vagrant";
+    then _kick_command="$(kick-command-vagrant)"
+    elif update-system-command-is-present;
+    then _kick_command="$(kick-command-update-system)"
+    else _kick_command="$(kick-command-bootstrap-st2)"
     fi
 
     echo ""
@@ -72,13 +86,4 @@ ok_message() {
     st2-support-contact-information
 }
 
-run-check-st2-ok() {
-    if executable-exists 'st2'; then
-        if run-st2-core-local-check; then ok_message;
-        else retry-message; exit 1;
-        fi
-    else retry-message; exit 2;
-    fi
-}
-
-run-check-st2-ok
+init-check-st2-ok

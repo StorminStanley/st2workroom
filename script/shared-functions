@@ -5,6 +5,7 @@
 # DIR=$( dirname "$(readlink -f "$0")" )
 # . $DIR/shared-functions
 set -e
+set -u
 set -o pipefail
 
 DIR=$( dirname "$(readlink -f "$0")" )

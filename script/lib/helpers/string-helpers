@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
 
+# adds a prefix to each element in an array
+#
+# returns string
+#
+# @ add-prefix-to-each <prefix> <array>
 add-prefix-to-each() {
     local _args_array=
     local _arg_len=
@@ -18,6 +26,11 @@ add-prefix-to-each() {
     echo $_blob
 }
 
+# Convert any input to lowercase string
+#
+# returns string
+#
+# @ to-lowercase <str>
 to-lowercase() {
     echo "${1:?}" | tr '[:upper:]' '[:lower:]'
 }

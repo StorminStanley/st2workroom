@@ -4,6 +4,10 @@ set -e
 DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
+# start the debian operating system bootstrap. Ensures that any debian OS
+# tasks are taken care of
+#
+# @ init-bootstrap-os-linux-debian
 bootstrap-os-linux-debian() {
     local _common_packages=
     local _augeas_packages=

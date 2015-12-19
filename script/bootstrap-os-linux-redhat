@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 set -e
+set -u
+set -o pipefail
 
 DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
+# start the debian operating system bootstrap. Ensures that any RedHat OS
+# tasks are taken care of
+#
+# @ init-bootstrap-os-linux-redhat
 init-bootstrap-os-linux-redhat() {
     local _common_packages=
     local _majorver_packages=
@@ -39,4 +45,5 @@ init-bootstrap-os-linux-redhat() {
     yum-clean
 }
 
+# Main init
 init-bootstrap-os-linux-redhat

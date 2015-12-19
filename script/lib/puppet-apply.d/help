@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
 
+# Show help output for AIO installer
+#
+# @ show-help
 show-help() {
     echo ""
     echo "StackStorm All-in-one Installer - System Update"
@@ -17,6 +23,9 @@ show-help() {
     st2-support-contact-information
 }
 
+# warn the user that a requested environment is not valid
+#
+# @ warn-invalid-environment
 warn-invalid-environment() {
     local _requested_env=
     local _actual_env=

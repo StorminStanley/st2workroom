@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
+
+# returns the current epoch at run-time
+#
+# returns string
+#
+# @ current-epoch
+current-epoch() {
+    echo $(date +%s)
+}

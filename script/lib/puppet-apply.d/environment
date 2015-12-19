@@ -1,9 +1,20 @@
 #!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
 
+# Setup requested puppet environment via ruby/rake task from
+# upstream git branch
+#
+# @ setup-environment-from-git-branch <branch>
 setup-environment-from-git-branch() {
-    rake environments:update[sanitized-puppet-environment-to-apply]
+    rake environments:update[$(sanitized-puppet-environment-to-apply)]
 }
 
+# Sync a directory to the AIO puppet directory as an environment
+# automatically excludes any extra arguments via rsync
+#
+# @ sync-dir-to-puppet-environment <src> <environment> [excludes]
 sync-dir-to-puppet-environment() {
     local _args_array=
     local _arg_len=
@@ -26,103 +37,197 @@ sync-dir-to-puppet-environment() {
     rsync-dir $_source_dir $_environment_dir $_excludes_args
 }
 
-setup-current-working-directory-environment() {
+# syncs the current project root as a Puppet environment for
+# rapid iteration and local fixes
+#
+# @ setup-local-development-environment
+setup-local-development-environment() {
     local _excludes=
     _excludes="environments vendor artifacts graphs packer script .git"
 
-    sync-dir-to-puppet-environment project-root current_working_directory $_excludes_args
+    sync-dir-to-puppet-environment $(project-root) \
+                                   $(local-development-environment) \
+                                   $_excludes
 }
 
+# detect if the system is currently in an environment that is not
+# mainline production. Could be a local-development-environment
+# or a testing environment
+#
+# returns boolean
+#
+# @ currently-in-an-environment
 currently-in-an-environment() {
-    if string-does-not-equal current-environment production-environment; then
-        true
-    else
-        false
+    if string-does-not-equal current-environment production-environment;
+    then true
+    else false
     fi
 }
 
+# return the current environment the system is currently configured to run
+#
+# returns string
+#
+# @ current-environment
 current-environment() {
-    if facter-has-value puppet_environment; then
-        facter-value puppet_environment
-    else
-        production-environment
+    if facter-has-value puppet_environment;
+    then facter-value puppet_environment;
+    else production-environment;
     fi
 }
 
+# return the environment the user asked to apply. Defaults to the
+# current running environment if not provided
+#
+# returns string
+#
+# @ requested-environment
 requested-environment() {
-    if variable-set $ENV; then
-        echo $ENV
-    else
-        current-environment
+    if variable-set $ENV;
+    then echo $ENV;
+    else current-environment;
     fi
 }
 
+# Puppet cannot process an environment unless it only contains
+# letters, numbers (but not leading), and underscores. This
+# removes all unnecessary characters allowing processing to
+# continue regardless of the user branch name
+#
+# returns string
+#
+# @ sanitized-puppet-environment-to-apply
 sanitized-puppet-environment-to-apply() {
-    environment-to-apply | sed 's/[-\/.]/_/g'
+    environment-to-apply
+        | sed 's/[-\/.]/_/g'
 }
 
+# detects if a requested environment can and should be generated
+# checks to see if a given env is a valid branch or tag, and
+# generates the environment.
+#
+# returns boolean
+#
+# @ is-valid-environment
 is-valid-environment() {
-    if git-ref-is-branch project-root environment ||
-            git-ref-is-tag project-root environment; then
-        true
+    if git-ref-is-branch project-root environment
+            || git-ref-is-tag project-root environment;
+    then true
     else
         warn-invalid-environment
         false
     fi
 }
 
+# detects if the current running system is on the production environment
+#
+# returns boolean
+#
+# @ production-mode
 production-mode() {
-    if string-equals requested-environment production-environment; then
-        true
-    else
-        false
+    if string-equals requested-environment production-environment;
+    then true;
+    else false;
     fi
 }
 
+# detects if the current running system is running local development
+# directly out of the $(project-root).
+#
+# returns boolean
+#
+# @ local-development-mode
 local-development-mode() {
-    if string-equals requested-environment local-development-environment; then
-        true
-    else
-        false
+    if string-equals requested-environment local-development-environment;
+    then true;
+    else false;
     fi
 }
 
+# detects if the current running system is running a branch environment
+# from upstream git repository
+#
+# returns boolean
+#
+# @ branch-development-mode
 branch-development-mode() {
-    if ! production-mode && ! local-development-mode; then true; else false; fi
+    if ! production-mode
+       && ! local-development-mode;
+    then true;
+    else false;
+    fi
 }
 
+# returns the reserved environment name used for local-development
+#
+# returns string
+#
+# @ local-development-environment
 local-development-environment() {
     echo "current_working_directory"
 }
 
+# returns the reserved environment name used for production
+#
+# returns string
+#
+# @ production-environment
 production-environment() {
     echo "master"
 }
 
+# Based on the user input, detect which branch to run. Ensures
+# that the user stays on a given branch if previously requested,
+# but, fall back to production if it's invalid for any reason
+#
+# returns string
+#
+# @ environment-to-apply
 environment-to-apply() {
-    if local-development-mode; then
-        local-development-environment
-    elif production-mode; then
-        production-environment
-    elif branch-development-mode && is-valid-environment; then
-        environment
-    else
-        production-environment
+    if local-development-mode;
+    then local-development-environment;
+    elif production-mode;
+    then production-environment;
+    elif branch-development-mode
+         && is-valid-environment;
+    then environment;
+    else production-environment;
     fi
 }
 
+# return the project root directory
+#
+# returns string
+#
+# @ environment-root
 environment-root() {
     echo "$(project-root)/environments"
 }
 
+# return the directory where environments are stored/managed
+#
+# returns string
+#
+# @ environment-dir
 environment-dir() {
     echo "$(environment-root)/$(environment-to-apply)"
 }
 
+# return the directory where graphs are stored during debugging
+#
+# returns string
+#
+# @ environment-graph-dir
 environment-graph-dir() {
     echo "$(environment-dir)/graphs"
 }
 
+# return the directory where graphs are stored for a given node
+# during debugging
+#
+# returns string
+#
+# @ node-graph-dir
 node-graph-dir() {
     echo "$(environment-graph-dir)/$(node-name)"
 }

@@ -1,9 +1,35 @@
 #!/usr/bin/env bash
-# This stand-alone script should be able to be used to kickstart a new node
 set -e
+set -u
+set -o pipefail
 
-##############################
-# Main Entry Point
+# StackStorm AIO Bootstrap Script
+#
+# This script contains a subset of functions necessary to have the script
+# call and invite friends and family to the system and sources their functions
+# As such, a few functions may be incomplete of mirrored, but are overwritten
+# by the sourcing
+
+
+# Returns the default / stable version of the AIO bootstrap.
+# change this value only when requesting to bump the default/production
+# version of the AIO installer.
+#
+# returns string
+#
+# @ default-aio-version
+stable-aio-version() {
+    echo "master"
+}
+
+project-root() {
+    echo "/opt/puppet"
+}
+
+
+# main entry point to bootstrap StackStorm AIO
+#
+# @ init-bootstrap-st2
 init-bootstrap-st2() {
     if ! is-root; then
         echo "Please re-run with root privileges"
@@ -11,20 +37,26 @@ init-bootstrap-st2() {
         exit 1
     fi
 
-    check-for-os-compatability
     install-git
-
     clone-aio-installer-from-github
+    source-aio-helpers
+
+    # ---- after this point, use upstream helpers and commands ----
+
+    check-for-os-compatability
     set-puppet-role-to-st2
     ensure-hubot-is-not-installed-if-requested-by-user
     setup-answer-file-if-supplied-by-user
 
     run-bootstrap-os
+    ensure-system-has-all-dependencies
     run-puppet-apply
     check-st2-health
 }
 
-### CLI Parsing
+# show all help information for the bootstrap script
+#
+# @ show-help
 show-help() {
     echo ""
     echo "StackStorm All-in-one Installer"
@@ -41,6 +73,7 @@ show-help() {
     echo "  ST2_PUPPET_BRANCH=       Set the upstream puppet-st2 branch"
 }
 
+# downloads the StackStorm AIO installer from upstream
 clone-aio-installer-from-github() {
     local _repo=
     local _dst_dir=
@@ -50,235 +83,248 @@ clone-aio-installer-from-github() {
     safe-git-clone $_repo $_dst_dir
 }
 
-## Tool Helpers
+# load all AIO helpers once downloaded from upstream
+#
+# @ source-aio-helpers
+source-aio-helpers() {
+    source "$(project-root)/script/shared-functions"
+}
+
+# detect the version of the AIO installer to process
+aio-version-to-install() {
+    if variable-set $BRANCH;
+    then echo $BRANCH;
+    else stable-aio-version;
+    fi
+}
+
+# install git on a debian system
+#
+# @ install-git-on-debian
 install-git-on-debian() {
     apt-get install -y git
 }
 
+# install git on a RHEL system
+#
+# @ install-git-on-redhat
 install-git-on-redhat() {
     yum install -y git-core
 }
 
+# attempts to detect and install git on an OS
+#
+# @ install-git
 install-git() {
-    if dist-is-redhat; then
-        install-git-on-redhat
-    elif dist-is-debian; then
-        install-git-on-debian
+    if dist-is-redhat;
+    then install-git-on-redhat
+    elif dist-is-debian;
+    then install-git-on-debian
     else
         echo "Unable to install git for your OS $(os-family)"
     fi
 }
 
+# safely clone an upstream repository. If the directory already exists
+# then make a backup. Likewise, ensure that the parent directory requested
+# exists so git does not have a bad time and bail out.
+#
+# @ safe-git-clone <repo> <dest_dir> <branch>
 safe-git-clone() {
-    local _repo="${1:?}"
-    local _dest_dir="${2:?}"
-    local _branch="${3:-master}"
+    local _repo=
+    local _dest_dir=
+    local _branch=
+    local _parent_dir=
+    _parent_dir=$(dirname $_dest_dir)
+    _repo="${1:?}"
+    _dest_dir="${2:?}"
+    _branch="${3:-master}"
 
-    if directory-exists $_dest_dir; then
-        safe-copy $_dest_dir "${_dest_dir}.old" $(random-tmpdir)
+    if directory-exists $_dest_dir;
+    then
+        safe-copy $_dest_dir "${_dest_dir}.$(current-epoch)"
         ensure-directory-absent $_dest_dir
     fi
 
+    ensure-directory-exists $_parent_dir
     git clone $_repo $_dest_dir -b $_branch
 }
 
-## OS Helpers
+# returns the current epoch at run-time
+#
+# returns string
+#
+# @ current-epoch
+current-epoch() {
+    echo $(date +%s)
+}
+
+# determines if has root permissions
+#
+# returns boolean
+#
+# @ is-root
 is-root() {
-    if [[ $(id -u) -eq 0 ]]; then true; else false; fi
+    if [[ $(id -u) -eq 0 ]];
+    then true;
+    else false;
+    fi
 }
 
+# detect if a directory exists on the file-system
+#
+# returns boolean
+#
+# @ directory-exists
+directory-exists() {
+    if [[ -d "${1:?}" ]];
+    then true;
+    else false;
+    fi
+}
+
+# safe wrapper to remove a directory. contains a series
+# of logic checks to ensure specific directories are
+# not deleted.
+#
+# returns boolean
+#
+# @ ensure-directory-absent <dir>
+ensure-directory-absent() {
+    local _dir=
+    _dir="${1:?}"
+
+    if directory-exists $_dir;
+    then recursive-rm $_dir;
+    else true;
+    fi
+}
+
+# Recursively deletes a file or directory.
+# DANGEROUS! No safeguards.
+#
+# @ recursive-rm <dir>
+recursive-rm() {
+    rm -rf "${1:?}"
+}
+
+
+# detect if the OS is a RHEL system
+#
+# returns boolean
+#
+# @ dist-is-redhat
 dist-is-redhat() {
-    if os-is-linux && file-exists "/etc/redhat-release"; then
-        true
-    else
-        false
+    if os-is-linux
+        && file-exists "/etc/redhat-release";
+    then true;
+    else false;
     fi
 }
 
+# detect if the OS is a Debian system
+#
+# returns boolean
+#
+# @ dist-is-debian
 dist-is-debian() {
-    if os-is-linux && file-exists "/etc/debian_version"; then
-        true
-    else
-        false
+    if os-is-linux
+        && file-exists "/etc/debian_version";
+    then true;
+    else false;
     fi
 }
 
+# detect if the OS is a Linux system
+#
+# returns boolean
+#
+# @ os-is-linux
 os-is-linux() {
-    if string-equals $(os-family) "Linux"; then true; else false; fi
+    if string-equals $(os-family) "Linux";
+    then true;
+    else false;
+    fi
 }
 
+# return the OS family version
+#
+# returns string
+#
+# @ os-family
 os-family() {
     echo $(uname -s)
 }
 
-
-set-puppet-role-to-st2() {
-    set-facter-value "role" "st2"
-}
-
-facts-d-directory() {
-    echo "/etc/facter/facts.d"
-}
-
-set-facter-value() {
-    local _fact="${1:?}"
-    local _value="${1:?}"
-    local _fact_file="$(facts-d-directory)/${_fact}.txt"
-
-    ensure-directory-exists $(facts-d-directory)
-    echo-to-new-file "${_fact}=${_value}" $_fact_file
-}
-
-
-
-## Helpers
-# In many cases, these are exact copies of helpers that have been otherwise
-# abstracted. This is intended, as this script cannot assert a full environment
-# and must be independent.
-
-## Bash Helpers
-string-equals() {
-    local _a="${1:?}"
-    local _b="${2:?}"
-    if [[ "$_a" = "$_b" ]]; then true; else false; fi
-}
-variable-set() {
-    local _var="${1:-}"
-    if [[ -n "$_var" ]]; then
-        true
-    else
-        false
-    fi
-}
-
-## File Helpers
-random-tmpdir() {
-    echo $(mktemp -d)
-}
-recursive-copy() {
-    local _source_dir="${1:?}"
-    local _dest_dir="${2:?}"
-    cp -R $_source_dir $_dest_dir
-}
-
-
+# Safely copy a directory from src to dst, ensuring that the dst
+# is empty. If it exists, move what is there out of the way before
+# continuing
+#
+# @ safe-copy <src> <dst>
 safe-copy() {
-    local _source_dir="${1:?}"
-    local _dest_dir="${2:?}"
-    local _backup_dir="${3:?}"
+    local _source_dir=
+    local _dest_dir=
+    _source_dir="${1:?}"
+    _dest_dir="${2:?}"
 
-    if directory-exists $_dest_dir; then
-        safe-copy $_dest_dir $_backup_dir $(random-tmpdir)
+    if directory-exists $_dest_dir;
+    then
+        safe-copy $_dest_dir "${_dest_dir}.$(current-epoch)"
     fi
 
     ensure-directory-absent $_dest_dir
     recursive-copy $_source_dir $_dest_dir
-
     ensure-directory-absent $_backup_dir
 }
 
 
+# ensure that a directory is absent, with safeguards to prevent
+# a horrible, horrible mistake
+#
+# @ ensure-directory-absent <dir>
 ensure-directory-absent() {
-    local _dir="${1:?}"
+    local _dir=
+    _dir="${1:?}"
 
-    if string-equals $_dir "/"; then
+    if string-equals $_dir "/";
+    then
         error "Will not continue... deleting / is not allowed directly"
         exit 1
     fi
 
-    if directory-exists $_dir; then recursive-rm $_dir; else true; fi
-}
-
-directory-exists() {
-    if [[ -d "${1:?}" ]]; then true; else false; fi
-}
-
-ensure-file-exists() {
-    local _file="${1:?}"
-
-    if ! file-exists $_file; then
-        debug "file $_file does not exist. creating..."
-        touch $_file
+    if directory-exists $_dir;
+    then recursive-rm $_dir;
+    else true;
     fi
 }
 
-ensure-file-absent() {
-    local _file="${1:?}"
-    if file-exists $_file; then recursive-rm $_file; else true; fi
+# Recursively ensure a directory exists.
+#
+# @ recursive-mkdir <dir>
+recursive-mkdir() {
+    mkdir -p "${1:?}"
 }
 
-file-exists() {
-    if [[ -f "${1:?}" ]]; then true; else false; fi
+# safe wrapper to create a directory. skips unnecessary checks
+# by doing some prodding around before it blindly creates a directory
+#
+# returns boolean
+#
+# @ ensure-directory-exists <dir>
+ensure-directory-exists() {
+    if directory-does-not-exist "${1:?}"
+    then recursive-mkdir;
+    else true;
+    fi
 }
 
-echo-to-new-file() {
-    local _message="${1:?}"
-    local _file="${2:?}"
-
-    ensure-file-absent $_file
-    echo-to-file $_message $_file
-}
-
-echo-to-file() {
-    local _message="${1:?}"
-    local _file="${2:?}"
-
-    echo "$_message" >> $_file
-}
-
-## Project Helpers
 project-root() {
-    local _project_root=/opt/puppet
-    if variable-set $PROJECT_ROOT; then
-        echo $PROJECT_ROOT
-    else
-        echo $_project_root
+    if variable-set $PROJECT_ROOT;
+    then echo $PROJECT_ROOT
+    else project-root
     fi
 }
 
-skip-st2-ok-check() {
-    if ! variable-set $SKIP_OK_CHECK; then true; else false; fi
-}
-
-check-for-os-compatability() {
-    eval "$(project-root)/script/check-os-compat"
-}
-
-run-bootstrap-os() {
-    eval "$(project-root)/script/bootstrap-os"
-}
-
-run-puppet-apply() {
-    eval "$(project-root)/script/puppet-apply"
-}
-
-check-st2-health() {
-    if skip-st2-ok-check; then
-        eval "$(project-root)/script/check-st2-ok"
-    fi
-}
-
-workroom-hiera-file() {
-    echo "$(project-root)/hieradata/workroom.yaml"
-}
-
-ensure-hubot-is-not-installed-if-requested-by-user() {
-    if user-requested-to-disable-hubot; then
-        echo-to-file "hubot: false" "$(workroom-hiera-file)"
-    fi
-}
-
-user-requested-to-disable-hubot() {
-    if variable-set $DISABLE_HUBOT; then true; else false; fi
-}
-
-setup-answer-file-if-supplied-by-user() {
-    local _answer_file_path="$(project-root)/hieradata/answers.yaml"
-    if variable-set $ANSWER_FILE; then
-        ensure-file-absent $_answer_file_path
-        safe-copy $ANSWER_FILE $_answer_file_path "$(random-tmpdir)"
-    fi
-}
 
 # Main entry point for script
 while :; do

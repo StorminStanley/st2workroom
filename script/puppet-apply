@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -e
+set -u
 set -o pipefail
 
 DIR=$( dirname "$(readlink -f "$0")" )
@@ -8,25 +9,32 @@ source $DIR/shared-functions
 source "$(project-root)/script/lib/puppet-apply.d/help"
 source "$(project-root)/script/lib/puppet-apply.d/environment"
 
-bootstrap-st2workroom() {
-    if local-development-mode; then
-        setup-current-working-directory-environment
-    else
-        setup-environment-from-git-branch
+# bootstraps the AIO system to ensure that any necessary libraries
+# are installed and ready to go
+#
+# @ bootstrap-aio
+bootstrap-aio() {
+    if local-development-mode;
+    then setup-current-working-directory-environment
+    else setup-environment-from-git-branch
     fi
 
     install-puppetfile
 }
 
+# function that downloads a the puppet-st2 project and sets it up
+# to be tested/used during development
 bootstrap-puppet-st2() {
-    local _repo="https://github.com/stackstorm/st2.git"
-    local _module_dir="$(environment-dir)/modules/st2"
-    local _module_backup_dir="$(random-tmpdir)"
-    local _git_stage_dir="$(random-tmpdir)"
+    local _repo=
+    local _module_dir=
+    local _module_backup_dir=
+    local _git_stage_dir=
+    _repo="https://github.com/stackstorm/st2.git"
+    _module_dir="$(environment-dir)/modules/st2"
+    _module_backup_dir="$(random-tmpdir)"
+    _git_stage_dir="$(random-tmpdir)"
 
     git-safe-clone $_repo $_git_stage_dir "$(puppet-st2-version)"
-    safe-copy $_module_dir $_module_backup_dir
-    ensure-directory-absent $_module_dir
     safe-copy $_git_stage_dir $_module_dir
 }
 
@@ -40,10 +48,10 @@ init-puppet-apply() {
     run-bootstrap-os
     git-update-and-clean $(project-root)
     run-preflight-os
-    bootstrap-st2workroom
+    bootstrap-aio
 
-    if install-puppet-st2-branch; then
-        bootstrap-puppet-st2
+    if install-puppet-st2-branch;
+    then bootstrap-puppet-st2
     fi
 
     run-puppet

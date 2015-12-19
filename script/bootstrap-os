@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
 set -e
+set -u
+set -o pipefail
 
 DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
+# start the operating system bootstrap. Ensures that any generic OS
+# tasks are taken care of, and detect/load any OS family scripts to also
+# process as part of bootstrap phase
+#
+# @ init-bootstrap-os
 init-bootstrap-os() {
     local _os_family_preflight_script=
     local _lock_file=
@@ -15,7 +22,9 @@ init-bootstrap-os() {
         fail-loudly "Please run with root permissions"
     fi
 
-    if file-exists $_os_family_preflight_script && ! file-exists $_lock_file; then
+    if file-exists $_os_family_preflight_script
+            && ! file-exists $_lock_file;
+    then
         execute-string $_os_family_preflight_script
         #ensure-file-exists $_lock_file
     else

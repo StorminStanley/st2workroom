@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
-# This stand-alone script should be able to be used to kickstart a new node
+set -e
+set -u
+set -o pipefail
+
+# StackStorm AIO uninstaller
+DIR=$( dirname "$(readlink -f "$0")" )
+. $DIR/shared-functions
 
 ### CLI Parsing
 show_help() {
@@ -12,29 +18,40 @@ show_help() {
   echo
 }
 
-reset_installer() {
-    echo "********************************************************"
-    echo "          Removing bootstrap lock files..."
-    echo "********************************************************"
-    rm -f /etc/facter/facts.d/mistral_bootstrapped.txt
-    rm -f /etc/facter/facts.d/st2client_bootstrapped.txt
-    rm -f /etc/facter/facts.d/st2flow_bootstrapped.txt
-    rm -f /etc/facter/facts.d/st2server_bootstrapped.txt
-    rm -f /etc/facter/facts.d/st2web_bootstrapped.txt
-    rm -f /etc/facter/facts.d/facts.txt
+reset-installer() {
+    local _files=
+    for i in mistral st2client st2flow st2server st2web facts; do
+        safe-delete "/etc/facter/facts.d/${i}"
+    fi
+
+    fail-loud "Removed StackStorm installer files. Please run bootstrap again"
 }
 
-init() {
-    # Grab out any and all variables from the global environment,
-    # and use them in each function as necessary
-    DIR=$( dirname "$(readlink -f "$0")" )
-    . $DIR/shared-functions
-
-   bail_if_not_root
-
-   if [ "$ST2_CLEAN" = "true" ]; then
-       reset_installer
-   fi
+# determine if a user has requested to not fully uninstall the AIO, but
+# rather return the system to a clean state with the bits still installed
+#
+# returns boolean
+#
+# @ user-requested-installer-reset
+user-requested-installer-reset() {
+    if variable-set $ST2_CLEAN;
+    then true;
+    else false;
+    fi
 }
 
-init
+# main function
+#
+# @ init-uninstall-st2
+init-uninstall-st2() {
+    if ! is-root; then
+        show-help
+        fail-loudly "Please run with root permissions"
+    fi
+
+    if user-requested-installer-reset;
+    then reset-installer
+    fi
+}
+
+init-uninstall-st2

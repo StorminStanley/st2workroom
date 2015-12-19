@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -e
+set -u
+set -o pipefail
 
 DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
@@ -39,13 +41,13 @@ incompatable-os() {
     exit 1
 }
 
+# Check to detect if the OS is a supported OS for StackStorm
 init-check-os-compat() {
-    if supported-redhat-distro || supported-debian-distro; then
-        compatable-os
-    else
-        incompatable-os
+    if supported-redhat-distro
+            || supported-debian-distro;
+    then compatable-os;
+    else incompatable-os;
     fi
 }
-
 
 init-check-os-compat

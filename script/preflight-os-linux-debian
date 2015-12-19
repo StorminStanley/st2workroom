@@ -1,33 +1,16 @@
 #!/usr/bin/env bash
+set -e
+set -u
+set -o pipefail
 
 DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
-APT_UPDATE_FREQ=30
-
-## This is an operation that requires access to the internet. Let's make sure
-## we're in an environment that will allow this.
-##
-## This value is set in Class['profile::infrastructure']
-OFFLINE_MODE=`facter system_offline_mode`
-
-update_apt() {
-    local _cmd=
-    debug "Updating Debian apt-cache"
-
-    $_cmd="apt-get update $
-    apt-get update > /dev/null 2>&1
+# run the bootstrap script for Debian systems
+#
+# @ init-preflight-os-linux-debian
+init-preflight-os-linux-debian() {
+    update-apt-if-cache-is-stale
 }
 
-
-
-if [ "$OFFLINE_MODE" != "true" ]; then
-  ## Only run if we haven't run APT in awhile. Speed up feedback loop
-  if [ -f /var/lib/apt/periodic/update-success-stamp ]; then
-      if [ `find /var/lib/apt/periodic/update-success-stamp -mmin +${APT_UPDATE_FREQ} | grep apt` ]; then
-          update_apt
-      fi
-  else
-    update_apt
-  fi
-fi
+init-preflight-os-linux-debian
