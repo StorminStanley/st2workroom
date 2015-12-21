@@ -537,12 +537,6 @@ class profile::st2server {
       logoutput => true,
       require   => File["${_openssl_root}/.rnd"],
     }
-
-    exec { 'apply the new CA to nginx':
-      command   => '/etc/init.d/nginx restart',
-      logoutput => true,
-      require   => Exec['sign client cert req'],
-    }
     ## CA Certificate END ##
 
     # We also must provide an endpoint for the user to go to in order
