@@ -553,8 +553,6 @@ class profile::st2server {
       command     => "cat ${_ssl_cert} >> `python -c 'import certifi; print certifi.where()'`",
       path        => '/usr/sbin:/usr/bin:/sbin:/bin',
       logoutput   => true,
-      refreshonly => true,
-      subscribe   => File["${_ssl_cert}"],
       require     => Exec['sign client cert req'],
     }
     ## CA Certificate END ##
