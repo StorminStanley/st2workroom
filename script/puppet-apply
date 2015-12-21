@@ -1,6 +1,50 @@
 #!/usr/bin/env sh
 set -e
 
+SCRIPT_ENTRY=$0
+FALLBACK_ENV='production'
+
+# Note to the user that a requested environment is not around.
+# Maybe a little intrusive, but at least it's not obfuscated
+warn_requested_env_missing() {
+    SLEEP=5
+    COMMAND=$1
+    REQUESTED_ENV=$2
+    ACTUAL_ENV=$3
+
+    if [ -z $ST2_SILENCE ]; then
+      echo ""
+      echo "********************************************************"
+      echo " Heads up friend! Just want let you know...  "
+      echo ""
+      echo " Once upon a time, as recently as 5 seconds ago, this machine"
+      echo " was asked to run ${COMMAND} in the ${REQUESTED_ENV}"
+      echo " environment. Alas, as much as it try, it was not possible"
+      echo ""
+      echo " But, as the machine came to learn, it was not all doom and"
+      echo " gloom! This could happen for any number of reasons, and all it had to"
+      echo " do is figure out which one!? Can you help?!"
+      echo ""
+      echo " * Is the branch name spelled correctly?"
+      echo " * If you personally or someone you know has been working"
+      echo "   on a feature, and you merged and/or deleted the branch"
+      echo ""
+      echo " In the end, machine realized there was another path to take"
+      echo " and instead continued on using the **${ACTUAL_ENV}** branch"
+      echo ""
+      echo " TL;DR: The machine could not find the requested branch ${REQUESTED_ENV}"
+      echo "        Falling back to ${ACTUAL_ENV}"
+      echo ""
+      echo " Maybe none of this applies to you, consider getting ahold of us"
+      echo " and letting us know. We'd like to fix it."
+      echo "  - https://stackstorm.com/community/"
+      echo "********************************************************"
+      echo ""
+      echo "Processing of ${COMMAND} will begin automatically in ${SLEEP} seconds..."
+      sleep $SLEEP
+    fi
+}
+
 if [ $(id -u) -ne 0 ]; then
     echo "Please run with root privileges"
     exit 1
@@ -64,7 +108,7 @@ if [ -z "$ENV" ]; then
     if [ -n "$CURRENT_ENV" ]; then
         PUPPET_ENV=$CURRENT_ENV
     else
-        PUPPET_ENV='production'
+        PUPPET_ENV=$FALLBACK_ENV
     fi
 else
     PUPPET_ENV=$ENV
@@ -96,8 +140,8 @@ fi
 ### Make sure our environment conforms to Puppet environment naming
 PUPPET_ENV=$(echo $PUPPET_ENV | sed 's/[-\/.]/_/g')
 if [ ! -d $PROJECT_ROOT/environments/$PUPPET_ENV ]; then
-    echo "The environment $PUPPET_ENV does not exist... falling back to production"
-    PUPPET_ENV='production'
+    warn_requested_env_missing $SCRIPT_ENTRY $PUPPET_ENV $FALLBACK_ENV
+    PUPPET_ENV=$FALLBACK_ENV
 fi
 
 ## Run Puppet

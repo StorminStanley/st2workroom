@@ -826,6 +826,35 @@ class profile::st2server {
     ],
   }
 
+  file { '/opt/stackstorm/static/errors/':
+    ensure => directory,
+    owner  => $_nginx_daemon_user,
+    group  => $_nginx_daemon_user,
+    mode   => '0755',
+  }
+
+  file { '/opt/stackstorm/static/errors/tokens.json':
+    ensure  => file,
+    owner   => 'root',
+    mode    => '0755',
+    content => '{ "faultstring": "Endpoint does not exist. Use /api/tokens instead. You might be using outdated version of st2web." }',
+    notify  => Class['::nginx::service'],
+  }
+
+  nginx::resource::location { 'st2autherror':
+    vhost                => 'st2webui',
+    ssl_only             => true,
+    location             => '/tokens',
+    www_root             => '/opt/stackstorm/static/errors/',
+    rewrite_rules        => [
+      '^/tokens /tokens.json break',
+    ],
+    raw_prepend          => [
+      'error_page  405     =200 $uri;',
+      $_cors_custom_options,
+    ],
+  }
+
   # Needed for uWSGI server to write to logs
   file { [
     '/var/log/st2/st2api.uwsgi.log',
