@@ -387,6 +387,7 @@ class profile::st2server {
     $_ca_cert_content = undef
     $_ca_key_content = undef
     $_ca_expiration = '1825'
+    $_ca_os_storage = '/etc/ssl/certs/ST2CA.pem'
     $_ssl_expiration = '730'
     $_openssl_cert_config = "${_openssl_root}/cert.cnf"
     $_openssl_ca_config = "${_openssl_root}/ca.cnf"
@@ -479,6 +480,12 @@ class profile::st2server {
       path      => '/usr/sbin:/usr/bin:/sbin:/bin',
       logoutput => true,
       before    => Exec['create client cert req'],
+    }
+
+    file { $_ca_os_storage:
+      ensure  => 'link',
+      target  => $_ca_cert,
+      require => Exec['create root CA'],
     }
 
     $_create_client_req_command = join([
