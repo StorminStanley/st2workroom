@@ -388,8 +388,11 @@ class profile::st2server {
     $_ca_key_content = undef
     $_ca_expiration = '1825'
     $_ssl_expiration = '730'
-    $_openssl_ca_config = "${_openssl_root}/ca.cnf"
     $_openssl_cert_config = "${_openssl_root}/cert.cnf"
+    $_openssl_ca_config = "${_openssl_root}/ca.cnf"
+    $_openssl_ca_index = "${_openssl_root}/index.txt"
+    $_openssl_ca_storage = "${_openssl_root}/certs"
+    $_openssl_ca_serial = "${_openssl_root}/serial"
 
     # Variables for OpenSSL Template
     $country = 'US'
@@ -401,6 +404,25 @@ class profile::st2server {
     $email = 'support@stackstorm.com'
     $altnames = $_server_names
 
+    file { $_openssl_ca_index:
+      ensure  => file,
+      owner   => $_nginx_daemon_user,
+      mode    => '0444',
+      before  => Exec['create root CA'],
+    }
+    file { $_openssl_ca_serial:
+      ensure  => file,
+      owner   => $_nginx_daemon_user,
+      mode    => '0444',
+      content => '01',
+      before  => Exec['create root CA'],
+    }
+    file { $_openssl_ca_storage:
+      ensure  => directory,
+      owner   => $_nginx_daemon_user,
+      mode    => '0444',
+      before  => Exec['create root CA'],
+    }
     file { $_openssl_ca_config:
       ensure  => file,
       owner   => $_nginx_daemon_user,
