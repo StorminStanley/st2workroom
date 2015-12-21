@@ -80,6 +80,7 @@ done
 ### Installation Steps
 # Install Pre-req for git
 if [ -f /usr/bin/apt-get ]; then
+  apt-get update
   apt-get install -y git
 fi
 
