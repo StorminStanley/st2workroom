@@ -542,7 +542,7 @@ class profile::st2server {
     # but we pretty much need it for anything in the system
     # if we want our CA to validate with python-requests.
     python::pip { 'certifi':
-      pkgname => 'certifi'
+      pkgname => 'certifi',
       ensure  => 'present',
       before  => Exec['add CA to the certifi bundle']
     }
