@@ -545,7 +545,6 @@ class profile::st2server {
     python::pip { 'certifi':
       ensure     => present,
       require    => Exec['sign client cert req'],
-      before     => Exec['add CA to the certifi bundle'],
     }
     # That's kind of ugly, but we really need to use
     # the `certifi` bundle, because that's how `requests` works.
@@ -554,7 +553,7 @@ class profile::st2server {
       path      => '/usr/sbin:/usr/bin:/sbin:/bin',
       logoutput => true,
       refreshonly => true,
-      require   => Exec['sign client cert req'],
+      require   => Exec['certifi'],
     }
     ## CA Certificate END ##
 
