@@ -409,6 +409,7 @@ class profile::st2server {
       ensure  => file,
       owner   => $_nginx_daemon_user,
       mode    => '0444',
+      content => '',
       before  => Exec['create root CA'],
     }
     file { $_openssl_ca_serial:
