@@ -544,6 +544,7 @@ class profile::st2server {
     python::pip { 'certifi':
       pkgname => 'certifi'
       ensure  => present,
+      before  => Exec['add CA to the certifi bundle']
     }
 
     # That's kind of ugly, but we really need to use
