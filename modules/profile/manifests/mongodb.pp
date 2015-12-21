@@ -24,6 +24,7 @@ class profile::mongodb {
       '/usr/sbin',
     ],
     refreshonly => true,
+    require     => Docker::Image['mongo']
   }
 
   docker::run { 'mongo':
