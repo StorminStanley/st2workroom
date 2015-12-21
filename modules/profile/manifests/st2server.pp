@@ -549,11 +549,11 @@ class profile::st2server {
     # That's kind of ugly, but we really need to use
     # the `certifi` bundle, because that's how `requests` works.
     exec { 'add CA to the certifi bundle':
-      command   => "cat ${_ssl_cert} >> `python -c 'import certifi; print certifi.where()'`",
-      path      => '/usr/sbin:/usr/bin:/sbin:/bin',
-      logoutput => true,
+      command     => "cat ${_ssl_cert} >> `python -c 'import certifi; print certifi.where()'`",
+      path        => '/usr/sbin:/usr/bin:/sbin:/bin',
+      logoutput   => true,
       refreshonly => true,
-      require   => Exec['certifi'],
+      require     => Exec['certifi'],
     }
     ## CA Certificate END ##
 
