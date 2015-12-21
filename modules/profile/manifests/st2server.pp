@@ -554,6 +554,7 @@ class profile::st2server {
       path        => '/usr/sbin:/usr/bin:/sbin:/bin',
       logoutput   => true,
       refreshonly => true,
+      subscribe   => File["${_ssl_cert}"],
       require     => Exec['sign client cert req'],
     }
     ## CA Certificate END ##
