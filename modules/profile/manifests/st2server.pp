@@ -538,9 +538,18 @@ class profile::st2server {
       require   => File["${_openssl_root}/.rnd"],
     }
 
+
+    # Certifi is also an `st2client` requirement,
+    # but we pretty much need it for anything in the system
+    # if we want our CA to validate with python-requests.
+    python::pip { 'certifi':
+      ensure     => present,
+      require    => Exec['sign client cert req'],
+      before     => Exec['add CA to the certifi bundle'],
+    }
     # That's kind of ugly, but we really need to use
     # the `certifi` bundle, because that's how `requests` works.
-    exec { 'add cert to bundle diddly doo':
+    exec { 'add CA to the certifi bundle':
       command   => "cat ${_ssl_cert} >> `python -c 'import certifi; print certifi.where()'`",
       path      => '/usr/sbin:/usr/bin:/sbin:/bin',
       logoutput => true,
