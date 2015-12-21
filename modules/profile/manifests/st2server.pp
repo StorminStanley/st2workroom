@@ -537,6 +537,16 @@ class profile::st2server {
       logoutput => true,
       require   => File["${_openssl_root}/.rnd"],
     }
+
+    # That's kind of ugly, but we really need to use
+    # the `certifi` bundle, because that's how `requests` works.
+    exec { 'add cert to bundle diddly doo':
+      command   => "cat ${_ssl_cert} >> `python -c 'import certifi; print certifi.where()'`",
+      path      => '/usr/sbin:/usr/bin:/sbin:/bin',
+      logoutput => true,
+      refreshonly => true,
+      require   => Exec['sign client cert req'],
+    }
     ## CA Certificate END ##
 
     # We also must provide an endpoint for the user to go to in order
