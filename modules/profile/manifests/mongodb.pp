@@ -33,7 +33,7 @@ class profile::mongodb {
       'mongodata',
     ],
     ports   => [
-      '27017:27017',
+      '127.0.0.1:27017:27017',
     ],
     require => [
       Docker::Image['mongo'],
