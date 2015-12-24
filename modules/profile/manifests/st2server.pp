@@ -726,6 +726,7 @@ class profile::st2server {
       'proxy_buffering off;',
       'proxy_cache off;',
       'proxy_set_header Host $host;',
+      'error_page 502 =200 @errors;',
     ],
   }
 
@@ -842,7 +843,13 @@ class profile::st2server {
     owner   => 'root',
     mode    => '0755',
     content => '{ "faultstring": "Endpoint does not exist. Use /api/tokens instead. You might be using outdated version of st2web." }',
-    notify  => Class['::nginx::service'],
+  }
+
+  file { '/opt/stackstorm/static/errors/stream.bin':
+    ensure  => file,
+    owner   => 'root',
+    mode    => '0755',
+    content => "retry: 1000\n\n",
   }
 
   nginx::resource::location { 'st2autherror':
@@ -855,6 +862,23 @@ class profile::st2server {
     ],
     raw_prepend          => [
       'error_page  405     =200 $uri;',
+      $_cors_custom_options,
+    ],
+  }
+
+  nginx::resource::location { 'errors':
+    vhost                => 'st2webui',
+    ssl_only             => true,
+    location             => '@errors',
+    www_root             => '/opt/stackstorm/static/errors/',
+    rewrite_rules        => [
+      '/stream /stream.bin break',
+    ],
+    raw_prepend          => [
+      'error_page 405 =200 $uri;',
+      'types {',
+      '  text/event-stream bin;',
+      '}',
       $_cors_custom_options,
     ],
   }
