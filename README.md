@@ -172,11 +172,9 @@ NOTE: You may be asked for permission to make modifications to the Host's `/etc/
 
 ### Adding Users
 By default, the `stanley` user is added to both the `st2express` and `st2dev` roles. This
-user is installed with default SSH keys that are insecure and not meant to be used in
-production. If you would like to change these keys, take a look at the `st2::stanley`
-keys located in `hieradata/workroom.yaml`
-
-For example, to change the SSH Keys for the `stanley` user:
+user has no SSH key associated with it by default. This means that if you want to use remote
+the runner you need to generate a new key pair and configure it in workroom.yaml file as shown
+below.
 
 ```
 # hieradata/workroom.yaml
