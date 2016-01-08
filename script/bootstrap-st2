@@ -14,6 +14,7 @@ show_help() {
   echo "Usage: $0 [OPTION]..."
   echo
   echo "  -a,  --answers     Supply installer with an answer file"
+  echo "  -r,  -- ref        Supply a SHA or TAG to use as installer version"
   echo "  -h,  --help        This help screen"
   echo
 }
@@ -64,6 +65,23 @@ while :; do
             printf 'ERROR: "--branch" requires a non-empty option argument.\n' >&2
             exit 1
             ;;
+        -r|--ref)
+            if [ -n "$2" ]; then
+                REF=$2
+                shift 2
+                continue
+            else
+                printf 'ERROR: "--ref" requires a non-empty option argument.\n' >&2
+                exit 1
+            fi
+            ;;
+        --ref=?*)
+            REF=${1#*=}
+            ;;
+        --ref=)
+            printf 'ERROR: "--ref" requires a non-empty option argument.\n' >&2
+            exit 1
+            ;;
         --)
             shift
             break
@@ -78,6 +96,14 @@ while :; do
 done
 
 ### Installation Steps
+
+# Validate args
+
+if [ -n  "$BRANCH" ] && [ -n "$REF" ]; then
+    printf "ERROR: Either specify a branch or ref but not both.\n"
+    exit 2
+fi
+
 # Install Pre-req for git
 if [ -f /usr/bin/apt-get ]; then
   apt-get update
@@ -99,6 +125,14 @@ fi
 # If a user provides a branch, check it out
 if [ -n "$BRANCH" ]; then
     git --git-dir=${PROJECT_ROOT}/.git --work-tree=${PROJECT_ROOT} checkout ${BRANCH}
+fi
+
+if [ -n "$REF" ]; then
+    RET=$(git --git-dir=${PROJECT_ROOT}/.git --work-tree=${PROJECT_ROOT} checkout ${REF} -b REF_${REF})
+    if [[ $RET != 0 ]]; then
+        printf "ERROR: Cannot checkout ref: ${REF}. Check if ref (SHA or tag) is valid."
+        exit 3
+    fi
 fi
 
 # Ability to disable hubot, drop to long-term setting for installer.
