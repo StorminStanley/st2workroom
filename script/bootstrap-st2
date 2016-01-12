@@ -14,6 +14,7 @@ show_help() {
   echo "Usage: $0 [OPTION]..."
   echo
   echo "  -a,  --answers     Supply installer with an answer file"
+  echo "  -r,  -- ref        Supply a SHA or TAG or branch to use as installer version"
   echo "  -h,  --help        This help screen"
   echo
 }
@@ -47,21 +48,21 @@ while :; do
             printf 'ERROR: "--answers" requires a non-empty option argument.\n' >&2
             exit 1
             ;;
-        -b|--branch)
+        -r|--ref)
             if [ -n "$2" ]; then
-                BRANCH=$2
+                REF=$2
                 shift 2
                 continue
             else
-                printf 'ERROR: "--branch" requires a non-empty option argument.\n' >&2
+                printf 'ERROR: "--ref" requires a non-empty option argument.\n' >&2
                 exit 1
             fi
             ;;
-        --branch=?*)
-            BRANCH=${1#*=}
+        --ref=?*)
+            REF=${1#*=}
             ;;
-        --branch=)
-            printf 'ERROR: "--branch" requires a non-empty option argument.\n' >&2
+        --ref=)
+            printf 'ERROR: "--ref" requires a non-empty option argument.\n' >&2
             exit 1
             ;;
         --)
@@ -96,9 +97,12 @@ if [ ! -d ${PROJECT_ROOT}/.git ]; then
   git clone https://github.com/StackStorm/st2workroom ${PROJECT_ROOT}
 fi
 
-# If a user provides a branch, check it out
-if [ -n "$BRANCH" ]; then
-    git --git-dir=${PROJECT_ROOT}/.git --work-tree=${PROJECT_ROOT} checkout ${BRANCH}
+if [ -n "$REF" ]; then
+    RET=$(git --git-dir=${PROJECT_ROOT}/.git --work-tree=${PROJECT_ROOT} checkout ${REF} -b REF_${REF})
+    if [[ $RET != 0 ]]; then
+        printf "ERROR: Cannot checkout ref: ${REF}. Check if ref (SHA or tag) is valid."
+        exit 3
+    fi
 fi
 
 # Ability to disable hubot, drop to long-term setting for installer.
