@@ -176,13 +176,12 @@ user has no SSH key associated with it by default. This means that if you want t
 the runner you need to generate a new key pair and configure it in workroom.yaml file as shown
 below.
 
-```
+``` yaml
 # hieradata/workroom.yaml
 st2::stanley::ssh_public_key: XXXXXX
 st2::stanley::ssh_key_type: ssh-rsa
 st2::stanley::ssh_private_key: XXXXXX
 ```
-
 
 However, there may exist times where you want to add a local user to the box. To do
 this, simply add an entry to `hieradata/workroom.yaml` under the `users` key.
