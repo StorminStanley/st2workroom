@@ -14,7 +14,7 @@ show_help() {
   echo "Usage: $0 [OPTION]..."
   echo
   echo "  -a,  --answers     Supply installer with an answer file"
-  echo "  -r,  -- ref        Supply a SHA or TAG to use as installer version"
+  echo "  -r,  -- ref        Supply a SHA or TAG or branch to use as installer version"
   echo "  -h,  --help        This help screen"
   echo
 }
@@ -48,23 +48,6 @@ while :; do
             printf 'ERROR: "--answers" requires a non-empty option argument.\n' >&2
             exit 1
             ;;
-        -b|--branch)
-            if [ -n "$2" ]; then
-                BRANCH=$2
-                shift 2
-                continue
-            else
-                printf 'ERROR: "--branch" requires a non-empty option argument.\n' >&2
-                exit 1
-            fi
-            ;;
-        --branch=?*)
-            BRANCH=${1#*=}
-            ;;
-        --branch=)
-            printf 'ERROR: "--branch" requires a non-empty option argument.\n' >&2
-            exit 1
-            ;;
         -r|--ref)
             if [ -n "$2" ]; then
                 REF=$2
@@ -96,14 +79,6 @@ while :; do
 done
 
 ### Installation Steps
-
-# Validate args
-
-if [ -n  "$BRANCH" ] && [ -n "$REF" ]; then
-    printf "ERROR: Either specify a branch or ref but not both.\n"
-    exit 2
-fi
-
 # Install Pre-req for git
 if [ -f /usr/bin/apt-get ]; then
   apt-get update
@@ -120,11 +95,6 @@ if [ ! -d ${PROJECT_ROOT}/.git ]; then
     mv ${PROJECT_ROOT} ${PROJECT_ROOT}.old
   fi
   git clone https://github.com/StackStorm/st2workroom ${PROJECT_ROOT}
-fi
-
-# If a user provides a branch, check it out
-if [ -n "$BRANCH" ]; then
-    git --git-dir=${PROJECT_ROOT}/.git --work-tree=${PROJECT_ROOT} checkout ${BRANCH}
 fi
 
 if [ -n "$REF" ]; then
