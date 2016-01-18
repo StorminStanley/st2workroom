@@ -98,7 +98,7 @@ if [ ! -d ${PROJECT_ROOT}/.git ]; then
 fi
 
 if [ -n "$REF" ]; then
-    git --git-dir=${PROJECT_ROOT}/.git --work-tree=${PROJECT_ROOT} checkout ${REF} -b REF_${REF}
+    git --git-dir=${PROJECT_ROOT}/.git --work-tree=${PROJECT_ROOT} checkout ${REF}
     RET=$?
 
     if [ $RET -ne 0 ]; then
