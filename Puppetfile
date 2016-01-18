@@ -51,7 +51,7 @@ mod 'maestrodev-wget',
   :git => 'https://github.com/maestrodev/puppet-wget',
   :ref => 'master'
 
-mod 'stackstorm-st2',                '0.14.1'
+mod 'stackstorm-st2',                '0.14.2'
 
 mod 'ilanco-s3cmd', '0.2.1'
 mod 'camptocamp-systemd', '0.2.2'
