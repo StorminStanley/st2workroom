@@ -77,7 +77,7 @@ FORGE
     saz-rsyslog (3.5.1)
     saz-sudo (3.0.9)
       puppetlabs-stdlib (>= 2.3.0)
-    stackstorm-st2 (0.14.1)
+    stackstorm-st2 (0.13.2)
       garethr-erlang (>= 0.3.0)
       ghoneycutt-facter (>= 2.1.0)
       jamtur01-httpauth (>= 0.0.3)
@@ -166,7 +166,7 @@ DEPENDENCIES
   rodjek-logrotate (= 1.1.1)
   saz-rsyslog (= 3.5.1)
   saz-sudo (= 3.0.9)
-  stackstorm-st2 (= 0.14.1)
+  stackstorm-st2 (= 0.13.2)
   stankevich-python (= 1.7.15)
   treydock-gpg_key (= 0.0.3)
 
