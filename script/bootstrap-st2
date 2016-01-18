@@ -14,7 +14,7 @@ show_help() {
   echo "Usage: $0 [OPTION]..."
   echo
   echo "  -a,  --answers     Supply installer with an answer file"
-  echo "  -r,  -- ref        Supply a SHA or TAG or branch to use as installer version"
+  echo "  -r,  --ref         Supply a SHA or TAG or branch to use as installer version"
   echo "  -h,  --help        This help screen"
   echo
 }
