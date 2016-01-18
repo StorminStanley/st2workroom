@@ -98,8 +98,10 @@ if [ ! -d ${PROJECT_ROOT}/.git ]; then
 fi
 
 if [ -n "$REF" ]; then
-    RET=$(git --git-dir=${PROJECT_ROOT}/.git --work-tree=${PROJECT_ROOT} checkout ${REF} -b REF_${REF})
-    if [[ $RET != 0 ]]; then
+    git --git-dir=${PROJECT_ROOT}/.git --work-tree=${PROJECT_ROOT} checkout ${REF} -b REF_${REF}
+    RET=$?
+
+    if [ $RET -ne 0 ]; then
         printf "ERROR: Cannot checkout ref: ${REF}. Check if ref (SHA or tag) is valid."
         exit 3
     fi
