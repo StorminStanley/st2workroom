@@ -30,7 +30,7 @@ retry_message() {
     echo ""
     echo "If you don't happen to get the 'OK' after that, give us a shout!"
     echo "Please also make sure to check and forward us the ${LOG_FILE} log file."
-    echo "This file should include more information which should help us"
+    echo "This file should include more information which will help us"
     echo "troubleshoot this issue."
     echo "We don't want to leave you hanging! Come find your favorite way to"
     echo "contact us, and we'll get you going faster than you can say..."
