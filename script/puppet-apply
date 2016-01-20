@@ -123,13 +123,7 @@ if [ "$PUPPET_ENV" = "current_working_directory" ]; then
     echo "Setting up 'current_working_directory'..."
 
     ## Install Puppet libs
-    _librarian_cmd="librarian-puppet install"
-    if [ -n "$DEBUG" ]; then
-        echo "Running ${_librarian_cmd}..."
-        eval "${_librarian_cmd} 2>&1 | tee -a $LOG_FILE"
-    else
-        eval "${_librarian_cmd} >> ${LOG_FILE} 2>&1"
-    fi
+    execute-command librarian-puppet install
 
     ## Setup an environment for this project
     rsync $RSYNC_DEBUG_ARGS -arh --delete --exclude "environments" \
@@ -138,15 +132,7 @@ if [ "$PUPPET_ENV" = "current_working_directory" ]; then
           $PROJECT_ROOT/ $PROJECT_ROOT/environments/current_working_directory/
 else
     echo "Setting up Puppet environments..."
-
-    _generate_environment_cmd="rake environments:update"
-    if [ -n "$DEBUG" ]; then
-        echo "Running ${_generate_environment_cmd}..."
-        eval "${_generate_environment_cmd} 2>&1 | tee -a $LOG_FILE"
-    else
-        eval "${_generate_environment_cmd} >> ${LOG_FILE} 2>&1"
-    fi
-
+    execute-command rake environments:update
 fi
 
 ## Attempt to detect if the environment even exists... if not,

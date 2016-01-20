@@ -23,7 +23,7 @@ fi
 # Install EPEL on RHEL boxen
 if [ -n "$EPEL" ]; then
     if [ ! -f /etc/yum.repos.d/epel.repo ]; then
-        rpm -ivh $EPEL
+        execute-command rpm -ivh $EPEL
     fi
 fi
 
@@ -31,21 +31,21 @@ fi
 # and get it ready for usage. Needs to happen before other packages
 # attempt to install
 if [ -n "$SCL" ]; then
-    yum install -y $SCL
+    execute-command yum install -y $SCL
 fi
 
-yum clean all
-yum clean dbcache
-yum groupinstall -y "Development Tools"
+execute-command yum clean all
+execute-command yum clean dbcache
+execute-command yum groupinstall -y "Development Tools"
 
 if [ "$CR" = true ] ; then
-    yum -y update
-    yum -y install yum-utils
-    yum-config-manager --enable cr
+    execute-command yum -y update
+    execute-command yum -y install yum-utils
+    execute-command yum-config-manager --enable cr
 fi
 
-yum install -y $PACKAGES
+execute-command yum install -y $PACKAGES
 
 if [ "$CR" = true ] ; then
-    yum-config-manager --disable cr
+    execute-command yum-config-manager --disable cr
 fi

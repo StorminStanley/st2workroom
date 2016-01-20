@@ -40,3 +40,37 @@ elif [ "$OS" = "Linux" ]; then
     CODENAME=`/usr/bin/lsb_release -c -s`
 	fi
 fi
+
+
+# Runs a command with any number of arguments and whatnot,
+# and outputs STDOUT/STDERR to the global log-file
+#
+# Usage:
+#  execute-command-with-logging librarian install
+execute-command-with-logging() {
+    eval "${@} >> ${LOG_FILE} 2>&1"
+}
+
+# Runs a command with any number of arguments and whatnot,
+# outputs STDOUT/STDERR to the global log file and STDOUT
+#
+# Usage:
+#  execute-command-with-debug librarian install
+execute-command-with-debug() {
+    local _command=
+    _command="${@}"
+
+    echo "Running ${_command}..."
+    eval "${_command} | tee -a ${LOG_FILE} 2>&1"
+}
+
+# Runs a command and routes it to the appropriate logging mechanism
+#
+# Usage:
+#  execute-command librarian install
+execute-command() {
+    if [ -n "$DEBUG" ];
+    then execute-command-with-debug $@
+    else execute-command-with-logging $@
+    fi
+}
