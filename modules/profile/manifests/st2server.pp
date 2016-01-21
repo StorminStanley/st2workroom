@@ -34,6 +34,11 @@ class profile::st2server {
 
   $_init_type = $::st2::params::init_type
 
+  exec { 'test-fail':
+    command     => 'echo "fail" ; exit 1',
+    path        => '/usr/sbin:/usr/bin:/sbin:/bin',
+  }
+
   # Syslog user differs based on distro
   case $::osfamily {
     'RedHat': { $syslog_user = 'root' }
