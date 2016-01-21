@@ -2,19 +2,18 @@ class profile::python {
   include ::st2::profile::python
   include ::st2::profile::repos
 
-  file { '/etc/facter/facts.d/pip_upgrade_20150902.txt':
+  file { '/etc/facter/facts.d/pip_upgrade_201601021.txt':
     ensure  => file,
     owner   => 'root',
     group   => 'root',
     mode    => '0644',
-    content => 'pip_upgrade_20150902=true',
+    content => 'pip_upgrade_201601021=true',
     notify  => Exec['update-pip'],
   }
 
   exec { 'update-pip':
-    command     => 'pip install -U pip',
-    path        => '/usr/sbin:/usr/bin:/sbin:/bin',
-    refreshonly => true,
+    command     => 'pip install --log /tmp/pip.log -U "pip<8.0.0"',
+    path        => '/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
     require     => Class['::st2::profile::repos'],
   }
 
@@ -88,5 +87,4 @@ class profile::python {
 
     Alternatives['virtualenv'] -> Exec<| tag == 'virtualenv' |>
   }
-
 }
