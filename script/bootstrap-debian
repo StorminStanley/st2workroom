@@ -22,13 +22,13 @@ else
 fi
 
 echo "Installing OS pre-requsite packages...."
-execute-command apt-get update
-execute-command apt-get -y install $PACKAGES $RUBY_PACKAGES $AUGEAS_PACKAGES
+execute_command apt-get update
+execute_command apt-get -y install $PACKAGES $RUBY_PACKAGES $AUGEAS_PACKAGES
 
 if [ -n "$BUILD_RUBY" ]; then
     install_rvm
 fi
 
 if [ -n "$GEM_BUNDLER" ]; then
-    execute-command gem install --no-ri --no-rdoc bundler
+    execute_command gem install --no-ri --no-rdoc bundler
 fi

@@ -123,7 +123,7 @@ if [ "$PUPPET_ENV" = "current_working_directory" ]; then
     echo "Setting up 'current_working_directory'..."
 
     ## Install Puppet libs
-    execute-command librarian-puppet install
+    execute_command librarian-puppet install
 
     ## Setup an environment for this project
     rsync $RSYNC_DEBUG_ARGS -arh --delete --exclude "environments" \
@@ -132,7 +132,7 @@ if [ "$PUPPET_ENV" = "current_working_directory" ]; then
           $PROJECT_ROOT/ $PROJECT_ROOT/environments/current_working_directory/
 else
     echo "Setting up Puppet environments..."
-    execute-command rake environments:update
+    execute_command rake environments:update
 fi
 
 ## Attempt to detect if the environment even exists... if not,
