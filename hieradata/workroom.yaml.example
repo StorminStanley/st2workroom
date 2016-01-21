@@ -39,7 +39,7 @@
 #  HUBOT_LOG_LEVEL: "debug"
 #  HUBOT_HIPCHAT_JID: "XXX"
 #  HUBOT_HIPCHAT_PASSWORD: "XXX"
-#  HUBOT_HIPCHAT_XMPP_DOMAIN: "XXX" # Use only if using HipChat Server Beta
+#  HUBOT_HIPCHAT_XMPP_DOMAIN: "btf.hipchat.com" # Use only if using HipChat Server Beta
 #  ST2_CHANNEL: "hubot"
 #  ST2_AUTH_USERNAME: "testu"
 #  ST2_AUTH_PASSWORD: "testu"
