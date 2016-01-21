@@ -21,13 +21,14 @@ else
     PACKAGES="ruby-bundler $PACKAGES $AUGEAS_PACKAGES"
 fi
 
-apt-get update
-apt-get -y install $PACKAGES $RUBY_PACKAGES $AUGEAS_PACKAGES
+echo "Installing OS pre-requsite packages...."
+execute_command apt-get update
+execute_command apt-get -y install $PACKAGES $RUBY_PACKAGES $AUGEAS_PACKAGES
 
 if [ -n "$BUILD_RUBY" ]; then
     install_rvm
 fi
 
 if [ -n "$GEM_BUNDLER" ]; then
-    gem install --no-ri --no-rdoc bundler
+    execute_command gem install --no-ri --no-rdoc bundler
 fi

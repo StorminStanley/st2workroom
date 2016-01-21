@@ -25,18 +25,52 @@ if [ "$OS" = "OpenBSD" ]; then
     ARCH=`arch -s`
     BUNDLE_PATH='bundle20'
 elif [ "$OS" = "Linux" ]; then
-	KERNEL=`uname -r`
+    KERNEL=`uname -r`
   BUNDLE_PATH='bundle'
-	if [ -f /etc/redhat-release ]; then
-		DIST='RedHat'
-		REV=`cat /etc/redhat-release | sed s/.*release\ // | sed s/\ .*//`
+    if [ -f /etc/redhat-release ]; then
+        DIST='RedHat'
+        REV=`cat /etc/redhat-release | sed s/.*release\ // | sed s/\ .*//`
     MAJORVER=`echo $REV | cut -d '.' -f1`
-	elif [ -f /etc/SUSE-release ]; then
-		DIST=`cat /etc/SUSE-release | tr "\n" ' '| sed s/VERSION.*//`
-		REV=`cat /etc/SUSE-release | tr "\n" ' ' | sed s/.*=\ //`
-	elif [ -f /etc/debian_version ] ; then
-		DIST="Debian"
-		REV="`cat /etc/debian_version`"
+    elif [ -f /etc/SUSE-release ]; then
+        DIST=`cat /etc/SUSE-release | tr "\n" ' '| sed s/VERSION.*//`
+        REV=`cat /etc/SUSE-release | tr "\n" ' ' | sed s/.*=\ //`
+    elif [ -f /etc/debian_version ] ; then
+        DIST="Debian"
+        REV="`cat /etc/debian_version`"
     CODENAME=`/usr/bin/lsb_release -c -s`
-	fi
+    fi
 fi
+
+
+# Runs a command with any number of arguments and whatnot,
+# and outputs STDOUT/STDERR to the global log-file
+#
+# Usage:
+#  execute_command_with_logging librarian install
+execute_command_with_logging() {
+    eval "${@} >> ${LOG_FILE} 2>&1"
+}
+
+# Runs a command with any number of arguments and whatnot,
+# outputs STDOUT/STDERR to the global log file and STDOUT
+#
+# Usage:
+#  execute_command_with_debug librarian install
+execute_command_with_debug() {
+    local _command=
+    _command="${@}"
+
+    echo "Running ${_command}..."
+    eval "${_command} | tee -a ${LOG_FILE} 2>&1"
+}
+
+# Runs a command and routes it to the appropriate logging mechanism
+#
+# Usage:
+#  execute_command librarian install
+execute_command() {
+    if [ -n "$DEBUG" ];
+    then execute_command_with_debug $@
+    else execute_command_with_logging $@
+    fi
+}
