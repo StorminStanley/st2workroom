@@ -21,7 +21,7 @@ if [ -n "$CACHE_LIBRARIES" ]; then
     BUNDLER_CURRENT_SHA=$(git hash-object Gemfile)
     if [ "$BUNDLER_OLD_SHA" != "$BUNDLER_CURRENT_SHA" ]; then
         echo "Need to update bundled gems..."
-        $BUNDLE_PATH install --path vendor/bundle $BUNDLER_ARGS
+        execute_command $BUNDLE_PATH install --path vendor/bundle $BUNDLER_ARGS
 
         echo $BUNDLER_CURRENT_SHA > .bundler
     fi
@@ -29,18 +29,18 @@ if [ -n "$CACHE_LIBRARIES" ]; then
     PUPPET_OLD_SHA=$(cat .puppetfile)
     PUPPET_CURRENT_SHA=$(git hash-object Puppetfile)
     if [ "$PUPPET_OLD_SHA" != "$PUPPET_CURRENT_SHA" ]; then
-        $BUNDLE_PATH exec librarian-puppet install --path shared \
+        execute_command $BUNDLE_PATH exec librarian-puppet install --path shared \
                $LIBRARIAN_DEBUG_ARGS
 
         echo $PUPPET_CURRENT_SHA > .puppetfile
     fi
 else
     echo "Ensuring pre-flight libraries are setup..."
-    $BUNDLE_PATH install --path vendor/bundle $BUNDLER_ARGS >> $LOG_FILE 2>&1
+    execute_command $BUNDLE_PATH install --path vendor/bundle $BUNDLER_ARGS
 
     echo "Installing vendored puppet modules..."
-    $BUNDLE_PATH exec librarian-puppet install --path shared \
-           $LIBRARIAN_DEBUG_ARGS >> $LOG_FILE 2>&1
+    execute_command $BUNDLE_PATH exec librarian-puppet install --path shared \
+           $LIBRARIAN_DEBUG_ARGS
 fi
 
 
