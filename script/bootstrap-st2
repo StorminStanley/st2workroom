@@ -105,6 +105,10 @@ if [ -n "$REF" ]; then
         printf "ERROR: Cannot checkout ref: ${REF}. Check if ref (SHA or tag) is valid."
         exit 3
     fi
+
+    # Set ENV to current working directory so the selected revision will also be
+    # used
+    export ENV=current_working_directory
 fi
 
 # Ability to disable hubot, drop to long-term setting for installer.
