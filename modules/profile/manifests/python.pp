@@ -15,7 +15,6 @@ class profile::python {
     command     => 'pip install --log /tmp/pip.log -U "pip<8.0.0"',
     path        => '/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
     require     => Class['::st2::profile::repos'],
-    logoutput   => true,
   }
 
   Exec['update-pip'] -> Python::Pip<||>
