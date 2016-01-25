@@ -2,12 +2,12 @@ class profile::python {
   include ::st2::profile::python
   include ::st2::profile::repos
 
-  file { '/etc/facter/facts.d/pip_upgrade_201601021.txt':
+  file { '/etc/facter/facts.d/pip_upgrade_201601025.txt':
     ensure  => file,
     owner   => 'root',
     group   => 'root',
     mode    => '0644',
-    content => 'pip_upgrade_201601021=true',
+    content => 'pip_upgrade_201601025=true',
     notify  => Exec['update-pip'],
   }
 
