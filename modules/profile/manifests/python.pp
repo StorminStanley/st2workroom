@@ -2,17 +2,17 @@ class profile::python {
   include ::st2::profile::python
   include ::st2::profile::repos
 
-  file { '/etc/facter/facts.d/pip_upgrade_201601021.txt':
+  file { '/etc/facter/facts.d/pip_upgrade_201601025.txt':
     ensure  => file,
     owner   => 'root',
     group   => 'root',
     mode    => '0644',
-    content => 'pip_upgrade_201601021=true',
+    content => 'pip_upgrade_201601025=true',
     notify  => Exec['update-pip'],
   }
 
   exec { 'update-pip':
-    command     => 'pip install --log /tmp/pip.log -U "pip<8.0.0"',
+    command     => 'pip install --log /tmp/pip.log -U "pip>=7.1.2,<8.0.0"',
     path        => '/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
     require     => Class['::st2::profile::repos'],
   }
