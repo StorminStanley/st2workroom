@@ -1,0 +1,85 @@
+#!/usr/bin/env sh
+set -e
+
+DIR=$( dirname "$(readlink -f "$0")" )
+. $DIR/shared-functions
+
+TEST_PACKAGE="st2common"
+
+is_st2_installed() {
+    local __resultvar=$1
+    eval $__resultvar=false
+    if [ "$OS" = "Linux" ]; then
+        if [ "$DIST" = "Debian" ]; then
+            dpkg -s ${TEST_PACKAGE} >> /dev/null
+        elif [ "$DIST" = "RedHat" ]; then
+            rpm -qa ${TEST_PACKAGE} | grep ${TEST_PACKAGE} >> /dev/null
+        fi
+    fi
+
+    if [ $? -eq 0 ]; then
+        eval $__resultvar=true
+    fi
+}
+
+is_st2_installed WARN_ABOUT_UPDATE
+
+# If st2 is not installed then exit immediately
+if [ ${WARN_ABOUT_UPDATE} = false ]; then
+    exit 0
+fi
+
+PROJECT_ROOT=/opt/puppet
+ANSWERS_FILE_YAML=${PROJECT_ROOT}/hieradata/answers.yaml
+ANSWERS_FILE_JSON=${PROJECT_ROOT}/hieradata/answers.json
+ANSWERS_FILE=""
+
+if [ -f ${ANSWERS_FILE_YAML} ]; then
+    ANSWERS_FILE=${ANSWERS_FILE_YAML}
+elif [ -f ${ANSWERS_FILE_JSON} ]; then
+    ANSWERS_FILE=${ANSWERS_FILE_JSON}
+fi
+
+grep "st2::version" ${ANSWERS_FILE} >> /dev/null && grep "st2::revision" ${ANSWERS_FILE} >> /dev/null
+# Safe to exit if version and revision are defined in answers
+if [ $? -eq 0 ]; then
+    exit 0
+fi
+
+INSTALLED_VERSION_REVISION=""
+if [ "$OS" = "Linux" ]; then
+    if [ "$DIST" = "Debian" ]; then
+        INSTALLED_VERSION_REVISION=`dpkg -s ${TEST_PACKAGE} | grep Version | awk -F: '{print $2}' | sed -e 's/^[ \t]*//'`
+    elif [ "$DIST" = "RedHat" ]; then
+        INSTALLED_VERSION_REVISION=`rpm -qa ${TEST_PACKAGE} | sed -e "s/${TEST_PACKAGE}-//" | sed -e 's/.noarch//'`
+    fi
+fi
+
+HIERA_ST2_YAML=${PROJECT_ROOT}/hieradata/role/st2.yaml
+if [ ! -f ${HIERA_ST2_YAML} ]; then
+    echo "Could not find ${HIERA_ST2_YAML} so cannot perform version checks."
+    exit 0
+fi
+
+HIERA_ST2_VERSION=`grep "st2::version" ${HIERA_ST2_YAML} | awk -F: '{print $4}' |  sed -e 's/^[ \t]*//'`
+HIERA_ST2_REVISION=`grep "st2::revision" ${HIERA_ST2_YAML} | awk -F: '{print $4}' |  sed -e 's/^[ \t]*//'`
+
+TO_BE_INSTALLED_VERSION_REVISION="${HIERA_ST2_VERSION}-${HIERA_ST2_REVISION}"
+
+if [ ${INSTALLED_VERSION_REVISION} = ${TO_BE_INSTALLED_VERSION_REVISION} ]; then
+    exit 0
+fi
+
+echo "We noticed that the currently ${INSTALLED_VERSION_REVISION} and ${TO_BE_INSTALLED_VERSION_REVISION} are different. "
+echo "Version ${TO_BE_INSTALLED_VERSION_REVISION} will overwrite ${INSTALLED_VERSION_REVISION}."
+echo "To avoid seeing this message in the future please follow instructions from <KB>."
+
+
+while true; do
+    read -p "Do you wish to continue with the installation? [Y/n]" yn
+    case $yn in
+        [Y] ) exit 0;;
+        [Nn] ) exit 1;;
+        * ) echo "Please answer Y or n.";;
+    esac
+done
