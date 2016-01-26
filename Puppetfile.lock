@@ -85,7 +85,7 @@ FORGE
 GIT
   remote: https://github.com/StackStorm/puppet-st2
   ref: try_some_rbac_stuff
-  sha: 1881d7364568d0b6f3d49382ceac96e6c2d09c79
+  sha: 96f95b100027010b583c541ba15dd31416f548d5
   specs:
     stackstorm-st2 (0.14.3)
       garethr-erlang (>= 0.3.0)
