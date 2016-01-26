@@ -6,6 +6,10 @@ DIR=$( dirname "$(readlink -f "$0")" )
 
 TEST_PACKAGE="st2common"
 
+##
+# Test for st2 being installed by looking for the st2common package.
+# It is likely that st2 i.e. the client could be installed standalone.
+##
 is_st2_installed() {
     local __resultvar=$1
     eval $__resultvar=false
@@ -46,14 +50,8 @@ if [ $? -eq 0 ]; then
     exit 0
 fi
 
-INSTALLED_VERSION_REVISION=""
-if [ "$OS" = "Linux" ]; then
-    if [ "$DIST" = "Debian" ]; then
-        INSTALLED_VERSION_REVISION=`dpkg -s ${TEST_PACKAGE} | grep Version | awk -F: '{print $2}' | sed -e 's/^[ \t]*//'`
-    elif [ "$DIST" = "RedHat" ]; then
-        INSTALLED_VERSION_REVISION=`rpm -qa ${TEST_PACKAGE} | sed -e "s/${TEST_PACKAGE}-//" | sed -e 's/.noarch//'`
-    fi
-fi
+# Once it is known that st2 is installed it is safe to assume that the client is present.
+INSTALLED_VERSION_REVISION=`st2 --version 2>&1 | awk -F \' '{print $2}'`
 
 HIERA_ST2_YAML=${PROJECT_ROOT}/hieradata/role/st2.yaml
 if [ ! -f ${HIERA_ST2_YAML} ]; then
@@ -64,16 +62,15 @@ fi
 HIERA_ST2_VERSION=`grep "st2::version" ${HIERA_ST2_YAML} | awk -F: '{print $4}' |  sed -e 's/^[ \t]*//'`
 HIERA_ST2_REVISION=`grep "st2::revision" ${HIERA_ST2_YAML} | awk -F: '{print $4}' |  sed -e 's/^[ \t]*//'`
 
-TO_BE_INSTALLED_VERSION_REVISION="${HIERA_ST2_VERSION}-${HIERA_ST2_REVISION}"
+TO_BE_INSTALLED_VERSION_REVISION="${HIERA_ST2_VERSION}.${HIERA_ST2_REVISION}"
 
 if [ ${INSTALLED_VERSION_REVISION} = ${TO_BE_INSTALLED_VERSION_REVISION} ]; then
     exit 0
 fi
 
-echo "We noticed that the currently ${INSTALLED_VERSION_REVISION} and ${TO_BE_INSTALLED_VERSION_REVISION} are different. "
-echo "Version ${TO_BE_INSTALLED_VERSION_REVISION} will overwrite ${INSTALLED_VERSION_REVISION}."
-echo "To avoid seeing this message in the future please follow instructions from <KB>."
-
+echo "We noticed that the currently installed version ${INSTALLED_VERSION_REVISION} and to be installed version ${TO_BE_INSTALLED_VERSION_REVISION}"
+echo "are different. Version ${TO_BE_INSTALLED_VERSION_REVISION} will overwrite version ${INSTALLED_VERSION_REVISION}."
+echo "To avoid an unintentional change of version, please follow instructions from <KB>."
 
 while true; do
     read -p "Do you wish to continue with the installation? [Y/n]" yn
