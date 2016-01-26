@@ -17,6 +17,7 @@ class profile::st2rbac {
     # Create default admin role assignment for root_cli user
     $_root_cli_username = $::profile::st2server::_root_cli_username
     st2::rbac { $_root_cli_username:
+      ensure       => present,
       description  => 'Default admin role assignments created by the installer',
       roles        => [
           'admin'
@@ -28,6 +29,7 @@ class profile::st2rbac {
     if size($_hubot_data.keys()) >= 1 {
         $_chatops_bot_username = $_hubot_data['ST2_AUTH_USERNAME']
         st2::rbac { $_chatops_bot_username:
+          ensure       => present,
           description  => 'Default admin role assignment created by the installer',
           roles        => [
               'admin'
@@ -40,6 +42,7 @@ class profile::st2rbac {
     # rules
     $_system_user_username = hiera('st2::stanley::username', 'stanley');
     st2::rbac { $_system_user_username:
+      ensure       => present,
       description  => 'Default admin role assignment created by the installer',
       roles        => [
           'admin'
@@ -53,6 +56,7 @@ class profile::st2rbac {
         $_admin_user = $_users[0]
 
         st2::rbac { $_admin_user:
+          ensure       => present,
           description  => 'Default system_admin role assignment created by the installer',
           roles        => [
               'system_admin'
