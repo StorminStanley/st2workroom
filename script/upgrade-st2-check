@@ -69,11 +69,12 @@ if [ ${INSTALLED_VERSION_REVISION} = ${TO_BE_INSTALLED_VERSION_REVISION} ]; then
 fi
 
 echo "We noticed that the currently installed version ${INSTALLED_VERSION_REVISION} and to be installed version ${TO_BE_INSTALLED_VERSION_REVISION}"
-echo "are different. Version ${TO_BE_INSTALLED_VERSION_REVISION} will overwrite version ${INSTALLED_VERSION_REVISION}."
-echo "To avoid an unintentional change of version, please follow instructions from <KB>."
+echo "of StackStorm are different. Version ${TO_BE_INSTALLED_VERSION_REVISION} will overwrite version ${INSTALLED_VERSION_REVISION}. To avoid an"
+echo "unintentional change of version, please follow instructions from <KB> and hit 'n'."
+echo
 
 while true; do
-    read -p "Do you wish to continue with the installation? [Y/n]" yn
+    read -p "Do you wish to overwrite with version ${TO_BE_INSTALLED_VERSION_REVISION}? [Y/n]" yn
     case $yn in
         [Y] ) exit 0;;
         [Nn] ) exit 1;;
