@@ -218,7 +218,7 @@ class profile::st2server {
   # Ensure that IPTables has access rules to alloww
   # access to StackStorm ports as necessary.
   firewall { '100 allow HTTP/HTTPS/ST2 Access':
-    dport  => ['80', '443', $_st2auth_port, $_st2api_port],
+    dport  => ['80', '443' , $_st2auth_port, $_st2api_port],
     proto  => tcp,
     action => accept,
   }
@@ -963,7 +963,19 @@ class profile::st2server {
 
   ## This creates the init script to start the
   ## st2installer service via uwsgi
+
+  # Note: We don't want to restart st2installer uwsgi app since will break
+  # puppet run (it kills the running process) so puppet wont fully converge
+
+  if $_installer_running {
+    $_st2installer_uwsgi_restart = false
+  }
+  else {
+    $_st2installer_uwsgi_restart = true
+  }
+
   adapter::st2_uwsgi_init { 'st2installer':
+    enable_restart => $_st2installer_uwsgi_restart,
     require => File['/var/sockets'],
   }
 
