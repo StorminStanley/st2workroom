@@ -13,23 +13,25 @@ TEST_PACKAGE="st2common"
 is_st2_installed() {
     local __resultvar=$1
     eval $__resultvar=false
+    local out=""
     if [ "$OS" = "Linux" ]; then
         if [ "$DIST" = "Debian" ]; then
-            dpkg -s ${TEST_PACKAGE} >> /dev/null
+            # the true at the end avoids an exit since dpkg will otherwise fail
+            out=`dpkg -l | grep ${TEST_PACKAGE} || true`
         elif [ "$DIST" = "RedHat" ]; then
-            rpm -qa ${TEST_PACKAGE} | grep ${TEST_PACKAGE} >> /dev/null
+            out=`rpm -qa ${TEST_PACKAGE}`
         fi
     fi
 
-    if [ $? -eq 0 ]; then
+    if [ -n "${out}" ]; then
         eval $__resultvar=true
     fi
 }
 
-is_st2_installed WARN_ABOUT_UPDATE
+is_st2_installed INSTALLED
 
 # If st2 is not installed then exit immediately
-if [ ${WARN_ABOUT_UPDATE} = false ]; then
+if [ ${INSTALLED} = false ]; then
     exit 0
 fi
 
@@ -44,10 +46,14 @@ elif [ -f ${ANSWERS_FILE_JSON} ]; then
     ANSWERS_FILE=${ANSWERS_FILE_JSON}
 fi
 
-grep "st2::version" ${ANSWERS_FILE} >> /dev/null && grep "st2::revision" ${ANSWERS_FILE} >> /dev/null
-# Safe to exit if version and revision are defined in answers
-if [ $? -eq 0 ]; then
-    exit 0
+if [ -n "${ANSWERS_FILE}" ]; then
+    is_version_present=`grep "st2::version" ${ANSWERS_FILE} || true`
+    is_revision_present=`grep "st2::revision" ${ANSWERS_FILE} || true`
+    # Safe to exit if version and revision are defined in answers
+    if [[ -n "${is_version_present}" ] && [ -n "${is_revision_present}" ]]; then
+        echo "Both version and revision present in ${ANSWERS_FILE}"
+        exit 0
+    fi
 fi
 
 # Once it is known that st2 is installed it is safe to assume that the client is present.
@@ -65,6 +71,7 @@ HIERA_ST2_REVISION=`grep "st2::revision" ${HIERA_ST2_YAML} | awk -F: '{print $4}
 TO_BE_INSTALLED_VERSION_REVISION="${HIERA_ST2_VERSION}.${HIERA_ST2_REVISION}"
 
 if [ ${INSTALLED_VERSION_REVISION} = ${TO_BE_INSTALLED_VERSION_REVISION} ]; then
+    echo "Installed and to be installed versions match - ${INSTALLED_VERSION_REVISION}"
     exit 0
 fi
 
