@@ -211,7 +211,7 @@ class profile::st2server {
 
   class { '::nginx':
     package_name      => "${_nginx_package}",
-    service_restart   => '/etc/init.d/nginx configtest',
+    service_restart   => '/etc/init.d/nginx restart',
     configtest_enable => $_nginx_configtest,
   }
 
