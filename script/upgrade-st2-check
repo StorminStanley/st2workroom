@@ -50,7 +50,7 @@ if [ -n "${ANSWERS_FILE}" ]; then
     is_version_present=`grep "st2::version" ${ANSWERS_FILE} || true`
     is_revision_present=`grep "st2::revision" ${ANSWERS_FILE} || true`
     # Safe to exit if version and revision are defined in answers
-    if [[ -n "${is_version_present}" ] && [ -n "${is_revision_present}" ]]; then
+    if [ -n "${is_version_present}" ] && [ -n "${is_revision_present}" ]; then
         echo "Both version and revision present in ${ANSWERS_FILE}"
         exit 0
     fi
