@@ -50,3 +50,6 @@ if [ "$OS" = "Linux" ]; then
         $DIR/preflight-debian
     fi
 fi
+
+# Validate versions and check if pinning is required.
+. $DIR/upgrade-st2-check
