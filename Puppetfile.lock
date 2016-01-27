@@ -77,6 +77,17 @@ FORGE
     saz-rsyslog (3.5.1)
     saz-sudo (3.0.9)
       puppetlabs-stdlib (>= 2.3.0)
+    stahnma-epel (1.1.1)
+    stankevich-python (1.10.0)
+      puppetlabs-stdlib (< 6.0.0, >= 4.6.0)
+      stahnma-epel (< 2.0.0, >= 1.0.1)
+    treydock-gpg_key (0.0.3)
+
+GIT
+  remote: https://github.com/StackStorm/puppet-st2
+  ref: test-v1.3.0
+  sha: 842549d91ba0a8f1c03da38a4aec053d283a0d93
+  specs:
     stackstorm-st2 (0.14.3)
       garethr-erlang (>= 0.3.0)
       ghoneycutt-facter (>= 2.1.0)
@@ -95,11 +106,7 @@ FORGE
       puppetlabs-vcsrepo (>= 1.2.0)
       saz-sudo (>= 3.0.9)
       stahnma-epel (>= 1.1.0)
-      stankevich-python (>= 1.7.15)
-    stahnma-epel (1.1.1)
-    stankevich-python (1.7.15)
-      puppetlabs-stdlib (>= 4.0.0)
-    treydock-gpg_key (0.0.3)
+      stankevich-python (>= 1.10.0)
 
 GIT
   remote: https://github.com/jfryman/evenup-hubot
@@ -166,7 +173,7 @@ DEPENDENCIES
   rodjek-logrotate (= 1.1.1)
   saz-rsyslog (= 3.5.1)
   saz-sudo (= 3.0.9)
-  stackstorm-st2 (= 0.14.3)
-  stankevich-python (= 1.7.15)
+  stackstorm-st2 (>= 0)
+  stankevich-python (= 1.10.0)
   treydock-gpg_key (= 0.0.3)
 
