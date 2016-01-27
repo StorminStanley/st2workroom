@@ -6,7 +6,7 @@
 #  keep that script still usable.
 #
 define adapter::st2_uwsgi_init (
-  $subsystem = $name,
+  $subsystem      = $name,
   $enable_restart = true,
 ) {
   include ::st2::params
