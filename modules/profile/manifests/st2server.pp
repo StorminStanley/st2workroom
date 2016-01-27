@@ -963,7 +963,19 @@ class profile::st2server {
 
   ## This creates the init script to start the
   ## st2installer service via uwsgi
+
+  # Note: We don't want to restart st2installer uwsgi app since will break
+  # puppet run (it kills the running process) so puppet wont fully converge
+
+  if $_installer_running {
+    $_st2installer_uwsgi_restart = false
+  }
+  else {
+    $_st2installer_uwsgi_restart = true
+  }
+
   adapter::st2_uwsgi_init { 'st2installer':
+    enable_restart => $_st2installer_uwsgi_restart,
     require => File['/var/sockets'],
   }
 
