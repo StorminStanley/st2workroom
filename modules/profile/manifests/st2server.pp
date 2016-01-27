@@ -218,7 +218,7 @@ class profile::st2server {
   # Ensure that IPTables has access rules to alloww
   # access to StackStorm ports as necessary.
   firewall { '100 allow HTTP/HTTPS/ST2 Access':
-    dport  => ['80', '443' , $_st2auth_port, $_st2api_port],
+    dport  => ['80', '443', $_st2auth_port, $_st2api_port],
     proto  => tcp,
     action => accept,
   }
