@@ -85,7 +85,7 @@ define adapter::st2_uwsgi_init (
 
   if $enable_restart == false {
     Service[$_subsystem] {
-      restart => 'exit 0',
+      restart => '/bin/true'
     }
   }
 }
