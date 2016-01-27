@@ -6,7 +6,7 @@ npm::proxy: false
 puppet::masterless::cron: disable
 
 st2::version: 1.3.0
-st2::revision: 10
+st2::revision: 11
 st2::autoupdate: false
 st2::mistral_git_branch: st2-1.3.0
 st2::installer_branch: disable_debug_mode
