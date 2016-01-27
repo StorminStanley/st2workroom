@@ -77,7 +77,8 @@ fi
 
 echo "We noticed that the currently installed version ${INSTALLED_VERSION_REVISION} and to be installed version ${TO_BE_INSTALLED_VERSION_REVISION}"
 echo "of StackStorm are different. Version ${TO_BE_INSTALLED_VERSION_REVISION} will overwrite version ${INSTALLED_VERSION_REVISION}. To avoid an"
-echo "unintentional change of version, please follow instructions from <KB> and hit 'n'."
+echo "unintentional change of version, please follow instructions from https://stackstorm.reamaze.com/kb/installation/pin-installed-stackstorm-version"
+echo "and hit 'n'."
 echo
 
 while true; do
