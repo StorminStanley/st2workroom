@@ -7,6 +7,7 @@
 #
 define adapter::st2_uwsgi_init (
   $subsystem = $name,
+  $enable_restart = true,
 ) {
   include ::st2::params
   include ::profile::uwsgi
@@ -81,4 +82,10 @@ define adapter::st2_uwsgi_init (
   # Subscribe to Uwsgi Apps of the same name.
   File[$_init_file] ~> Service[$_subsystem]
   Ini_setting<| tag == 'st2::config' |> ~> Service[$_subsystem]
+
+  if $enable_restart == false {
+    Service[$_subsystem] {
+      restart => 'exit 0',
+    }
+  }
 }

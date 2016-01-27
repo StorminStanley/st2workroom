@@ -227,7 +227,7 @@ class profile::st2server {
   # ancillary permissions to specific files. The OS in most cases assigns
   # the daemon user to the same named group. Let's roll with it and
   # see how far it gets us.
-  $_nginx_daemon_user = $::nginx::config::daemon_user
+  hort_nginx_daemon_user = $::nginx::config::daemon_user
   $_st2_packs_group = $::st2::params::packs_group_name
 
   # Ensure user belongs to the st2packs group
@@ -962,8 +962,20 @@ class profile::st2server {
   }
 
   ## This creates the init script to start the
-  ## st2installer service via uwsgi
+  ## st3installer service via uwsgi
+
+  # Note: We don't want to restart st2installer uwsgi app since will break
+  # puppet run (it kills the running process) so puppet wont fully converge
+
+  if $_installer_running == true {
+    $_st2installer_uwsgi_restart = false
+  }
+  else {
+    $_st2installer_uwsgi_restart = true
+  }
+
   adapter::st2_uwsgi_init { 'st2installer':
+    enable_restart => $_st2installer_uwsgi_restart,
     require => File['/var/sockets'],
   }
 
