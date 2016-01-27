@@ -1,0 +1,90 @@
+#!/usr/bin/env sh
+set -e
+
+DIR=$( dirname "$(readlink -f "$0")" )
+. $DIR/shared-functions
+
+TEST_PACKAGE="st2common"
+
+##
+# Test for st2 being installed by looking for the st2common package.
+# It is likely that st2 i.e. the client could be installed standalone.
+##
+is_st2_installed() {
+    local __resultvar=$1
+    eval $__resultvar=false
+    local out=""
+    if [ "$OS" = "Linux" ]; then
+        if [ "$DIST" = "Debian" ]; then
+            # the true at the end avoids an exit since dpkg will otherwise fail
+            out=`dpkg -l | grep ${TEST_PACKAGE} || true`
+        elif [ "$DIST" = "RedHat" ]; then
+            out=`rpm -qa ${TEST_PACKAGE}`
+        fi
+    fi
+
+    if [ -n "${out}" ]; then
+        eval $__resultvar=true
+    fi
+}
+
+is_st2_installed INSTALLED
+
+# If st2 is not installed then exit immediately
+if [ ${INSTALLED} = false ]; then
+    exit 0
+fi
+
+PROJECT_ROOT=/opt/puppet
+ANSWERS_FILE_YAML=${PROJECT_ROOT}/hieradata/answers.yaml
+ANSWERS_FILE_JSON=${PROJECT_ROOT}/hieradata/answers.json
+ANSWERS_FILE=""
+
+if [ -f ${ANSWERS_FILE_YAML} ]; then
+    ANSWERS_FILE=${ANSWERS_FILE_YAML}
+elif [ -f ${ANSWERS_FILE_JSON} ]; then
+    ANSWERS_FILE=${ANSWERS_FILE_JSON}
+fi
+
+if [ -n "${ANSWERS_FILE}" ]; then
+    is_version_present=`grep "st2::version" ${ANSWERS_FILE} || true`
+    is_revision_present=`grep "st2::revision" ${ANSWERS_FILE} || true`
+    # Safe to exit if version and revision are defined in answers
+    if [ -n "${is_version_present}" ] && [ -n "${is_revision_present}" ]; then
+        echo "Both version and revision present in ${ANSWERS_FILE}"
+        exit 0
+    fi
+fi
+
+# Once it is known that st2 is installed it is safe to assume that the client is present.
+INSTALLED_VERSION_REVISION=`st2 --version 2>&1 | awk -F \' '{print $2}'`
+
+HIERA_ST2_YAML=${PROJECT_ROOT}/hieradata/role/st2.yaml
+if [ ! -f ${HIERA_ST2_YAML} ]; then
+    echo "Could not find ${HIERA_ST2_YAML} so cannot perform version checks."
+    exit 0
+fi
+
+HIERA_ST2_VERSION=`grep "st2::version" ${HIERA_ST2_YAML} | awk -F: '{print $4}' |  sed -e 's/^[ \t]*//'`
+HIERA_ST2_REVISION=`grep "st2::revision" ${HIERA_ST2_YAML} | awk -F: '{print $4}' |  sed -e 's/^[ \t]*//'`
+
+TO_BE_INSTALLED_VERSION_REVISION="${HIERA_ST2_VERSION}.${HIERA_ST2_REVISION}"
+
+if [ ${INSTALLED_VERSION_REVISION} = ${TO_BE_INSTALLED_VERSION_REVISION} ]; then
+    echo "Installed and to be installed versions match - ${INSTALLED_VERSION_REVISION}"
+    exit 0
+fi
+
+echo "We noticed that the currently installed version ${INSTALLED_VERSION_REVISION} and to be installed version ${TO_BE_INSTALLED_VERSION_REVISION}"
+echo "of StackStorm are different. Version ${TO_BE_INSTALLED_VERSION_REVISION} will overwrite version ${INSTALLED_VERSION_REVISION}. To avoid an"
+echo "unintentional change of version, please follow instructions from <KB> and hit 'n'."
+echo
+
+while true; do
+    read -p "Do you wish to overwrite with version ${TO_BE_INSTALLED_VERSION_REVISION}? [Y/n]" yn
+    case $yn in
+        [Y] ) exit 0;;
+        [Nn] ) exit 1;;
+        * ) echo "Please answer Y or n.";;
+    esac
+done
