@@ -84,8 +84,10 @@ echo
 while true; do
     read -p "Do you wish to overwrite with version ${TO_BE_INSTALLED_VERSION_REVISION}? [Y/n]" yn
     case $yn in
-        [Y] ) exit 0;;
+        [Y] ) echo "StackStorm verion ${TO_BE_INSTALLED_VERSION_REVISION} will be installed." && break;;
         [Nn] ) exit 1;;
         * ) echo "Please answer Y or n.";;
     esac
 done
+
+rm -f /etc/facter/facts.d/st2server_bootstrapped.txt
