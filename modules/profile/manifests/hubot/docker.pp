@@ -18,7 +18,7 @@ class profile::hubot::docker (
   }
   $_all_env_vars    = merge($_hiera_env_vars, $_user_env_vars)
   $_docker_env_vars = $_all_env_vars.map |$_key, $_value| {
-    "${_key}=${_value}"
+    inline_template("<%- require 'shellwords' -%><%= @_key %>='<%= @_value.shellescape %>'")
   }
   $_run_image = $version ? {
     undef   => $docker_image,

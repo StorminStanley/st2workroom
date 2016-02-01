@@ -1,3 +1,5 @@
+<% require 'shellwords' %>
+
 description "<%= @bot_name %>"
 author "Estee Tew"
 
@@ -8,7 +10,7 @@ setuid hubot
 setgid hubot
 
 <%- @env_vars.each do |k,v| -%>
-env <%= k %>=<%= v %>
+env <%= k %>='<%= v.shellescape %>'
 <%- end -%>
 
 chdir <%= @hubot_home %>
