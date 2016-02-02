@@ -10,7 +10,7 @@ setuid hubot
 setgid hubot
 
 <%- @env_vars.each do |k,v| -%>
-env <%= k %>='<%= v.shellescape %>'
+env <%= k %>=<%= v.shellescape %>
 <%- end -%>
 
 chdir <%= @hubot_home %>
