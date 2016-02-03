@@ -1,5 +1,5 @@
 st2workroom
-=========
+===========
 
 A full fledged development environment for working with StackStorm. This project allows you to:
 
