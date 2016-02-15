@@ -132,7 +132,7 @@ if [ "$PUPPET_ENV" = "current_working_directory" ]; then
           $PROJECT_ROOT/ $PROJECT_ROOT/environments/current_working_directory/
 else
     echo "Setting up Puppet environments..."
-    execute_command rake environments:update
+    execute_command rake environments:update[$PUPPET_ENV]
 fi
 
 ## Attempt to detect if the environment even exists... if not,
