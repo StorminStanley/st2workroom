@@ -1,4 +1,7 @@
 ---
+classes:
+  - 'profile::debian'
+
 system::packages:
   - "bc"
   - "whois"
