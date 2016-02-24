@@ -32,6 +32,16 @@ is_st2_installed INSTALLED
 
 # If st2 is not installed then exit immediately
 if [ ${INSTALLED} = false ]; then
+    echo "StackStorm is not installed (${TEST_PACKAGE} package not present), skipping upgrade check..."
+    exit 0
+fi
+
+# Additional check, if st2 is not present we assume st2 is not installed and exit immediately
+OUTPUT=$(st2 --version)
+EXIT_CODE=$?
+
+if [ ${EXIT_CODE} -eq 127 ]; then
+    echo "StackStorm is not installed (st2 CLI binary not present), skipping upgrade check..."
     exit 0
 fi
 
