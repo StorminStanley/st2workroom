@@ -6,9 +6,10 @@
 #  keep that script still usable.
 #
 define adapter::st2_gunicorn_init (
-  $subsystem = $name,
-  $workers   = 1,
-  $threads   = 1,
+  $subsystem   = $name,
+  $workers     = 1,
+  $threads     = 1,
+  $worker_type = 'sync',
   $socket,
   $user,
   $group,

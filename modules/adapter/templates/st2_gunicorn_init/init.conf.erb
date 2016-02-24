@@ -20,6 +20,6 @@ kill timeout 60
 script
     export PYTHONPATH=<%= @_python_pack %>/<%= @_subsystem %>/<%= @_subsystem %>
     gunicorn_pecan <%= @_python_pack %>/<%= @_subsystem %>/gunicorn_config.py \
-      -k eventlet -b unix:<%= @socket %> --threads <%= @threads %> \
+      -k <%= @worker_type %> -b unix:<%= @socket %> --threads <%= @threads %> \
       --workers <%= @workers %> -u <%= @user %> -g <%= @group %>
 end script

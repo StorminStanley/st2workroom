@@ -20,7 +20,7 @@ export PATH
 name="<%= @_subsystem %>"
 program="/usr/bin/gunicorn_pecan"
 args="<%= @_python_pack %>/<%= @_subsystem %>/gunicorn_config.py   \
-      -k eventlet -b unix:<%= @socket %> --threads <%= @threads %> \
+      -k <%= @worker_type %> -b unix:<%= @socket %> --threads <%= @threads %> \
       --workers <%= @workers %> -u <%= @user %> -g <%= @group %>   \
       --pid /var/run/$name.pid"
 pidfile="/var/run/$name.pid"
