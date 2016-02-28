@@ -19,8 +19,8 @@ RANDFILE         = $BASEDIR/.rnd
 default_crl_days = 30
 default_days     = <%= @_ca_expiration %>
 default_md       = sha256
-policy           = policy
-x509_extensions  = extensions
+policy           = cert_policy
+x509_extensions  = cert_ext
 
 [ stackstorm_req ]
 default_bits    = 2048

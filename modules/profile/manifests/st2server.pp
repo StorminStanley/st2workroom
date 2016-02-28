@@ -387,9 +387,13 @@ class profile::st2server {
     $_ca_cert_content = undef
     $_ca_key_content = undef
     $_ca_expiration = '1825'
+    $_ca_os_storage = '/etc/ssl/certs/ST2CA.pem'
     $_ssl_expiration = '730'
-    $_openssl_ca_config = "${_openssl_root}/ca.cnf"
     $_openssl_cert_config = "${_openssl_root}/cert.cnf"
+    $_openssl_ca_config = "${_openssl_root}/ca.cnf"
+    $_openssl_ca_index = "${_openssl_root}/index.txt"
+    $_openssl_ca_storage = "${_openssl_root}/certs"
+    $_openssl_ca_serial = "${_openssl_root}/serial"
 
     # Variables for OpenSSL Template
     $country = 'US'
@@ -401,6 +405,26 @@ class profile::st2server {
     $email = 'support@stackstorm.com'
     $altnames = $_server_names
 
+    file { $_openssl_ca_index:
+      ensure  => file,
+      owner   => $_nginx_daemon_user,
+      mode    => '0444',
+      content => '',
+      before  => Exec['create root CA'],
+    }
+    file { $_openssl_ca_serial:
+      ensure  => file,
+      owner   => $_nginx_daemon_user,
+      mode    => '0444',
+      content => '01',
+      before  => Exec['create root CA'],
+    }
+    file { $_openssl_ca_storage:
+      ensure  => directory,
+      owner   => $_nginx_daemon_user,
+      mode    => '0444',
+      before  => Exec['create root CA'],
+    }
     file { $_openssl_ca_config:
       ensure  => file,
       owner   => $_nginx_daemon_user,
@@ -459,6 +483,12 @@ class profile::st2server {
       before    => Exec['create client cert req'],
     }
 
+    file { $_ca_os_storage:
+      ensure  => 'link',
+      target  => $_ca_cert,
+      require => Exec['create root CA'],
+    }
+
     $_create_client_req_command = join([
       'openssl',
       'req',
@@ -488,16 +518,12 @@ class profile::st2server {
     $_random_seed = "ssl-cert-serial-$_timestamp"
     $_sign_client_req_command = join([
       'openssl',
-      'x509',
-      '-req',
+      'ca',
+      '-batch',
       '-in',
       $_ssl_csr,
-      '-CA',
-      $_ca_cert,
-      '-CAkey',
-      $_ca_key,
-      '-set_serial',
-      fqdn_rand(100000, $_random_seed),
+      '-config',
+      $_openssl_cert_config,
       '-out',
       $_ssl_cert,
     ], ' ')
@@ -510,6 +536,24 @@ class profile::st2server {
       path      => '/usr/sbin:/usr/bin:/sbin:/bin',
       logoutput => true,
       require   => File["${_openssl_root}/.rnd"],
+    }
+
+    # Certifi is also an `st2client` requirement,
+    # but we pretty much need it for anything in the system
+    # if we want our CA to validate with python-requests.
+    python::pip { 'certifi':
+      pkgname => 'certifi',
+      ensure  => 'present',
+      before  => Exec['add CA to the certifi bundle']
+    }
+
+    # That's kind of ugly, but we really need to use
+    # the `certifi` bundle, because that's how `requests` works.
+    exec { 'add CA to the certifi bundle':
+      command     => "cat ${_ssl_cert} >> `python -c 'import certifi; print certifi.where()'`",
+      path        => '/usr/sbin:/usr/bin:/sbin:/bin',
+      logoutput   => true,
+      require     => Exec['sign client cert req'],
     }
     ## CA Certificate END ##
 
