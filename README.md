@@ -1,5 +1,11 @@
 st2workroom
 ===========
+> #### WARNING! Deprecation Notice!
+>
+> This repo is outdated and based on old deprecated installer.
+> Use [st2vagrant](https://github.com/stackstorm/st2vagrant) instead.
+
+
 
 A full fledged development environment for working with StackStorm. This project allows you to:
 
