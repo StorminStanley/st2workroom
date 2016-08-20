@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+LOG_FILE=/var/log/puppet.log
+
 DIR=$( dirname "$(readlink -f "$0")" )
 . $DIR/shared-functions
 
@@ -24,9 +26,12 @@ retry_message() {
     echo "Don't worry! Occasionally something goes wrong, and you just have"
     echo "to kick the tires a bit. Try re-provisioning by executing the command:"
     echo ""
-    echo "${KICK_COMMAND}"
+    echo "DEBUG=1 ${KICK_COMMAND}"
     echo ""
     echo "If you don't happen to get the 'OK' after that, give us a shout!"
+    echo "Please also make sure to check and forward us the ${LOG_FILE} log file."
+    echo "This file should include more information which will help us"
+    echo "troubleshoot this issue."
     echo "We don't want to leave you hanging! Come find your favorite way to"
     echo "contact us, and we'll get you going faster than you can say..."
     echo "AUTOMATE ALL THE THINGS!"
@@ -36,10 +41,6 @@ retry_message() {
     echo "Slack: http://stackstorm.com/community-signup"
     echo
 }
-
-
-
-
 
 prompt_for_credentials() {
     echo ""
